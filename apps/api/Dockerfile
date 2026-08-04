@@ -35,7 +35,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Install wget/curl for healthcheck (included in alpine)
-RUN apk add --no-built-in --no-cache wget
+RUN apk add --no-cache wget
 
 # Create app directory permissions for node user
 COPY --chown=node:node --from=builder /app/pruned/node_modules ./node_modules
