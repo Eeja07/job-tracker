@@ -118,6 +118,24 @@ describe('AuthService', () => {
 
       await expect(service.register(dto)).rejects.toThrow(ConflictException);
     });
+
+    it('should rollback transaction and throw error if default USER role assignment fails', async () => {
+      const dto: RegisterDto = {
+        email: 'newuser@example.com',
+        password: 'password123',
+        fullName: 'New User',
+      };
+
+      const mockRbacService = {
+        assignRole: jest.fn().mockRejectedValue(new Error('Role assignment failed')),
+      };
+
+      (service as any).rbacService = mockRbacService;
+      userRepository.findByEmail.mockResolvedValue(null);
+      userRepository.create.mockResolvedValue(mockUser);
+
+      await expect(service.register(dto)).rejects.toThrow('Role assignment failed');
+    });
   });
 
   describe('login', () => {
@@ -141,7 +159,7 @@ describe('AuthService', () => {
   });
 
   describe('refreshTokens', () => {
-    it('should refresh tokens when valid session exists in DB', async () => {
+    it('should refresh tokens when valid session exists in DB (successful refresh rotation)', async () => {
       const dto: RefreshTokenDto = { refreshToken: 'valid-refresh-token' };
       const tokenHash = await argon2.hash('valid-refresh-token');
 
@@ -156,6 +174,36 @@ describe('AuthService', () => {
 
       expect(result.accessToken).toBe('new-access-token');
       expect(result.refreshToken).toBe('new-refresh-token');
+    });
+
+    it('should handle concurrent refresh requests safely during grace period', async () => {
+      const dto: RefreshTokenDto = { refreshToken: 'valid-refresh-token' };
+      const tokenHash = await argon2.hash('valid-refresh-token');
+
+      jwtService.verifyAsync.mockResolvedValue({ sub: 'user-uuid-1' });
+      refreshSessionRepository.findByUserId.mockResolvedValue({ ...mockSession, tokenHash });
+      userRepository.findById.mockResolvedValue(mockUser);
+      jwtService.signAsync
+        .mockResolvedValue('rotated-access-token')
+        .mockResolvedValue('rotated-refresh-token');
+
+      const [res1, res2] = await Promise.all([
+        service.refreshTokens(dto),
+        service.refreshTokens(dto),
+      ]);
+
+      expect(res1.accessToken).toBeDefined();
+      expect(res2.accessToken).toBeDefined();
+    });
+
+    it('should throw UnauthorizedException on refresh lock timeout', async () => {
+      const dto: RefreshTokenDto = { refreshToken: 'valid-refresh-token' };
+      jwtService.verifyAsync.mockResolvedValue({ sub: 'user-uuid-timeout' });
+
+      // Lock user-uuid-timeout artificially in inMemoryLocks
+      (service as any).inMemoryLocks.set('user-uuid-timeout', true);
+
+      await expect(service.refreshTokens(dto)).rejects.toThrow(UnauthorizedException);
     });
 
     it('should throw UnauthorizedException if session is missing', async () => {

@@ -32,6 +32,9 @@ export interface AuthResponse extends AuthTokens {
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
+  private readonly inMemoryLocks = new Map<string, boolean>();
+  private readonly recentTokensCache = new Map<string, { tokens: AuthTokens; expiresAt: number }>();
+
   constructor(
     private readonly userRepository: UserRepository,
     private readonly refreshSessionRepository: RefreshSessionRepository,
@@ -101,11 +104,7 @@ export class AuthService {
           );
 
           if (this.rbacService) {
-            try {
-              await this.rbacService.assignRole(createdUser.id, 'USER', tx);
-            } catch (err: any) {
-              this.logger?.warn?.(`Could not assign default USER role: ${err.message}`);
-            }
+            await this.rbacService.assignRole(createdUser.id, 'USER', tx);
           }
 
           return createdUser;
@@ -119,11 +118,7 @@ export class AuthService {
           });
 
           if (this.rbacService) {
-            try {
-              await this.rbacService.assignRole(createdUser.id, 'USER');
-            } catch (err: any) {
-              this.logger?.warn?.(`Could not assign default USER role: ${err.message}`);
-            }
+            await this.rbacService.assignRole(createdUser.id, 'USER');
           }
 
           return createdUser;
@@ -177,33 +172,121 @@ export class AuthService {
     }
 
     const userId = payload.sub;
-    const session = await this.getCachedRefreshSession(userId);
+    const lockKey = `auth:lock:refresh:${userId}`;
+    const recentKey = `auth:recent_tokens:${userId}`;
+    const useRedis = Boolean(this.redisService && this.redisService.isReady());
 
-    if (!session) {
-      throw new UnauthorizedException('Invalid or expired refresh token');
+    // 1. Check for active grace period tokens from concurrent refresh
+    if (useRedis) {
+      const recent = await this.redisService!.get(recentKey);
+      if (recent) {
+        try {
+          return JSON.parse(recent) as AuthTokens;
+        } catch {}
+      }
+    } else {
+      const memoryRecent = this.recentTokensCache.get(userId);
+      if (memoryRecent && memoryRecent.expiresAt > Date.now()) {
+        return memoryRecent.tokens;
+      }
     }
 
-    const isTokenValid = await argon2.verify(session.tokenHash, dto.refreshToken);
-    if (!isTokenValid) {
-      await this.refreshSessionRepository.deleteByUserId(userId);
-      await this.invalidateRefreshSessionCache(userId);
-      throw new UnauthorizedException('Invalid or expired refresh token');
+    // 2. Acquire lock with retry loop to prevent refresh race conditions
+    let lockToken: string | null = null;
+    if (useRedis) {
+      let attempts = 0;
+      while (attempts < 40) {
+        lockToken = await this.redisService!.acquireLock(lockKey, 10);
+        if (lockToken) break;
+
+        const recentWhileWaiting = await this.redisService!.get(recentKey);
+        if (recentWhileWaiting) {
+          try {
+            return JSON.parse(recentWhileWaiting) as AuthTokens;
+          } catch {}
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        attempts++;
+      }
+
+      if (!lockToken) {
+        throw new UnauthorizedException('Refresh lock timeout: concurrent request in progress');
+      }
+    } else {
+      let attempts = 0;
+      while (this.inMemoryLocks.get(userId) && attempts < 40) {
+        const memoryRecentWhileWaiting = this.recentTokensCache.get(userId);
+        if (memoryRecentWhileWaiting && memoryRecentWhileWaiting.expiresAt > Date.now()) {
+          return memoryRecentWhileWaiting.tokens;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        attempts++;
+      }
+
+      if (this.inMemoryLocks.get(userId)) {
+        throw new UnauthorizedException('Refresh lock timeout: concurrent request in progress');
+      }
+      this.inMemoryLocks.set(userId, true);
     }
 
-    const user = await this.userRepository.findById(userId);
-    if (!user) {
-      throw new UnauthorizedException('User not found');
+    try {
+      const session = await this.getCachedRefreshSession(userId);
+      if (!session) {
+        throw new UnauthorizedException('Invalid or expired refresh token');
+      }
+
+      const isTokenValid = await argon2.verify(session.tokenHash, dto.refreshToken);
+      if (!isTokenValid) {
+        if (this.redisService) {
+          const recent = await this.redisService.get(recentKey);
+          if (recent) {
+            return JSON.parse(recent) as AuthTokens;
+          }
+        } else {
+          const memoryRecent = this.recentTokensCache.get(userId);
+          if (memoryRecent && memoryRecent.expiresAt > Date.now()) {
+            return memoryRecent.tokens;
+          }
+        }
+
+        await this.refreshSessionRepository.deleteByUserId(userId);
+        await this.invalidateRefreshSessionCache(userId);
+        throw new UnauthorizedException('Invalid or expired refresh token');
+      }
+
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      const tokens = await this.generateTokens(user.id, user.email);
+      await this.updateRefreshTokenHash(user.id, tokens.refreshToken);
+
+      if (this.redisService) {
+        await this.redisService.set(recentKey, JSON.stringify(tokens), 10);
+      } else {
+        this.recentTokensCache.set(userId, { tokens, expiresAt: Date.now() + 10000 });
+      }
+
+      return tokens;
+    } finally {
+      if (this.redisService && lockToken) {
+        await this.redisService.releaseLock(lockKey, lockToken);
+      } else {
+        this.inMemoryLocks.delete(userId);
+      }
     }
-
-    const tokens = await this.generateTokens(user.id, user.email);
-    await this.updateRefreshTokenHash(user.id, tokens.refreshToken);
-
-    return tokens;
   }
 
   async logout(userId: string): Promise<{ success: boolean }> {
     await this.refreshSessionRepository.deleteByUserId(userId);
     await this.invalidateRefreshSessionCache(userId);
+    if (this.redisService) {
+      await this.redisService.del(`auth:recent_tokens:${userId}`);
+    } else {
+      this.recentTokensCache.delete(userId);
+    }
     return { success: true };
   }
 
