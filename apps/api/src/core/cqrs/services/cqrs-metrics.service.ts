@@ -12,6 +12,10 @@ export class CqrsMetricsService {
   public readonly queryCacheMissesTotal: Counter<string>;
   public readonly commandExecutionTotal: Counter<string>;
   public readonly queryExecutionTotal: Counter<string>;
+  public readonly projectionRebuildTotal: Counter<string>;
+  public readonly projectionRebuildDurationSeconds: Histogram<string>;
+  public readonly projectionRecordsProcessedTotal: Counter<string>;
+  public readonly projectionBatchesTotal: Counter<string>;
 
   constructor(@Optional() private readonly registry?: Registry) {
     const reg = this.registry || new Registry();
@@ -63,6 +67,34 @@ export class CqrsMetricsService {
       name: 'query_execution_total',
       help: 'Total query executions',
       labelNames: ['query', 'status'],
+      registers: [reg],
+    });
+
+    this.projectionRebuildTotal = new Counter({
+      name: 'projection_rebuild_total',
+      help: 'Total number of projection rebuild executions',
+      labelNames: ['status'],
+      registers: [reg],
+    });
+
+    this.projectionRebuildDurationSeconds = new Histogram({
+      name: 'projection_rebuild_duration_seconds',
+      help: 'Projection rebuild duration in seconds',
+      buckets: [0.05, 0.1, 0.5, 1, 5, 10, 30, 60],
+      registers: [reg],
+    });
+
+    this.projectionRecordsProcessedTotal = new Counter({
+      name: 'projection_records_processed_total',
+      help: 'Total records processed during projection rebuilds',
+      labelNames: ['model'],
+      registers: [reg],
+    });
+
+    this.projectionBatchesTotal = new Counter({
+      name: 'projection_batches_total',
+      help: 'Total batches processed during projection rebuilds',
+      labelNames: ['model'],
       registers: [reg],
     });
   }
