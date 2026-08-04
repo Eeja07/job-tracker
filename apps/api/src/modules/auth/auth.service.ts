@@ -18,6 +18,8 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 
+import { PrismaService } from '../../prisma/prisma.service';
+
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
@@ -35,6 +37,7 @@ export class AuthService {
     private readonly refreshSessionRepository: RefreshSessionRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @Optional() private readonly prismaService?: PrismaService,
     @Optional() private readonly redisService?: RedisService,
     @Optional() private readonly rbacService?: RbacService,
   ) {}
@@ -84,22 +87,47 @@ export class AuthService {
       timeCost: 3,
     });
 
-    const user = await this.userRepository.create({
-      email: dto.email,
-      passwordHash,
-      fullName: dto.fullName,
-      isEmailVerified: false,
-    });
+    // Atomic transaction for User creation + default USER role assignment
+    const user = this.prismaService
+      ? await this.prismaService.$transaction(async (tx) => {
+          const createdUser = await this.userRepository.create(
+            {
+              email: dto.email,
+              passwordHash,
+              fullName: dto.fullName,
+              isEmailVerified: false,
+            },
+            tx,
+          );
 
-    // Auto-assign default USER role
-    if (this.rbacService) {
-      try {
-        await this.rbacService.assignRole(user.id, 'USER');
-      } catch (err: any) {
-        // Non-fatal: log and continue (role may not exist in test envs)
-        this.logger?.warn?.(`Could not assign default USER role: ${err.message}`);
-      }
-    }
+          if (this.rbacService) {
+            try {
+              await this.rbacService.assignRole(createdUser.id, 'USER', tx);
+            } catch (err: any) {
+              this.logger?.warn?.(`Could not assign default USER role: ${err.message}`);
+            }
+          }
+
+          return createdUser;
+        })
+      : await (async () => {
+          const createdUser = await this.userRepository.create({
+            email: dto.email,
+            passwordHash,
+            fullName: dto.fullName,
+            isEmailVerified: false,
+          });
+
+          if (this.rbacService) {
+            try {
+              await this.rbacService.assignRole(createdUser.id, 'USER');
+            } catch (err: any) {
+              this.logger?.warn?.(`Could not assign default USER role: ${err.message}`);
+            }
+          }
+
+          return createdUser;
+        })();
 
     const tokens = await this.generateTokens(user.id, user.email);
     await this.updateRefreshTokenHash(user.id, tokens.refreshToken);

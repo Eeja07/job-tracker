@@ -131,6 +131,42 @@ describe('RbacService', () => {
         300,
       );
     });
+
+    it('should fallback to DB gracefully when Redis throws an error', async () => {
+      redisService.get.mockRejectedValue(new Error('Redis connection failed'));
+      rolePermRepo.getPermissionNamesForUser.mockResolvedValue(['company.read']);
+
+      const perms = await service.getPermissions('user-123');
+
+      expect(perms).toEqual(['company.read']);
+      expect(rolePermRepo.getPermissionNamesForUser).toHaveBeenCalledWith('user-123');
+    });
+  });
+
+  describe('getRoles', () => {
+    it('should return cached roles on Redis hit', async () => {
+      redisService.get.mockResolvedValue(JSON.stringify(['ADMIN']));
+
+      const roles = await service.getRoles('user-123');
+
+      expect(roles).toEqual(['ADMIN']);
+      expect(userRoleRepo.getRoleNamesForUser).not.toHaveBeenCalled();
+    });
+
+    it('should query DB and populate cache on Redis miss', async () => {
+      redisService.get.mockResolvedValue(null);
+      userRoleRepo.getRoleNamesForUser.mockResolvedValue(['USER']);
+
+      const roles = await service.getRoles('user-123');
+
+      expect(roles).toEqual(['USER']);
+      expect(userRoleRepo.getRoleNamesForUser).toHaveBeenCalledWith('user-123');
+      expect(redisService.set).toHaveBeenCalledWith(
+        'roles:user:user-123',
+        JSON.stringify(['USER']),
+        300,
+      );
+    });
   });
 
   describe('hasPermission', () => {
@@ -146,6 +182,22 @@ describe('RbacService', () => {
 
       const result = await service.hasPermission('user-123', 'company.delete');
       expect(result).toBe(false);
+    });
+  });
+
+  describe('concurrent operations', () => {
+    it('should execute concurrent permission checks cleanly', async () => {
+      redisService.get.mockResolvedValue(JSON.stringify(['company.create', 'company.read']));
+
+      const [res1, res2, res3] = await Promise.all([
+        service.hasPermission('user-123', 'company.create'),
+        service.hasAnyPermission('user-123', ['company.read']),
+        service.hasAllPermissions('user-123', ['company.create', 'company.read']),
+      ]);
+
+      expect(res1).toBe(true);
+      expect(res2).toBe(true);
+      expect(res3).toBe(true);
     });
   });
 });
