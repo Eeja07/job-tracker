@@ -36,3 +36,17 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# ==========================================
+# Local AI Workspace (DO NOT COMMIT)
+# ==========================================
+.ai/
+
+# AI IDE
+.cursor/
+.claude/
+
+# AI instruction files
+AGENTS.md
+CLAUDE.md
+GEMINI.md
