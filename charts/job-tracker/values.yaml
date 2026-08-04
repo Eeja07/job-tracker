@@ -1,0 +1,126 @@
+# Default values for job-tracker.
+replicaCount: 3
+
+image:
+  repository: ghcr.io/eeja07/job-tracker-api
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/path: "/api/v1/metrics"
+  prometheus.io/port: "3000"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+
+service:
+  type: ClusterIP
+  port: 3000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: app.jobtracker.io
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: job-tracker-tls
+      hosts:
+        - app.jobtracker.io
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 75
+  targetMemoryUtilizationPercentage: 80
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+networkPolicy:
+  enabled: true
+
+serviceMonitor:
+  enabled: true
+  interval: 15s
+  scrapeTimeout: 10s
+  path: /api/v1/metrics
+
+probes:
+  liveness:
+    path: /api/v1/health/live
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+  readiness:
+    path: /api/v1/health/ready
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - job-tracker
+          topologyKey: kubernetes.io/hostname
+
+nodeSelector: {}
+tolerations: []
+
+env:
+  NODE_ENV: "production"
+  PORT: "3000"
+  CORS_ORIGIN: "https://app.jobtracker.io"
+  LOG_LEVEL: "info"
+
+secrets:
+  DATABASE_URL: "postgresql://jobtracker:secret_password@postgres-service:5432/job_tracker?schema=public"
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  JWT_ACCESS_SECRET: "change-me-in-production-access-secret-32-chars"
+  JWT_REFRESH_SECRET: "change-me-in-production-refresh-secret-32-chars"
