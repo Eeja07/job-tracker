@@ -6,6 +6,7 @@ import { RedisService } from '../../modules/redis/redis.service';
 import { QueueService } from '../../modules/jobs/services/queue.service';
 import { EmailService } from '../../modules/email/services/email.service';
 import { StorageService } from '../../modules/storage/storage.service';
+import { FeatureFlagService } from '../../modules/feature-flags/services/feature-flag.service';
 
 describe('HealthController', () => {
   let controller: HealthController;
@@ -35,6 +36,10 @@ describe('HealthController', () => {
       fileExists: jest.fn().mockResolvedValue(true),
     };
 
+    const mockFeatureFlagService = {
+      get: jest.fn().mockResolvedValue(null),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [HealthController],
       providers: [
@@ -43,6 +48,7 @@ describe('HealthController', () => {
         { provide: QueueService, useValue: mockQueueService },
         { provide: EmailService, useValue: mockEmailService },
         { provide: StorageService, useValue: mockStorageService },
+        { provide: FeatureFlagService, useValue: mockFeatureFlagService },
       ],
     }).compile();
 
@@ -65,6 +71,7 @@ describe('HealthController', () => {
         rbacCache: 'up',
         storage: 'up',
         virusScanner: 'up',
+        featureFlags: 'up',
       });
     });
   });

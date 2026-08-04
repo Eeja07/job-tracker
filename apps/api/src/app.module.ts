@@ -24,6 +24,7 @@ import { NotesModule } from './modules/notes/notes.module';
 import { StatusHistoryModule } from './modules/status-history/status-history.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { StorageModule } from './modules/storage/storage.module';
+import { FeatureFlagsModule } from './modules/feature-flags/feature-flags.module';
 import { MetricsModule } from './core/metrics/metrics.module';
 import { MetricsInterceptor } from './core/metrics/metrics.interceptor';
 import { RequestIdMiddleware } from './core/middlewares/request-id.middleware';
@@ -69,6 +70,7 @@ import { RequestIdMiddleware } from './core/middlewares/request-id.middleware';
     StatusHistoryModule,
     DashboardModule,
     StorageModule,
+    FeatureFlagsModule,
   ],
   controllers: [AppController],
   providers: [

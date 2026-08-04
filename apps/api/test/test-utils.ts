@@ -62,6 +62,7 @@ export async function cleanDatabase(prisma: PrismaService): Promise<void> {
   await prisma.application.deleteMany();
   await prisma.company.deleteMany();
   await prisma.auditLog.deleteMany();
+  await prisma.featureFlag.deleteMany();
   await prisma.user.deleteMany();
 
   // Ensure default roles exist for tests

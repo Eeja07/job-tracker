@@ -42,6 +42,11 @@ export class MetricsService implements OnModuleInit {
   public readonly storageBytesUploadedTotal: Counter<string>;
   public readonly storageBytesDownloadedTotal: Counter<string>;
 
+  public readonly featureFlagHitsTotal: Counter<string>;
+  public readonly featureFlagMissesTotal: Counter<string>;
+  public readonly featureFlagCacheHitsTotal: Counter<string>;
+  public readonly featureFlagCacheMissesTotal: Counter<string>;
+
   constructor(
     @Optional() private readonly redisService?: RedisService,
     @Optional() private readonly queueService?: QueueService,
@@ -88,6 +93,34 @@ export class MetricsService implements OnModuleInit {
       name: 'storage_bytes_downloaded_total',
       help: 'Total bytes downloaded from object storage',
       labelNames: ['provider'],
+      registers: [this.registry],
+    });
+
+    this.featureFlagHitsTotal = new Counter({
+      name: 'feature_flag_hits_total',
+      help: 'Total feature flag hits',
+      labelNames: ['flag'],
+      registers: [this.registry],
+    });
+
+    this.featureFlagMissesTotal = new Counter({
+      name: 'feature_flag_misses_total',
+      help: 'Total feature flag misses',
+      labelNames: ['flag'],
+      registers: [this.registry],
+    });
+
+    this.featureFlagCacheHitsTotal = new Counter({
+      name: 'feature_flag_cache_hits_total',
+      help: 'Total feature flag cache hits',
+      labelNames: ['flag'],
+      registers: [this.registry],
+    });
+
+    this.featureFlagCacheMissesTotal = new Counter({
+      name: 'feature_flag_cache_misses_total',
+      help: 'Total feature flag cache misses',
+      labelNames: ['flag'],
       registers: [this.registry],
     });
 

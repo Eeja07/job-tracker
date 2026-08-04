@@ -5,6 +5,7 @@ import { RedisService } from '../../modules/redis/redis.service';
 import { QueueService } from '../../modules/jobs/services/queue.service';
 import { EmailService } from '../../modules/email/services/email.service';
 import { StorageService } from '../../modules/storage/storage.service';
+import { FeatureFlagService } from '../../modules/feature-flags/services/feature-flag.service';
 
 export interface HealthCheckResponse {
   status: string;
@@ -24,6 +25,7 @@ export class HealthController {
     @Optional() private readonly queueService?: QueueService,
     @Optional() private readonly emailService?: EmailService,
     @Optional() private readonly storageService?: StorageService,
+    @Optional() private readonly featureFlagService?: FeatureFlagService,
   ) {}
 
   @Get()
@@ -38,6 +40,7 @@ export class HealthController {
     let rbacCacheCheck = 'down';
     let storageCheck = 'down';
     let virusScannerCheck = 'down';
+    let featureFlagsCheck = 'down';
 
     try {
       if (this.redisService) {
@@ -86,6 +89,14 @@ export class HealthController {
       virusScannerCheck = 'down';
     }
 
+    try {
+      if (this.featureFlagService) {
+        featureFlagsCheck = 'up';
+      }
+    } catch {
+      featureFlagsCheck = 'down';
+    }
+
     const isDegraded =
       redisCheck === 'down' ||
       jobsCheck === 'down' ||
@@ -105,6 +116,7 @@ export class HealthController {
         rbacCache: rbacCacheCheck,
         storage: storageCheck,
         virusScanner: virusScannerCheck,
+        featureFlags: featureFlagsCheck,
       },
     };
   }

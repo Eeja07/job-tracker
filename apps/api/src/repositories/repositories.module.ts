@@ -12,6 +12,7 @@ import { RoleRepository } from './role/role.repository';
 import { PermissionRepository } from './permission/permission.repository';
 import { UserRoleRepository } from './user-role/user-role.repository';
 import { RolePermissionRepository } from './role-permission/role-permission.repository';
+import { FeatureFlagRepository } from './feature-flag/feature-flag.repository';
 
 const repositories = [
   UserRepository,
@@ -27,6 +28,7 @@ const repositories = [
   PermissionRepository,
   UserRoleRepository,
   RolePermissionRepository,
+  FeatureFlagRepository,
 ];
 
 @Module({
