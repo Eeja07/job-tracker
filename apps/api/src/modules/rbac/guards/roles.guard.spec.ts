@@ -61,4 +61,14 @@ describe('RolesGuard', () => {
 
     await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
   });
+
+  it('should throw InternalServerErrorException if RbacService is unavailable (fail-closed)', async () => {
+    const unconfiguredGuard = new RolesGuard(reflector, undefined);
+    reflector.getAllAndOverride.mockReturnValue(['ADMIN']);
+    const context = createMockContext({ sub: 'user-123' });
+
+    await expect(unconfiguredGuard.canActivate(context)).rejects.toThrow(
+      'Authorization provider unavailable',
+    );
+  });
 });

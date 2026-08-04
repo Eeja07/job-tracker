@@ -54,4 +54,14 @@ describe('PermissionsGuard', () => {
 
     await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
   });
+
+  it('should throw InternalServerErrorException if RbacService is unavailable (fail-closed)', async () => {
+    const unconfiguredGuard = new PermissionsGuard(reflector, undefined);
+    reflector.getAllAndOverride.mockReturnValue(['company.delete']);
+    const context = createMockContext({ sub: 'user-123' });
+
+    await expect(unconfiguredGuard.canActivate(context)).rejects.toThrow(
+      'Authorization provider unavailable',
+    );
+  });
 });

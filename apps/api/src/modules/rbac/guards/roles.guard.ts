@@ -1,4 +1,12 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException, Logger, Optional } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  InternalServerErrorException,
+  Logger,
+  Optional,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/rbac.decorators';
 import { RbacService } from '../services/rbac.service';
@@ -34,7 +42,8 @@ export class RolesGuard implements CanActivate {
     const userId = user.sub as string;
 
     if (!this.rbacService) {
-      return true;
+      this.logger.error('RbacService is not available in RolesGuard. Security fail-closed triggered.');
+      throw new InternalServerErrorException('Authorization provider unavailable');
     }
 
     for (const role of requiredRoles) {

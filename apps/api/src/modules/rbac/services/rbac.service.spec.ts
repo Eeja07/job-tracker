@@ -72,15 +72,16 @@ describe('RbacService', () => {
   });
 
   describe('assignRole', () => {
-    it('should assign role and invalidate cache', async () => {
+    it('should assign role and invalidate cache (pre & post DB write)', async () => {
       roleRepo.findByName.mockResolvedValue(mockRole);
       userRoleRepo.assign.mockResolvedValue({} as any);
 
       await service.assignRole('user-123', 'ADMIN');
 
-      expect(roleRepo.findByName).toHaveBeenCalledWith('ADMIN');
-      expect(userRoleRepo.assign).toHaveBeenCalledWith('user-123', mockRole.id);
+      expect(roleRepo.findByName).toHaveBeenCalledWith('ADMIN', undefined);
+      expect(userRoleRepo.assign).toHaveBeenCalledWith('user-123', mockRole.id, undefined);
       expect(redisService.del).toHaveBeenCalledWith('permissions:user:user-123');
+      expect(redisService.del).toHaveBeenCalledWith('roles:user:user-123');
     });
 
     it('should throw error if role does not exist', async () => {
@@ -93,14 +94,16 @@ describe('RbacService', () => {
   });
 
   describe('removeRole', () => {
-    it('should remove role and invalidate cache', async () => {
+    it('should remove role and invalidate cache (pre & post DB write)', async () => {
       roleRepo.findByName.mockResolvedValue(mockRole);
       userRoleRepo.remove.mockResolvedValue(undefined);
 
       await service.removeRole('user-123', 'ADMIN');
 
-      expect(userRoleRepo.remove).toHaveBeenCalledWith('user-123', mockRole.id);
+      expect(roleRepo.findByName).toHaveBeenCalledWith('ADMIN', undefined);
+      expect(userRoleRepo.remove).toHaveBeenCalledWith('user-123', mockRole.id, undefined);
       expect(redisService.del).toHaveBeenCalledWith('permissions:user:user-123');
+      expect(redisService.del).toHaveBeenCalledWith('roles:user:user-123');
     });
   });
 

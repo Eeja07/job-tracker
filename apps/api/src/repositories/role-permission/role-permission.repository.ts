@@ -30,25 +30,20 @@ export class RolePermissionRepository extends BaseRepository<Prisma.RolePermissi
   }
 
   async getPermissionNamesForUser(userId: string): Promise<string[]> {
-    const userRoles = await this.prisma.userRole.findMany({
-      where: { userId },
-      include: {
-        role: {
-          include: {
-            rolePermissions: {
-              include: { permission: { select: { name: true } } },
+    const permissions = await this.prisma.permission.findMany({
+      where: {
+        rolePermissions: {
+          some: {
+            role: {
+              userRoles: {
+                some: { userId },
+              },
             },
           },
         },
       },
+      select: { name: true },
     });
-
-    const permissionNames = new Set<string>();
-    for (const ur of userRoles) {
-      for (const rp of (ur as any).role.rolePermissions) {
-        permissionNames.add(rp.permission.name);
-      }
-    }
-    return Array.from(permissionNames);
+    return permissions.map((p) => p.name);
   }
 }
