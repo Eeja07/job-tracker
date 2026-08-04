@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis, { RedisOptions } from 'ioredis';
+import { randomUUID } from 'crypto';
 
 export interface RedisMetrics {
   status: string;
@@ -10,6 +11,14 @@ export interface RedisMetrics {
   hitRatio: number;
 }
 
+const RELEASE_LOCK_LUA_SCRIPT = `
+if redis.call("get", KEYS[1]) == ARGV[1] then
+  return redis.call("del", KEYS[1])
+else
+  return 0
+end
+`.trim();
+
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(RedisService.name);
@@ -17,6 +26,10 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   private subClient?: Redis;
   private hits = 0;
   private misses = 0;
+
+  // Single listener event dispatcher map for Redis Pub/Sub subscribers
+  private readonly channelHandlers = new Map<string, Set<(message: string) => void>>();
+  private isSubListenerRegistered = false;
 
   constructor(private readonly configService: ConfigService) {}
 
@@ -56,6 +69,8 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleDestroy() {
     try {
+      this.channelHandlers.clear();
+      this.isSubListenerRegistered = false;
       if (this.subClient) {
         await this.subClient.quit().catch(() => this.subClient?.disconnect());
       }
@@ -120,12 +135,23 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /**
+   * Delete keys by pattern using non-blocking SCAN iteration instead of blocking KEYS command.
+   */
   async delByPattern(pattern: string): Promise<void> {
     try {
-      const keys = await this.client.keys(pattern);
-      if (keys.length > 0) {
-        await this.client.del(...keys);
-      }
+      let cursor = '0';
+      do {
+        const res = await this.client.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+        if (!res || !Array.isArray(res)) {
+          break;
+        }
+        const [nextCursor, keys] = res;
+        cursor = nextCursor || '0';
+        if (keys && keys.length > 0) {
+          await this.client.del(...keys);
+        }
+      } while (cursor !== '0');
     } catch (err: any) {
       this.logger.warn(`Redis delByPattern error for pattern [${pattern}]: ${err.message}`);
     }
@@ -187,6 +213,10 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /**
+   * Subscribe to a Redis channel using a single global event listener and internal Map dispatcher
+   * to eliminate EventEmitter listener leaks.
+   */
   async subscribe(channel: string, handler: (message: string) => void): Promise<void> {
     try {
       if (!this.subClient) {
@@ -195,30 +225,87 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
           this.logger.warn(`Redis subClient error: ${err.message}`);
         });
       }
-      await this.subClient.subscribe(channel);
-      this.subClient.on('message', (chan, msg) => {
-        if (chan === channel) {
-          handler(msg);
-        }
-      });
+
+      if (!this.isSubListenerRegistered) {
+        this.subClient.on('message', (chan: string, msg: string) => {
+          const handlers = this.channelHandlers.get(chan);
+          if (handlers) {
+            for (const h of handlers) {
+              try {
+                h(msg);
+              } catch (err: any) {
+                this.logger.error(`Error in subscriber handler for channel [${chan}]: ${err.message}`);
+              }
+            }
+          }
+        });
+        this.isSubListenerRegistered = true;
+      }
+
+      let handlers = this.channelHandlers.get(channel);
+      const isFirstHandler = !handlers || handlers.size === 0;
+
+      if (!handlers) {
+        handlers = new Set();
+        this.channelHandlers.set(channel, handlers);
+      }
+      handlers.add(handler);
+
+      if (isFirstHandler) {
+        await this.subClient.subscribe(channel);
+      }
     } catch (err: any) {
       this.logger.warn(`Redis subscribe error for channel [${channel}]: ${err.message}`);
     }
   }
 
-  // Lock helper using SET NX EX
-  async acquireLock(key: string, ttlSeconds: number): Promise<boolean> {
+  /**
+   * Unsubscribe a handler or clear all handlers for a channel.
+   */
+  async unsubscribe(channel: string, handler?: (message: string) => void): Promise<void> {
     try {
-      const res = await this.client.set(key, 'locked', 'EX', ttlSeconds, 'NX');
-      return res === 'OK';
+      if (!this.subClient || !this.channelHandlers.has(channel)) {
+        return;
+      }
+
+      const handlers = this.channelHandlers.get(channel);
+      if (handlers && handler) {
+        handlers.delete(handler);
+      }
+
+      if (!handler || !handlers || handlers.size === 0) {
+        this.channelHandlers.delete(channel);
+        await this.subClient.unsubscribe(channel);
+      }
     } catch (err: any) {
-      this.logger.warn(`Redis acquireLock error for key [${key}]: ${err.message}`);
-      return false;
+      this.logger.warn(`Redis unsubscribe error for channel [${channel}]: ${err.message}`);
     }
   }
 
-  async releaseLock(key: string): Promise<boolean> {
+  /**
+   * Distributed Lock Acquisition with unique random lock token and SET NX EX.
+   * Returns the lock token string if acquired, or null if lock acquisition failed.
+   */
+  async acquireLock(key: string, ttlSeconds: number, token?: string): Promise<string | null> {
+    const lockToken = token || randomUUID();
     try {
+      const res = await this.client.set(key, lockToken, 'EX', ttlSeconds, 'NX');
+      return res === 'OK' ? lockToken : null;
+    } catch (err: any) {
+      this.logger.warn(`Redis acquireLock error for key [${key}]: ${err.message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Distributed Lock Release using atomic Lua compare-and-delete script to ensure process ownership.
+   */
+  async releaseLock(key: string, lockToken?: string): Promise<boolean> {
+    try {
+      if (lockToken) {
+        const res = await this.client.eval(RELEASE_LOCK_LUA_SCRIPT, 1, key, lockToken);
+        return res === 1 || res === '1';
+      }
       const res = await this.client.del(key);
       return res > 0;
     } catch (err: any) {
@@ -254,3 +341,4 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     };
   }
 }
+

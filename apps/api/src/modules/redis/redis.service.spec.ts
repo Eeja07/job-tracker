@@ -36,6 +36,9 @@ describe('RedisService', () => {
       decr: jest.fn(),
       publish: jest.fn(),
       subscribe: jest.fn(),
+      unsubscribe: jest.fn(),
+      scan: jest.fn(),
+      eval: jest.fn(),
       duplicate: jest.fn().mockReturnThis(),
       keys: jest.fn(),
       info: jest.fn().mockResolvedValue('used_memory:102400'),
@@ -90,10 +93,10 @@ describe('RedisService', () => {
       expect(mockRedisInstance.del).toHaveBeenCalledWith('key-to-del');
     });
 
-    it('should delete keys matching pattern in delByPattern', async () => {
-      mockRedisInstance.keys.mockResolvedValue(['k1', 'k2']);
+    it('should delete keys matching pattern in delByPattern using SCAN', async () => {
+      mockRedisInstance.scan.mockResolvedValue(['0', ['k1', 'k2']]);
       await service.delByPattern('dashboard:*');
-      expect(mockRedisInstance.keys).toHaveBeenCalledWith('dashboard:*');
+      expect(mockRedisInstance.scan).toHaveBeenCalledWith('0', 'MATCH', 'dashboard:*', 'COUNT', 100);
       expect(mockRedisInstance.del).toHaveBeenCalledWith('k1', 'k2');
     });
   });
@@ -133,23 +136,50 @@ describe('RedisService', () => {
   });
 
   describe('Lock Helper', () => {
-    it('should acquire lock using SET NX EX', async () => {
+    it('should acquire lock using SET NX EX and return lock token', async () => {
       mockRedisInstance.set.mockResolvedValue('OK');
-      const acquired = await service.acquireLock('lock:job:123', 10);
-      expect(acquired).toBe(true);
-      expect(mockRedisInstance.set).toHaveBeenCalledWith('lock:job:123', 'locked', 'EX', 10, 'NX');
+      const token = await service.acquireLock('lock:job:123', 10);
+      expect(typeof token).toBe('string');
+      expect(token).not.toBeNull();
+      expect(mockRedisInstance.set).toHaveBeenCalledWith('lock:job:123', expect.any(String), 'EX', 10, 'NX');
     });
 
-    it('should fail to acquire lock if already held', async () => {
+    it('should acquire lock with custom token', async () => {
+      mockRedisInstance.set.mockResolvedValue('OK');
+      const token = await service.acquireLock('lock:job:123', 10, 'my-custom-token');
+      expect(token).toBe('my-custom-token');
+      expect(mockRedisInstance.set).toHaveBeenCalledWith('lock:job:123', 'my-custom-token', 'EX', 10, 'NX');
+    });
+
+    it('should return null if lock is already held', async () => {
       mockRedisInstance.set.mockResolvedValue(null);
-      const acquired = await service.acquireLock('lock:job:123', 10);
-      expect(acquired).toBe(false);
+      const token = await service.acquireLock('lock:job:123', 10);
+      expect(token).toBeNull();
     });
 
-    it('should release lock by deleting key', async () => {
+    it('should release lock using Lua compare-and-delete when token is provided', async () => {
+      mockRedisInstance.eval.mockResolvedValue(1);
+      const released = await service.releaseLock('lock:job:123', 'my-token');
+      expect(released).toBe(true);
+      expect(mockRedisInstance.eval).toHaveBeenCalledWith(
+        expect.stringContaining('redis.call("get", KEYS[1])'),
+        1,
+        'lock:job:123',
+        'my-token',
+      );
+    });
+
+    it('should fail to release lock if Lua script returns 0 (token mismatch)', async () => {
+      mockRedisInstance.eval.mockResolvedValue(0);
+      const released = await service.releaseLock('lock:job:123', 'wrong-token');
+      expect(released).toBe(false);
+    });
+
+    it('should fallback to direct delete when token is omitted', async () => {
       mockRedisInstance.del.mockResolvedValue(1);
       const released = await service.releaseLock('lock:job:123');
       expect(released).toBe(true);
+      expect(mockRedisInstance.del).toHaveBeenCalledWith('lock:job:123');
     });
   });
 
@@ -160,18 +190,41 @@ describe('RedisService', () => {
       expect(subs).toBe(1);
     });
 
-    it('should subscribe handler to channel', async () => {
+    it('should register a single global message listener and dispatch to handlers', async () => {
+      let messageListener: (chan: string, msg: string) => void = () => {};
       const mockSubClient = {
         subscribe: jest.fn().mockResolvedValue('OK'),
-        on: jest.fn(),
+        unsubscribe: jest.fn().mockResolvedValue('OK'),
+        on: jest.fn((event: string, cb: any) => {
+          if (event === 'message') {
+            messageListener = cb;
+          }
+        }),
       };
       mockRedisInstance.duplicate.mockReturnValue(mockSubClient);
 
-      const handler = jest.fn();
-      await service.subscribe('events', handler);
+      const handler1 = jest.fn();
+      const handler2 = jest.fn();
 
-      expect(mockRedisInstance.duplicate).toHaveBeenCalled();
-      expect(mockSubClient.subscribe).toHaveBeenCalledWith('events');
+      await service.subscribe('channel1', handler1);
+      await service.subscribe('channel1', handler2);
+
+      expect(mockSubClient.on).toHaveBeenCalledWith('message', expect.any(Function));
+      expect(mockSubClient.subscribe).toHaveBeenCalledTimes(1);
+      expect(mockSubClient.subscribe).toHaveBeenCalledWith('channel1');
+
+      // Simulate incoming message
+      messageListener('channel1', 'test-payload');
+      expect(handler1).toHaveBeenCalledWith('test-payload');
+      expect(handler2).toHaveBeenCalledWith('test-payload');
+
+      // Unsubscribe one handler
+      await service.unsubscribe('channel1', handler1);
+      expect(mockSubClient.unsubscribe).not.toHaveBeenCalled();
+
+      // Unsubscribe final handler
+      await service.unsubscribe('channel1', handler2);
+      expect(mockSubClient.unsubscribe).toHaveBeenCalledWith('channel1');
     });
   });
 
@@ -192,3 +245,4 @@ describe('RedisService', () => {
     });
   });
 });
+
