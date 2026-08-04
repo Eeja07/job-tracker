@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import { RepositoriesModule } from '../../repositories/repositories.module';
 import { AppGateway } from './app.gateway';
 import { PresenceService } from './services/presence.service';
 import { RoomService } from './services/room.service';
@@ -11,6 +12,7 @@ import { WebsocketMetricsService } from './services/websocket-metrics.service';
 @Module({
   imports: [
     JwtModule.register({}),
+    RepositoriesModule,
   ],
   providers: [
     AppGateway,

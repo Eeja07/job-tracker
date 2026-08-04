@@ -39,7 +39,10 @@ describe('AppGateway', () => {
       verify: jest.fn().mockReturnValue({ sub: 'user-1', email: 'user-1@test.com' }),
     };
     const mockConfig = {
-      get: jest.fn().mockReturnValue('dev-access-secret-key-12345'),
+      get: jest.fn((key: string, defaultValue?: any) => {
+        if (key === 'WS_MAX_CONNECTIONS_PER_USER') return 5;
+        return 'dev-access-secret-key-12345';
+      }),
     };
     const mockPresence = {
       setServer: jest.fn(),
@@ -59,6 +62,8 @@ describe('AppGateway', () => {
       touchActivity: jest.fn(),
       getConnectionCount: jest.fn().mockReturnValue(1),
       getStaleSocketIds: jest.fn().mockReturnValue([]),
+      getUserSocketIds: jest.fn().mockReturnValue([]),
+      clear: jest.fn(),
     };
     const mockPublisher = {
       setServer: jest.fn(),
@@ -147,5 +152,39 @@ describe('AppGateway', () => {
     const socket = makeSocket();
     await gateway.handleJoinRoom(socket, { room: 'application:app-1' });
     expect(roomService.joinRoom).toHaveBeenCalled();
+  });
+
+  it('should reject connection when max user sockets limit is exceeded', async () => {
+    (connectionManager.getUserSocketIds as jest.Mock).mockReturnValue(['sock-1', 'sock-2', 'sock-3', 'sock-4', 'sock-5']);
+    const socket = makeSocket();
+    await gateway.handleConnection(socket);
+    expect(socket.emit).toHaveBeenCalledWith(WsServerEvent.ERROR, expect.objectContaining({ message: expect.stringContaining('Maximum connection limit') }));
+    expect(socket.disconnect).toHaveBeenCalledWith(true);
+  });
+
+  it('should cleanly disconnect active sockets and stop server onModuleDestroy', async () => {
+    const mockSocket = makeSocket();
+    gateway.server = {
+      sockets: {
+        fetchSockets: jest.fn().mockResolvedValue([mockSocket]),
+      },
+      close: jest.fn(),
+    } as any;
+
+    await gateway.onModuleDestroy();
+
+    expect(mockSocket.disconnect).toHaveBeenCalledWith(true);
+    expect(gateway.server.close).toHaveBeenCalled();
+  });
+
+  it('should reject authentication if token is missing or invalid', async () => {
+    const mockSocket = {
+      id: 's-unauth',
+      handshake: { auth: {}, headers: {} },
+    } as any;
+    const nextFn = jest.fn();
+
+    await (gateway as any).authenticateSocket(mockSocket, nextFn);
+    expect(nextFn).toHaveBeenCalledWith(expect.objectContaining({ message: 'Authentication required' }));
   });
 });

@@ -29,6 +29,7 @@ import { RealtimePublisher } from './services/realtime-publisher.service';
 import { WsEventBridgeSubscriber } from './services/ws-event-bridge.subscriber';
 import { WebsocketMetricsService } from './services/websocket-metrics.service';
 import { EventSubscriberService } from '../event-bus/services/event-subscriber.service';
+import { UserRepository } from '../../repositories/user/user.repository';
 import { WsClientEvent, WsServerEvent } from './constants/ws-events.constants';
 import {
   HEARTBEAT_TIMEOUT_MS,
@@ -40,14 +41,25 @@ const MAX_PAYLOAD_SIZE = 64 * 1024; // 64 KB
 @WebSocketGateway({
   cors: {
     origin: (origin: string | undefined, cb: (err: Error | null, allow?: boolean) => void) => {
-      // Allow all in development; restrict by CORS_ORIGIN in production
-      cb(null, true);
+      const allowedOriginsEnv = process.env.CORS_ORIGIN || '*';
+      if (!origin || allowedOriginsEnv === '*') {
+        return cb(null, true);
+      }
+      const allowedList = allowedOriginsEnv.split(',').map((o) => o.trim().toLowerCase());
+      if (allowedList.includes(origin.toLowerCase())) {
+        return cb(null, true);
+      }
+      const logger = new Logger('AppGatewayCors');
+      logger.warn(`WS CORS rejected connection from origin: ${origin}`);
+      return cb(new Error(`CORS origin '${origin}' not allowed`), false);
     },
     credentials: true,
   },
   maxHttpBufferSize: MAX_PAYLOAD_SIZE,
   transports: ['websocket', 'polling'],
   namespace: '/ws',
+  pingTimeout: 20000,
+  pingInterval: 10000,
 })
 export class AppGateway
   implements
@@ -73,6 +85,7 @@ export class AppGateway
     private readonly wsBridge: WsEventBridgeSubscriber,
     private readonly wsMetrics: WebsocketMetricsService,
     @Optional() private readonly eventSubscriberService?: EventSubscriberService,
+    @Optional() private readonly userRepository?: UserRepository,
   ) {}
 
   onModuleInit(): void {
@@ -89,7 +102,7 @@ export class AppGateway
 
     // JWT handshake middleware – runs before handleConnection
     server.use((socket: Socket, next) => {
-      this.authenticateSocket(socket as AuthenticatedSocket, next);
+      this.authenticateSocket(socket as AuthenticatedSocket, next).catch((err) => next(err));
     });
 
     // Start stale connection cleanup interval
@@ -100,10 +113,32 @@ export class AppGateway
     this.logger.log('AppGateway initialized');
   }
 
-  onModuleDestroy(): void {
+  async onModuleDestroy(): Promise<void> {
+    this.logger.log('AppGateway shutting down gracefully...');
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = undefined;
     }
+
+    if (this.server) {
+      try {
+        const sockets = await this.server.sockets.fetchSockets();
+        for (const socket of sockets) {
+          socket.emit(WsServerEvent.ERROR, { message: 'Server is shutting down' });
+          socket.disconnect(true);
+        }
+      } catch (err: any) {
+        this.logger.warn(`Error disconnecting sockets during shutdown: ${err.message}`);
+      }
+
+      try {
+        this.server.close();
+      } catch (err: any) {
+        this.logger.warn(`Error closing WebSocket server: ${err.message}`);
+      }
+    }
+
+    this.connectionManager.clear?.();
   }
 
   async handleConnection(socket: AuthenticatedSocket): Promise<void> {
@@ -114,6 +149,23 @@ export class AppGateway
       socket.joinedRooms = new Set();
       socket.lastHeartbeat = Date.now();
       socket.connectionTime = Date.now();
+
+      // Enforce max connections per user account
+      const maxUserConns = Number(this.configService.get<number>('WS_MAX_CONNECTIONS_PER_USER', 5));
+      const activeUserSockets = this.connectionManager.getUserSocketIds?.(userId) || [];
+      if (activeUserSockets.length >= maxUserConns) {
+        this.logger.warn(
+          JSON.stringify({
+            message: 'WS connection rejected: maximum connections per user reached',
+            socketId: socket.id,
+            userId,
+            maxUserConns,
+          }),
+        );
+        socket.emit(WsServerEvent.ERROR, { message: 'Maximum connection limit reached for user account' });
+        socket.disconnect(true);
+        return;
+      }
 
       // Register in memory manager
       this.connectionManager.register(socket);
@@ -289,10 +341,10 @@ export class AppGateway
   // Private helpers
   // ─────────────────────────────────────────────────────────────────────
 
-  private authenticateSocket(
+  private async authenticateSocket(
     socket: AuthenticatedSocket,
     next: (err?: Error) => void,
-  ): void {
+  ): Promise<void> {
     try {
       const token =
         (socket.handshake.auth as any)?.token ||
@@ -310,7 +362,25 @@ export class AppGateway
       }
 
       const secret = this.configService.get<string>('JWT_ACCESS_SECRET') || 'dev-access-secret-key-12345';
-      const payload = this.jwtService.verify<AuthenticatedUser>(token, { secret });
+      const payload = this.jwtService.verify<AuthenticatedUser>(token, {
+        secret,
+        ignoreExpiration: false,
+      });
+
+      if (!payload || !payload.sub) {
+        throw new Error('Malformed token payload');
+      }
+
+      if ((payload as any).isRevoked || (payload as any).isDisabled || (payload as any).status === 'DISABLED') {
+        throw new Error('User account is disabled or token revoked');
+      }
+
+      if (this.userRepository) {
+        const dbUser = await this.userRepository.findById(payload.sub).catch(() => null);
+        if (dbUser && ((dbUser as any).isRevoked || (dbUser as any).isDisabled || (dbUser as any).status === 'DISABLED')) {
+          throw new Error('User account is disabled or token revoked');
+        }
+      }
 
       socket.user = payload;
 
@@ -327,12 +397,12 @@ export class AppGateway
       this.wsMetrics.authFailuresTotal.inc();
       this.logger.warn(
         JSON.stringify({
-          message: 'WS auth rejected: invalid or expired token',
+          message: 'WS auth rejected: invalid, expired or revoked token',
           socketId: socket.id,
           error: err.message,
         }),
       );
-      return next(new Error('Invalid or expired token'));
+      return next(new Error(`Authentication failed: ${err.message || 'Invalid or expired token'}`));
     }
   }
 

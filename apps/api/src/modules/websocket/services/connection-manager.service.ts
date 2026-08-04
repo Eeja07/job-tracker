@@ -127,4 +127,12 @@ export class ConnectionManager {
     }
     return stale;
   }
+
+  /**
+   * Clear all tracked connections for graceful shutdown.
+   */
+  clear(): void {
+    this.connections.clear();
+    this.userSockets.clear();
+  }
 }
