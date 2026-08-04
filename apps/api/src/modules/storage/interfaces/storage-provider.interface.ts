@@ -1,5 +1,16 @@
 import { Readable } from 'stream';
 
+export type UploadFileInput =
+  | Express.Multer.File
+  | {
+      buffer?: Buffer;
+      stream?: Readable;
+      filename?: string;
+      originalname?: string;
+      mimetype?: string;
+      size?: number;
+    };
+
 export interface ReadStreamResult {
   stream: Readable;
   contentLength: number;
@@ -11,10 +22,7 @@ export interface StorageProvider {
   /**
    * Uploads a file to storage and returns the storage key.
    */
-  upload(
-    file: Express.Multer.File | { buffer: Buffer; filename: string; mimetype: string },
-    key?: string,
-  ): Promise<string>;
+  upload(file: UploadFileInput, key?: string): Promise<string>;
 
   /**
    * Downloads a file from storage by key/path and returns its content buffer.

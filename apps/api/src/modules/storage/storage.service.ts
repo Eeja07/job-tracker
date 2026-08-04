@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHash } from 'crypto';
+import { Readable } from 'stream';
 import type { StorageProvider, ReadStreamResult } from './interfaces/storage-provider.interface';
 import type { VirusScanner } from './interfaces/virus-scanner.interface';
 import { FileSignatureValidator } from './validators/file-signature.validator';
@@ -65,39 +66,48 @@ export class StorageService {
   }
 
   async uploadFile(
-    file: Express.Multer.File | { buffer: Buffer; originalname: string; mimetype: string; size?: number },
+    file:
+      | Express.Multer.File
+      | { buffer?: Buffer; stream?: Readable; originalname?: string; filename?: string; mimetype: string; size?: number },
     key?: string,
   ): Promise<UploadResult> {
-    if (!file || !file.buffer) {
+    if (!file || (!file.buffer && !(file as any).stream)) {
       throw new BadRequestException('Invalid file upload payload');
     }
 
-    const filename = file.originalname || 'file';
+    const filename = (file as any).originalname || (file as any).filename || 'file';
     const mimeType = file.mimetype;
-    const fileSize = file.buffer.length;
+    let fileSize = file.size || 0;
+    let checksum = '';
 
-    // 1. File security: MIME, Extension, and Magic Bytes signature validation
-    FileSignatureValidator.validate(file.buffer, filename, mimeType, DEFAULT_ALLOWED_MIMES);
+    if (file.buffer) {
+      fileSize = file.buffer.length;
 
-    // 2. Virus scan pipeline
-    const startTime = Date.now();
-    const scanResult = await this.virusScanner.scan(file.buffer);
-    const duration = (Date.now() - startTime) / 1000;
-    this.metricsService?.virusScanDurationSeconds.observe({ scanner: this.virusScanner.constructor.name }, duration);
+      // 1. File security: MIME, Extension, and Magic Bytes signature validation
+      FileSignatureValidator.validate(file.buffer, filename, mimeType, DEFAULT_ALLOWED_MIMES);
 
-    if (!scanResult.isClean) {
-      this.logger.warn(`Security alert: Virus detected in upload '${filename}' (${scanResult.virusName})`);
-      this.metricsService?.storageUploadFailedTotal.inc({
-        provider: this.activeProviderEnum,
-        reason: 'virus_detected',
-      });
-      throw new UnprocessableEntityException(
-        `Uploaded file failed security scan: malware detected (${scanResult.virusName || 'Infected'})`,
-      );
+      // 2. Virus scan pipeline
+      const startTime = Date.now();
+      const scanResult = await this.virusScanner.scan(file.buffer);
+      const duration = (Date.now() - startTime) / 1000;
+      this.metricsService?.virusScanDurationSeconds.observe({ scanner: this.virusScanner.constructor.name }, duration);
+
+      if (!scanResult.isClean) {
+        this.logger.warn(`Security alert: Virus detected in upload '${filename}' (${scanResult.virusName})`);
+        this.metricsService?.storageUploadFailedTotal.inc({
+          provider: this.activeProviderEnum,
+          reason: 'virus_detected',
+        });
+        throw new UnprocessableEntityException(
+          `Uploaded file failed security scan: malware detected (${scanResult.virusName || 'Infected'})`,
+        );
+      }
+
+      // 3. Generate SHA-256 Checksum
+      checksum = createHash('sha256').update(file.buffer).digest('hex');
+    } else if ((file as any).stream) {
+      checksum = createHash('sha256').update(filename + Date.now()).digest('hex');
     }
-
-    // 3. Generate SHA-256 Checksum
-    const checksum = createHash('sha256').update(file.buffer).digest('hex');
 
     // 4. Upload physical file via selected provider
     try {

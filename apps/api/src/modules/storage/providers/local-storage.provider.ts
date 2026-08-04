@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import { createHmac } from 'crypto';
-import { StorageProvider, ReadStreamResult } from '../interfaces/storage-provider.interface';
+import { StorageProvider, ReadStreamResult, UploadFileInput } from '../interfaces/storage-provider.interface';
 
 @Injectable()
 export class LocalStorageProvider implements StorageProvider {
@@ -18,11 +18,9 @@ export class LocalStorageProvider implements StorageProvider {
     }
   }
 
-  async upload(
-    file: Express.Multer.File | { buffer: Buffer; filename: string; mimetype: string },
-    key?: string,
-  ): Promise<string> {
-    const storageKey = key || this.generateKey(file.filename || (file as any).originalname || 'file');
+  async upload(file: UploadFileInput, key?: string): Promise<string> {
+    const filename = (file as any).filename || (file as any).originalname || 'file';
+    const storageKey = key || this.generateKey(filename);
     const fullPath = path.join(this.uploadDir, storageKey);
     const parentDir = path.dirname(fullPath);
 
@@ -30,7 +28,19 @@ export class LocalStorageProvider implements StorageProvider {
       await fs.promises.mkdir(parentDir, { recursive: true });
     }
 
-    await fs.promises.writeFile(fullPath, file.buffer);
+    if ((file as any).stream && typeof (file as any).stream.pipe === 'function') {
+      const writeStream = fs.createWriteStream(fullPath);
+      await new Promise<void>((resolve, reject) => {
+        (file as any).stream.pipe(writeStream);
+        writeStream.on('finish', resolve);
+        writeStream.on('error', reject);
+      });
+    } else if (file.buffer) {
+      await fs.promises.writeFile(fullPath, file.buffer);
+    } else {
+      throw new Error('Upload payload must contain a buffer or stream');
+    }
+
     this.logger.log(`File saved locally: ${storageKey}`);
     return storageKey;
   }
