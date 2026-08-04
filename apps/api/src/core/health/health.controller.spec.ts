@@ -92,6 +92,9 @@ describe('HealthController', () => {
         socketio: 'up',
         redisAdapter: 'up',
         presence: 'up',
+        tracing: 'down',
+        otlpExporter: 'up',
+        jaegerExporter: 'up',
       });
     });
   });

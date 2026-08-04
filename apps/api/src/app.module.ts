@@ -27,6 +27,8 @@ import { StorageModule } from './modules/storage/storage.module';
 import { FeatureFlagsModule } from './modules/feature-flags/feature-flags.module';
 import { EventBusModule } from './modules/event-bus/event-bus.module';
 import { WebsocketModule } from './modules/websocket/websocket.module';
+import { TracingModule } from './core/tracing/tracing.module';
+import { TraceInterceptor } from './core/tracing/interceptors/trace.interceptor';
 import { MetricsModule } from './core/metrics/metrics.module';
 import { MetricsInterceptor } from './core/metrics/metrics.interceptor';
 import { RequestIdMiddleware } from './core/middlewares/request-id.middleware';
@@ -43,6 +45,7 @@ import { RequestIdMiddleware } from './core/middlewares/request-id.middleware';
         transport: process.env.NODE_ENV !== 'production' ? { target: 'pino-pretty' } : undefined,
       },
     }),
+    TracingModule,
     RedisModule,
     JobsModule,
     EmailModule,
@@ -79,6 +82,10 @@ import { RequestIdMiddleware } from './core/middlewares/request-id.middleware';
   controllers: [AppController],
   providers: [
     AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TraceInterceptor,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: MetricsInterceptor,

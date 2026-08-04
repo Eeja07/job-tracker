@@ -8,6 +8,7 @@ import { StorageService } from '../../modules/storage/storage.service';
 import { FeatureFlagService } from '../../modules/feature-flags/services/feature-flag.service';
 import { EventBusService } from '../../modules/event-bus/services/event-bus.service';
 import { ConnectionManager } from '../../modules/websocket/services/connection-manager.service';
+import { TracingService } from '../tracing/services/tracing.service';
 
 export interface HealthCheckResponse {
   status: string;
@@ -30,6 +31,7 @@ export class HealthController {
     @Optional() private readonly featureFlagService?: FeatureFlagService,
     @Optional() private readonly eventBusService?: EventBusService,
     @Optional() private readonly connectionManager?: ConnectionManager,
+    @Optional() private readonly tracingService?: TracingService,
   ) {}
 
   @Get()
@@ -122,6 +124,9 @@ export class HealthController {
 
     const websocketCheck = this.connectionManager ? 'up' : 'down';
     const presenceCheck = redisCheck === 'up' ? 'up' : 'degraded';
+    const tracingCheck = this.tracingService?.isTracingEnabled() ? 'up' : 'down';
+    const otlpCheck = this.tracingService?.getOtlpStatus() || 'up';
+    const jaegerCheck = this.tracingService?.getJaegerStatus() || 'up';
 
     const isDegraded =
       redisCheck === 'down' ||
@@ -151,6 +156,9 @@ export class HealthController {
         socketio: websocketCheck,
         redisAdapter: redisPubSubCheck,
         presence: presenceCheck,
+        tracing: tracingCheck,
+        otlpExporter: otlpCheck,
+        jaegerExporter: jaegerCheck,
       },
     };
   }
