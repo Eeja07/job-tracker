@@ -33,14 +33,17 @@ export class HealthController {
     let jobsCheck = 'down';
     let smtpCheck = 'down';
     let auditQueueCheck = 'down';
+    let rbacCacheCheck = 'down';
 
     try {
       if (this.redisService) {
         await this.redisService.ping();
         redisCheck = 'up';
+        rbacCacheCheck = 'up';
       }
     } catch {
       redisCheck = 'down';
+      rbacCacheCheck = 'down';
     }
 
     try {
@@ -63,7 +66,12 @@ export class HealthController {
       smtpCheck = 'down';
     }
 
-    const isDegraded = redisCheck === 'down' || jobsCheck === 'down' || smtpCheck === 'down' || auditQueueCheck === 'down';
+    const isDegraded =
+      redisCheck === 'down' ||
+      jobsCheck === 'down' ||
+      smtpCheck === 'down' ||
+      auditQueueCheck === 'down' ||
+      rbacCacheCheck === 'down';
 
     return {
       status: isDegraded ? 'degraded' : 'ok',
@@ -74,6 +82,7 @@ export class HealthController {
         jobs: jobsCheck,
         smtp: smtpCheck,
         auditQueue: auditQueueCheck,
+        rbacCache: rbacCacheCheck,
       },
     };
   }
@@ -101,6 +110,7 @@ export class HealthController {
     let jobsStatus = 'down';
     let smtpStatus = 'down';
     let auditQueueStatus = 'down';
+    let rbacCacheStatus = 'down';
 
     try {
       await this.prisma.$queryRaw`SELECT 1`;
@@ -113,9 +123,11 @@ export class HealthController {
       if (this.redisService) {
         await this.redisService.ping();
         redisStatus = 'up';
+        rbacCacheStatus = 'up';
       }
     } catch {
       redisStatus = 'down';
+      rbacCacheStatus = 'down';
     }
 
     try {
@@ -149,11 +161,17 @@ export class HealthController {
           jobs: jobsStatus,
           smtp: smtpStatus,
           auditQueue: auditQueueStatus,
+          rbacCache: rbacCacheStatus,
         },
       });
     }
 
-    const isDegraded = redisStatus === 'down' || jobsStatus === 'down' || smtpStatus === 'down' || auditQueueStatus === 'down';
+    const isDegraded =
+      redisStatus === 'down' ||
+      jobsStatus === 'down' ||
+      smtpStatus === 'down' ||
+      auditQueueStatus === 'down' ||
+      rbacCacheStatus === 'down';
 
     return {
       status: isDegraded ? 'degraded' : 'ok',
@@ -165,6 +183,7 @@ export class HealthController {
         jobs: jobsStatus,
         smtp: smtpStatus,
         auditQueue: auditQueueStatus,
+        rbacCache: rbacCacheStatus,
       },
     };
   }

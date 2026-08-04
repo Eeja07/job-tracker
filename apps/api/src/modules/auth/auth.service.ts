@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
   NotFoundException,
   Optional,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -12,6 +13,7 @@ import { User } from '@prisma/client';
 import { UserRepository } from '../../repositories/user/user.repository';
 import { RefreshSessionRepository } from '../../repositories/refresh-session/refresh-session.repository';
 import { RedisService } from '../redis/redis.service';
+import { RbacService } from '../rbac/services/rbac.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -27,12 +29,14 @@ export interface AuthResponse extends AuthTokens {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     private readonly userRepository: UserRepository,
     private readonly refreshSessionRepository: RefreshSessionRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     @Optional() private readonly redisService?: RedisService,
+    @Optional() private readonly rbacService?: RbacService,
   ) {}
 
   private async getCachedRefreshSession(userId: string) {
@@ -86,6 +90,16 @@ export class AuthService {
       fullName: dto.fullName,
       isEmailVerified: false,
     });
+
+    // Auto-assign default USER role
+    if (this.rbacService) {
+      try {
+        await this.rbacService.assignRole(user.id, 'USER');
+      } catch (err: any) {
+        // Non-fatal: log and continue (role may not exist in test envs)
+        this.logger?.warn?.(`Could not assign default USER role: ${err.message}`);
+      }
+    }
 
     const tokens = await this.generateTokens(user.id, user.email);
     await this.updateRefreshTokenHash(user.id, tokens.refreshToken);

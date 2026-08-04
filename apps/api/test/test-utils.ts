@@ -54,11 +54,25 @@ export async function createTestApp(): Promise<TestAppSetup> {
 }
 
 export async function cleanDatabase(prisma: PrismaService): Promise<void> {
+  await prisma.userRole.deleteMany();
   await prisma.refreshSession.deleteMany();
   await prisma.note.deleteMany();
   await prisma.attachment.deleteMany();
   await prisma.statusHistory.deleteMany();
   await prisma.application.deleteMany();
   await prisma.company.deleteMany();
+  await prisma.auditLog.deleteMany();
   await prisma.user.deleteMany();
+
+  // Ensure default roles exist for tests
+  await prisma.role.upsert({
+    where: { name: 'ADMIN' },
+    update: {},
+    create: { name: 'ADMIN', description: 'Admin role' },
+  });
+  await prisma.role.upsert({
+    where: { name: 'USER' },
+    update: {},
+    create: { name: 'USER', description: 'User role' },
+  });
 }

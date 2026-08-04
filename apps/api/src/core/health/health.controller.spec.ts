@@ -51,7 +51,13 @@ describe('HealthController', () => {
     it('should return ok status and checks when Redis, Jobs, SMTP, and Audit Queue are up', async () => {
       const response = await controller.check();
       expect(response.status).toBe('ok');
-      expect(response.checks).toEqual({ redis: 'up', jobs: 'up', smtp: 'up', auditQueue: 'up' });
+      expect(response.checks).toEqual({
+        redis: 'up',
+        jobs: 'up',
+        smtp: 'up',
+        auditQueue: 'up',
+        rbacCache: 'up',
+      });
     });
   });
 
@@ -71,7 +77,14 @@ describe('HealthController', () => {
 
       const response = await controller.readiness();
       expect(response.status).toBe('ok');
-      expect(response.checks).toEqual({ database: 'up', redis: 'up', jobs: 'up', smtp: 'up', auditQueue: 'up' });
+      expect(response.checks).toEqual({
+        database: 'up',
+        redis: 'up',
+        jobs: 'up',
+        smtp: 'up',
+        auditQueue: 'up',
+        rbacCache: 'up',
+      });
     });
 
     it('should return degraded status when Redis ping fails but DB is up', async () => {
@@ -82,7 +95,14 @@ describe('HealthController', () => {
 
       const response = await controller.readiness();
       expect(response.status).toBe('degraded');
-      expect(response.checks).toEqual({ database: 'up', redis: 'down', jobs: 'up', smtp: 'up', auditQueue: 'up' });
+      expect(response.checks).toEqual({
+        database: 'up',
+        redis: 'down',
+        jobs: 'up',
+        smtp: 'up',
+        auditQueue: 'up',
+        rbacCache: 'down',
+      });
     });
 
     it('should throw ServiceUnavailableException when DB check fails', async () => {

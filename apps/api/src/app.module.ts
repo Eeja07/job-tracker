@@ -14,6 +14,7 @@ import { JobsModule } from './modules/jobs/jobs.module';
 import { EmailModule } from './modules/email/email.module';
 import { AuditLogModule } from './modules/audit-log/audit-log.module';
 import { AuditLogInterceptor } from './modules/audit-log/interceptors/audit-log.interceptor';
+import { RbacModule } from './modules/rbac/rbac.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './core/health/health.module';
 import { CompaniesModule } from './modules/companies/companies.module';
@@ -43,6 +44,7 @@ import { RequestIdMiddleware } from './core/middlewares/request-id.middleware';
     JobsModule,
     EmailModule,
     AuditLogModule,
+    RbacModule,
     ThrottlerModule.forRootAsync({
       imports: [RedisModule],
       inject: [RedisThrottlerStorage],

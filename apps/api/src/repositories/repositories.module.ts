@@ -8,6 +8,10 @@ import { NoteRepository } from './note/note.repository';
 import { DashboardRepository } from './dashboard/dashboard.repository';
 import { RefreshSessionRepository } from './refresh-session/refresh-session.repository';
 import { AuditLogRepository } from './audit-log/audit-log.repository';
+import { RoleRepository } from './role/role.repository';
+import { PermissionRepository } from './permission/permission.repository';
+import { UserRoleRepository } from './user-role/user-role.repository';
+import { RolePermissionRepository } from './role-permission/role-permission.repository';
 
 const repositories = [
   UserRepository,
@@ -19,6 +23,10 @@ const repositories = [
   DashboardRepository,
   RefreshSessionRepository,
   AuditLogRepository,
+  RoleRepository,
+  PermissionRepository,
+  UserRoleRepository,
+  RolePermissionRepository,
 ];
 
 @Module({

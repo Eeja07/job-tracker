@@ -30,6 +30,11 @@ export class MetricsService implements OnModuleInit {
   public readonly auditLogsFailedTotal: Counter<string>;
   public readonly auditQueueSize: Gauge<string>;
 
+  public readonly rbacCacheHitsTotal: Counter<string>;
+  public readonly rbacCacheMissesTotal: Counter<string>;
+  public readonly rbacPermissionChecksTotal: Counter<string>;
+  public readonly rbacPermissionDeniedTotal: Counter<string>;
+
   constructor(
     @Optional() private readonly redisService?: RedisService,
     @Optional() private readonly queueService?: QueueService,
@@ -149,6 +154,34 @@ export class MetricsService implements OnModuleInit {
     this.auditQueueSize = new Gauge({
       name: 'audit_queue_size',
       help: 'Current size of the audit logging queue',
+      registers: [this.registry],
+    });
+
+    this.rbacCacheHitsTotal = new Counter({
+      name: 'rbac_cache_hits_total',
+      help: 'Total RBAC permission cache hits',
+      labelNames: ['userId'],
+      registers: [this.registry],
+    });
+
+    this.rbacCacheMissesTotal = new Counter({
+      name: 'rbac_cache_misses_total',
+      help: 'Total RBAC permission cache misses',
+      labelNames: ['userId'],
+      registers: [this.registry],
+    });
+
+    this.rbacPermissionChecksTotal = new Counter({
+      name: 'rbac_permission_checks_total',
+      help: 'Total RBAC permission check evaluations',
+      labelNames: ['permission'],
+      registers: [this.registry],
+    });
+
+    this.rbacPermissionDeniedTotal = new Counter({
+      name: 'rbac_permission_denied_total',
+      help: 'Total RBAC permission denials',
+      labelNames: ['type'],
       registers: [this.registry],
     });
   }
