@@ -8,6 +8,7 @@ import { EmailService } from '../../modules/email/services/email.service';
 import { StorageService } from '../../modules/storage/storage.service';
 import { FeatureFlagService } from '../../modules/feature-flags/services/feature-flag.service';
 import { EventBusService } from '../../modules/event-bus/services/event-bus.service';
+import { ConnectionManager } from '../../modules/websocket/services/connection-manager.service';
 
 describe('HealthController', () => {
   let controller: HealthController;
@@ -45,6 +46,10 @@ describe('HealthController', () => {
       isReady: jest.fn().mockReturnValue(true),
     };
 
+    const mockConnectionManager = {
+      getConnectionCount: jest.fn().mockReturnValue(0),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [HealthController],
       providers: [
@@ -55,6 +60,7 @@ describe('HealthController', () => {
         { provide: StorageService, useValue: mockStorageService },
         { provide: FeatureFlagService, useValue: mockFeatureFlagService },
         { provide: EventBusService, useValue: mockEventBusService },
+        { provide: ConnectionManager, useValue: mockConnectionManager },
       ],
     }).compile();
 
@@ -66,7 +72,7 @@ describe('HealthController', () => {
   });
 
   describe('check', () => {
-    it('should return ok status and checks when Redis, Jobs, SMTP, and Audit Queue are up', async () => {
+    it('should return ok status and all checks when services are up', async () => {
       const response = await controller.check();
       expect(response.status).toBe('ok');
       expect(response.checks).toEqual({
@@ -82,6 +88,10 @@ describe('HealthController', () => {
         publisher: 'up',
         subscriber: 'up',
         redisPubSub: 'up',
+        websocket: 'up',
+        socketio: 'up',
+        redisAdapter: 'up',
+        presence: 'up',
       });
     });
   });

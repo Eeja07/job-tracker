@@ -7,6 +7,7 @@ import { EmailService } from '../../modules/email/services/email.service';
 import { StorageService } from '../../modules/storage/storage.service';
 import { FeatureFlagService } from '../../modules/feature-flags/services/feature-flag.service';
 import { EventBusService } from '../../modules/event-bus/services/event-bus.service';
+import { ConnectionManager } from '../../modules/websocket/services/connection-manager.service';
 
 export interface HealthCheckResponse {
   status: string;
@@ -28,6 +29,7 @@ export class HealthController {
     @Optional() private readonly storageService?: StorageService,
     @Optional() private readonly featureFlagService?: FeatureFlagService,
     @Optional() private readonly eventBusService?: EventBusService,
+    @Optional() private readonly connectionManager?: ConnectionManager,
   ) {}
 
   @Get()
@@ -118,6 +120,9 @@ export class HealthController {
       subscriberCheck = 'down';
     }
 
+    const websocketCheck = this.connectionManager ? 'up' : 'down';
+    const presenceCheck = redisCheck === 'up' ? 'up' : 'degraded';
+
     const isDegraded =
       redisCheck === 'down' ||
       jobsCheck === 'down' ||
@@ -142,6 +147,10 @@ export class HealthController {
         publisher: publisherCheck,
         subscriber: subscriberCheck,
         redisPubSub: redisPubSubCheck,
+        websocket: websocketCheck,
+        socketio: websocketCheck,
+        redisAdapter: redisPubSubCheck,
+        presence: presenceCheck,
       },
     };
   }

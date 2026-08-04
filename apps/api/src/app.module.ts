@@ -26,6 +26,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { FeatureFlagsModule } from './modules/feature-flags/feature-flags.module';
 import { EventBusModule } from './modules/event-bus/event-bus.module';
+import { WebsocketModule } from './modules/websocket/websocket.module';
 import { MetricsModule } from './core/metrics/metrics.module';
 import { MetricsInterceptor } from './core/metrics/metrics.interceptor';
 import { RequestIdMiddleware } from './core/middlewares/request-id.middleware';
@@ -73,6 +74,7 @@ import { RequestIdMiddleware } from './core/middlewares/request-id.middleware';
     DashboardModule,
     StorageModule,
     FeatureFlagsModule,
+    WebsocketModule,
   ],
   controllers: [AppController],
   providers: [
