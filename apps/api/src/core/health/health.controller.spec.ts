@@ -95,6 +95,9 @@ describe('HealthController', () => {
         tracing: 'down',
         otlpExporter: 'up',
         jaegerExporter: 'up',
+        projection: 'down',
+        readModel: 'down',
+        cqrs: 'down',
       });
     });
   });

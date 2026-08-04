@@ -27,6 +27,7 @@ import { StorageModule } from './modules/storage/storage.module';
 import { FeatureFlagsModule } from './modules/feature-flags/feature-flags.module';
 import { EventBusModule } from './modules/event-bus/event-bus.module';
 import { WebsocketModule } from './modules/websocket/websocket.module';
+import { CqrsModule } from './core/cqrs/cqrs.module';
 import { TracingModule } from './core/tracing/tracing.module';
 import { TraceInterceptor } from './core/tracing/interceptors/trace.interceptor';
 import { MetricsModule } from './core/metrics/metrics.module';
@@ -46,6 +47,7 @@ import { RequestIdMiddleware } from './core/middlewares/request-id.middleware';
       },
     }),
     TracingModule,
+    CqrsModule,
     RedisModule,
     JobsModule,
     EmailModule,

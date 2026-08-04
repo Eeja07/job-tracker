@@ -10,6 +10,9 @@ import { EventBusService } from '../../modules/event-bus/services/event-bus.serv
 import { ConnectionManager } from '../../modules/websocket/services/connection-manager.service';
 import { TracingService } from '../tracing/services/tracing.service';
 
+import { ProjectionManager } from '../cqrs/services/projection-manager.service';
+import { ReadModelService } from '../cqrs/services/read-model.service';
+
 export interface HealthCheckResponse {
   status: string;
   timestamp: string;
@@ -32,6 +35,8 @@ export class HealthController {
     @Optional() private readonly eventBusService?: EventBusService,
     @Optional() private readonly connectionManager?: ConnectionManager,
     @Optional() private readonly tracingService?: TracingService,
+    @Optional() private readonly projectionManager?: ProjectionManager,
+    @Optional() private readonly readModelService?: ReadModelService,
   ) {}
 
   @Get()
@@ -127,6 +132,9 @@ export class HealthController {
     const tracingCheck = this.tracingService?.isTracingEnabled() ? 'up' : 'down';
     const otlpCheck = this.tracingService?.getOtlpStatus() || 'up';
     const jaegerCheck = this.tracingService?.getJaegerStatus() || 'up';
+    const projectionCheck = this.projectionManager?.isHealthy() ? 'up' : 'down';
+    const readModelCheck = this.readModelService?.isReady() ? 'up' : 'down';
+    const cqrsCheck = (projectionCheck === 'up' && readModelCheck === 'up') ? 'up' : 'down';
 
     const isDegraded =
       redisCheck === 'down' ||
@@ -159,6 +167,9 @@ export class HealthController {
         tracing: tracingCheck,
         otlpExporter: otlpCheck,
         jaegerExporter: jaegerCheck,
+        projection: projectionCheck,
+        readModel: readModelCheck,
+        cqrs: cqrsCheck,
       },
     };
   }

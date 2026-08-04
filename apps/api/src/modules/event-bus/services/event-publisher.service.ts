@@ -7,13 +7,15 @@ import { getChannelForEventType } from '../enums/event-channel.enum';
 
 export type EventPublishInput<T extends BaseEvent = BaseEvent> = Omit<
   T,
-  'eventId' | 'timestamp' | 'correlationId' | 'channel' | 'version'
+  'eventId' | 'timestamp' | 'correlationId' | 'channel' | 'version' | 'aggregateId' | 'aggregateType'
 > & {
   eventId?: string;
   timestamp?: string;
   correlationId?: string;
   channel?: string;
   version?: number;
+  aggregateId?: string;
+  aggregateType?: string;
 };
 
 @Injectable()
@@ -35,6 +37,8 @@ export class EventPublisherService {
     const correlationId = input.correlationId || eventId;
     const version = input.version ?? 1;
     const channel = input.channel || getChannelForEventType(input.type);
+    const aggregateId = input.aggregateId || eventId;
+    const aggregateType = input.aggregateType || 'domain';
 
     const fullEvent: T = {
       ...input,
@@ -43,6 +47,8 @@ export class EventPublisherService {
       correlationId,
       version,
       channel,
+      aggregateId,
+      aggregateType,
     } as unknown as T;
 
     const payloadString = JSON.stringify(fullEvent);

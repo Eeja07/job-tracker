@@ -6,6 +6,7 @@ export interface BaseEvent<T = any> {
   timestamp: string;
   correlationId: string;
   requestId?: string | null;
+  traceId?: string | null;
   userId?: string | null;
   aggregateId: string;
   aggregateType: string;
