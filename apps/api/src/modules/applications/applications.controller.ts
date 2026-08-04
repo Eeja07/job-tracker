@@ -24,10 +24,15 @@ import {
   ApplicationResponseDto,
 } from './dto/application.dto';
 
+import { ApiVersion } from '../../core/versioning/decorators/api-version.decorator';
+import { DeprecatedEndpoint } from '../../core/versioning/decorators/deprecated-endpoint.decorator';
+
 @ApiTags('Applications')
+@ApiVersion('1')
+@DeprecatedEndpoint({ sunsetDate: 'Sun, 01 Dec 2025 00:00:00 GMT', infoUrl: '/docs/v1' })
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('applications')
+@Controller({ path: 'applications', version: '1' })
 export class ApplicationsController {
   constructor(private readonly applicationService: ApplicationService) {}
 

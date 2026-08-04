@@ -98,6 +98,7 @@ describe('HealthController', () => {
         projection: 'down',
         readModel: 'down',
         cqrs: 'down',
+        apiVersioning: 'up',
       });
     });
   });

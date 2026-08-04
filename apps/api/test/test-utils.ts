@@ -1,10 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication, ValidationPipe, VersioningType } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { GlobalExceptionFilter } from '../src/core/filters/http-exception.filter';
 import { LoggingInterceptor } from '../src/core/interceptors/logging.interceptor';
+import { applyVersionMiddleware } from '../src/core/versioning/middlewares/version.middleware';
 
 export interface TestAppSetup {
   app: INestApplication;
@@ -27,7 +28,12 @@ export async function createTestApp(): Promise<TestAppSetup> {
 
   const prisma = app.get(PrismaService);
 
-  app.setGlobalPrefix('api/v1');
+  app.use(applyVersionMiddleware);
+  app.setGlobalPrefix('api');
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

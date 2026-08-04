@@ -170,6 +170,7 @@ export class HealthController {
         projection: projectionCheck,
         readModel: readModelCheck,
         cqrs: cqrsCheck,
+        apiVersioning: 'up',
       },
     };
   }

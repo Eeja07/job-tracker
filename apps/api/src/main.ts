@@ -9,6 +9,9 @@ import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './core/filters/http-exception.filter';
 import { LoggingInterceptor } from './core/interceptors/logging.interceptor';
 
+import { VersioningType } from '@nestjs/common';
+import { applyVersionMiddleware } from './core/versioning/middlewares/version.middleware';
+
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(Logger));
@@ -25,8 +28,14 @@ async function bootstrap(): Promise<void> {
     credentials: true,
   });
 
-  // Global Prefix & Pipes
-  app.setGlobalPrefix('api/v1');
+  // Multi-Strategy Versioning Middleware & URI Version Router Setup
+  app.use(applyVersionMiddleware);
+  app.setGlobalPrefix('api');
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+  });
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -39,20 +48,31 @@ async function bootstrap(): Promise<void> {
   app.useGlobalInterceptors(new LoggingInterceptor());
   app.useGlobalFilters(new GlobalExceptionFilter());
 
-  // Swagger Documentation
-  const config = new DocumentBuilder()
-    .setTitle('Job Tracker API')
-    .setDescription('Production-Grade REST API for Job Tracker Core Application')
+  // Swagger Documentation - Version 1
+  const configV1 = new DocumentBuilder()
+    .setTitle('Job Tracker API - v1 (Deprecated)')
+    .setDescription('Legacy API endpoints (Version 1.0) - Sunset Date: 01 Dec 2025')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  const documentV1 = SwaggerModule.createDocument(app, configV1);
+  SwaggerModule.setup('docs/v1', app, documentV1);
+  SwaggerModule.setup('api/docs', app, documentV1);
+
+  // Swagger Documentation - Version 2
+  const configV2 = new DocumentBuilder()
+    .setTitle('Job Tracker API - v2')
+    .setDescription('Current Production REST API (Version 2.0)')
+    .setVersion('2.0')
+    .addBearerAuth()
+    .build();
+  const documentV2 = SwaggerModule.createDocument(app, configV2);
+  SwaggerModule.setup('docs/v2', app, documentV2);
 
   await app.listen(port);
   const appLogger = app.get(Logger);
-  appLogger.log(`Server running on port ${port} [API Prefix: /api/v1]`);
-  appLogger.log(`Swagger documentation available at /api/docs`);
+  appLogger.log(`Server running on port ${port} [API Versions: /api/v1, /api/v2]`);
+  appLogger.log(`Swagger docs available at /docs/v1 and /docs/v2`);
 }
 
 bootstrap();
