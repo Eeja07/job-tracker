@@ -1,29 +1,29 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { App } from 'supertest/types';
-import { AppModule } from './../src/app.module';
+import { createTestApp, cleanDatabase, TestAppSetup } from './test-utils';
+import { PrismaService } from '../src/prisma/prisma.service';
 
 describe('AppController (e2e)', () => {
-  let app: INestApplication<App>;
+  let app: INestApplication;
+  let prisma: PrismaService;
+  let setup: TestAppSetup;
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
+  beforeAll(async () => {
+    setup = await createTestApp();
+    app = setup.app;
+    prisma = setup.prisma;
+    await cleanDatabase(prisma);
   });
 
-  it('/ (GET)', () => {
+  afterAll(async () => {
+    await cleanDatabase(prisma);
+    await app.close();
+  });
+
+  it('GET /api/v1 should return Hello World!', async () => {
     return request(app.getHttpServer())
-      .get('/')
+      .get('/api/v1')
       .expect(200)
       .expect('Hello World!');
-  });
-
-  afterEach(async () => {
-    await app.close();
   });
 });

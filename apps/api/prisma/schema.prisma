@@ -1,0 +1,254 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+
+enum ApplicationStatus {
+  SAVED
+  APPLIED
+  SCREENING
+  INTERVIEWING
+  OFFER
+  REJECTED
+  WITHDRAWN
+}
+
+enum WorkMode {
+  REMOTE
+  HYBRID
+  ONSITE
+}
+
+enum ApplicationSource {
+  LINKEDIN
+  JOBSTREET
+  GLINTS
+  KALIBRR
+  EMAIL
+  WHATSAPP
+  TELEGRAM
+  WEBSITE
+  OTHER
+}
+
+enum AttachmentType {
+  RESUME
+  CV
+  COVER_LETTER
+  PORTFOLIO
+  CERTIFICATE
+  OTHER
+}
+
+enum StorageProvider {
+  LOCAL
+  MINIO
+  S3
+  R2
+  GDRIVE
+}
+
+enum Currency {
+  IDR
+  USD
+  SGD
+  EUR
+  GBP
+  AUD
+  JPY
+  MYR
+  CNY
+}
+
+// ==========================================
+// MODELS
+// ==========================================
+
+model User {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email           String    @unique @db.VarChar(255)
+  passwordHash    String    @map("password_hash") @db.VarChar(255)
+  fullName        String    @map("full_name") @db.VarChar(255)
+  avatarUrl       String?   @map("avatar_url") @db.Text
+  isEmailVerified Boolean   @default(false) @map("is_email_verified")
+  lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz(6)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  applications    Application[]
+  attachments     Attachment[]
+  notes           Note[]
+  statusHistories StatusHistory[]
+  refreshSessions RefreshSession[]
+  auditLogs       AuditLog[]
+
+  @@map("users")
+}
+
+model Company {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @unique @db.VarChar(255)
+  industry    String?  @db.VarChar(255)
+  website     String?  @db.Text
+  careerPage  String?  @map("career_page") @db.Text
+  location    String?  @db.VarChar(255)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  applications Application[]
+
+  @@map("companies")
+}
+
+model Application {
+  id                  String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId              String             @map("user_id") @db.Uuid
+  companyId           String?            @map("company_id") @db.Uuid
+  jobTitle            String             @map("job_title") @db.VarChar(255)
+  applicationCode     String?            @map("application_code") @db.VarChar(50)
+  status              ApplicationStatus  @default(SAVED)
+  workMode            WorkMode?          @map("work_mode")
+  source              ApplicationSource?
+  salaryMin           Int?               @map("salary_min")
+  salaryMax           Int?               @map("salary_max")
+  currency            Currency?          @default(IDR)
+  sourceUrl           String?            @map("source_url") @db.Text
+  location            String?            @db.VarChar(255)
+  deadline            DateTime?          @db.Timestamptz(6)
+  appliedAt           DateTime           @default(now()) @map("applied_at") @db.Timestamptz(6)
+  lastStatusChangedAt DateTime           @default(now()) @map("last_status_changed_at") @db.Timestamptz(6)
+  createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company         Company?        @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  statusHistories StatusHistory[]
+  attachments     Attachment[]
+  notes           Note[]
+
+  @@index([userId])
+  @@index([userId, status])
+  @@index([companyId])
+  @@index([deadline])
+  @@index([userId, appliedAt])
+  @@index([lastStatusChangedAt])
+  @@index([userId, lastStatusChangedAt])
+  @@map("applications")
+}
+
+model StatusHistory {
+  id            String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationId String             @map("application_id") @db.Uuid
+  userId        String             @map("user_id") @db.Uuid
+  fromStatus    ApplicationStatus? @map("from_status")
+  toStatus      ApplicationStatus  @map("to_status")
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([applicationId, createdAt])
+  @@index([userId])
+  @@map("status_histories")
+}
+
+model Attachment {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationId   String          @map("application_id") @db.Uuid
+  userId          String          @map("user_id") @db.Uuid
+  type            AttachmentType
+  label           String          @db.VarChar(255)
+  filename        String?         @db.VarChar(255)
+  mimeType        String?         @map("mime_type") @db.VarChar(100)
+  fileSize        Int?            @map("file_size")
+  storageProvider StorageProvider @default(LOCAL) @map("storage_provider")
+  storagePath     String          @map("storage_path") @db.Text
+  checksum        String?         @db.VarChar(64)
+  version         String?         @db.VarChar(50)
+  uploadedAt      DateTime        @default(now()) @map("uploaded_at") @db.Timestamptz(6)
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([userId])
+  @@map("attachments")
+}
+
+model Note {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationId String   @map("application_id") @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  content       String   @db.Text
+  pinned        Boolean  @default(false)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([applicationId, pinned])
+  @@index([userId])
+  @@map("notes")
+}
+
+model RefreshSession {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  tokenHash String   @map("token_hash") @db.VarChar(255)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_sessions")
+}
+
+model AuditLog {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String?  @map("user_id") @db.Uuid
+  action     String   @db.VarChar(100)
+  resource   String   @db.VarChar(100)
+  resourceId String?  @map("resource_id") @db.VarChar(255)
+  method     String   @db.VarChar(10)
+  endpoint   String   @db.VarChar(255)
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  userAgent  String?  @map("user_agent") @db.VarChar(500)
+  requestId  String?  @map("request_id") @db.VarChar(100)
+  metadata   Json?    @default("{}")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([resource])
+  @@index([action])
+  @@map("audit_logs")
+}

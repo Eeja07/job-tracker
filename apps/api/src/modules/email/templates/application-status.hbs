@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Application Status Update</title>
+  <style>
+    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #1e293b; }
+    .container { max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .header { text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 20px; }
+    .header h1 { color: #0284c7; margin: 0; font-size: 24px; }
+    .content { font-size: 16px; line-height: 1.6; }
+    .status-badge { display: inline-block; padding: 6px 12px; background-color: #e0f2fe; color: #0369a1; border-radius: 4px; font-weight: bold; }
+    .footer { font-size: 12px; color: #64748b; text-align: center; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Application Status Update</h1>
+    </div>
+    <div class="content">
+      <p>Hello <strong>{{fullName}}</strong>,</p>
+      <p>Your application for <strong>{{positionTitle}}</strong> at <strong>{{companyName}}</strong> has been updated:</p>
+      <p>Status: <span class="status-badge">{{oldStatus}} &rarr; {{newStatus}}</span></p>
+      <p>Log in to view details, update notes, or set follow-up reminders.</p>
+    </div>
+    <div class="footer">
+      <p>&copy; {{currentYear}} Job Tracker Platform. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>

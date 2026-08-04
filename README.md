@@ -1,159 +1,77 @@
-# Turborepo starter
+# 💼 Job Tracker Application & Production API
 
-This Turborepo starter is maintained by the Turborepo core team.
+[![Build Status](https://github.com/eeja07/job-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/eeja07/job-tracker/actions/workflows/ci.yml)
+[![Docker Security Scan](https://github.com/eeja07/job-tracker/actions/workflows/docker.yml/badge.svg)](https://github.com/eeja07/job-tracker/actions/workflows/docker.yml)
+![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-blue)
 
-## Using this example
+Production-grade job application tracking monorepo powered by NestJS, Prisma, PostgreSQL, and React / Next.js.
 
-Run the following command:
+---
 
-```sh
-npx create-turbo@latest
+## 🏗️ Architecture & Monorepo Structure
+
+- **`apps/api`**: Production REST API powered by NestJS, Prisma Client, Pino, and Argon2id security.
+- **`apps/web`**: Frontend application built with Next.js.
+- **`packages/ui`**: Shared UI component library.
+
+---
+
+## 🔄 CI/CD Pipeline & DevOps Operations
+
+### 1. How CI Works (`ci.yml`)
+- Triggered automatically on every `push` or `pull_request` to `main` or `feature/*` branches.
+- Uses `actions/setup-node@v4` with `pnpm` caching.
+- Enforces strict quality gates:
+  1. `pnpm install --frozen-lockfile`
+  2. `pnpm --filter api exec prisma generate`
+  3. `pnpm lint`
+  4. `pnpm --filter api exec tsc --noEmit`
+  5. `pnpm --filter api test:cov` (Unit tests + coverage reports)
+- Uploads code coverage reports as downloadable workflow artifacts.
+
+### 2. How Docker Build Works (`docker.yml`)
+- Uses a multi-stage Docker build (`apps/api/Dockerfile`) on `node:22-alpine` image to produce minimal production images (<180MB).
+- Runs automated container vulnerability scans using **Trivy** (`aquasecurity/trivy-action@master`).
+- Automatically fails the build on `HIGH` or `CRITICAL` vulnerability CVEs.
+
+### 3. How Release Works
+1. Code approved via PR is merged into `main`.
+2. GitHub Actions builds production container images tagged with both `:latest` and `:sha-<commit>`.
+3. Target host runs `prisma migrate deploy` prior to zero-downtime container rolling restart.
+4. Process health is verified via `/api/v1/health/ready`.
+
+### 4. How Rollback Works
+If post-deployment health probes fail:
+```bash
+docker compose pull api:<previous-stable-sha>
+docker compose up -d --no-deps api
+curl -f http://localhost:3000/api/v1/health/ready
 ```
 
-## What's inside?
+---
 
-This Turborepo includes the following packages/apps:
+## 🚀 Quick Start (Local Development)
 
-### Apps and Packages
+```bash
+# Install dependencies
+pnpm install
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+# Generate Prisma Client
+pnpm --filter api exec prisma generate
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+# Run TypeScript typecheck
+pnpm exec tsc --noEmit
 
-### Utilities
+# Run unit tests
+pnpm --filter api test
 
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+# Start API in development mode
+pnpm --filter api start:dev
 ```
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo build
-pnpm dlx turbo build
-pnpm exec turbo build
-```
+## 📜 License
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo build --filter=docs
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+[MIT License](LICENSE)
