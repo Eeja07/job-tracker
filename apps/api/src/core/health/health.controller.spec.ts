@@ -7,6 +7,7 @@ import { QueueService } from '../../modules/jobs/services/queue.service';
 import { EmailService } from '../../modules/email/services/email.service';
 import { StorageService } from '../../modules/storage/storage.service';
 import { FeatureFlagService } from '../../modules/feature-flags/services/feature-flag.service';
+import { EventBusService } from '../../modules/event-bus/services/event-bus.service';
 
 describe('HealthController', () => {
   let controller: HealthController;
@@ -40,6 +41,10 @@ describe('HealthController', () => {
       get: jest.fn().mockResolvedValue(null),
     };
 
+    const mockEventBusService = {
+      isReady: jest.fn().mockReturnValue(true),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [HealthController],
       providers: [
@@ -49,6 +54,7 @@ describe('HealthController', () => {
         { provide: EmailService, useValue: mockEmailService },
         { provide: StorageService, useValue: mockStorageService },
         { provide: FeatureFlagService, useValue: mockFeatureFlagService },
+        { provide: EventBusService, useValue: mockEventBusService },
       ],
     }).compile();
 
@@ -72,6 +78,10 @@ describe('HealthController', () => {
         storage: 'up',
         virusScanner: 'up',
         featureFlags: 'up',
+        eventBus: 'up',
+        publisher: 'up',
+        subscriber: 'up',
+        redisPubSub: 'up',
       });
     });
   });

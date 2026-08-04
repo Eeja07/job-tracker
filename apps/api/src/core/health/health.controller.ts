@@ -6,6 +6,7 @@ import { QueueService } from '../../modules/jobs/services/queue.service';
 import { EmailService } from '../../modules/email/services/email.service';
 import { StorageService } from '../../modules/storage/storage.service';
 import { FeatureFlagService } from '../../modules/feature-flags/services/feature-flag.service';
+import { EventBusService } from '../../modules/event-bus/services/event-bus.service';
 
 export interface HealthCheckResponse {
   status: string;
@@ -26,6 +27,7 @@ export class HealthController {
     @Optional() private readonly emailService?: EmailService,
     @Optional() private readonly storageService?: StorageService,
     @Optional() private readonly featureFlagService?: FeatureFlagService,
+    @Optional() private readonly eventBusService?: EventBusService,
   ) {}
 
   @Get()
@@ -41,16 +43,22 @@ export class HealthController {
     let storageCheck = 'down';
     let virusScannerCheck = 'down';
     let featureFlagsCheck = 'down';
+    let eventBusCheck = 'down';
+    let publisherCheck = 'down';
+    let subscriberCheck = 'down';
+    let redisPubSubCheck = 'down';
 
     try {
       if (this.redisService) {
         await this.redisService.ping();
         redisCheck = 'up';
         rbacCacheCheck = 'up';
+        redisPubSubCheck = 'up';
       }
     } catch {
       redisCheck = 'down';
       rbacCacheCheck = 'down';
+      redisPubSubCheck = 'down';
     }
 
     try {
@@ -97,6 +105,19 @@ export class HealthController {
       featureFlagsCheck = 'down';
     }
 
+    try {
+      if (this.eventBusService) {
+        const isReady = this.eventBusService.isReady();
+        eventBusCheck = isReady ? 'up' : 'down';
+        publisherCheck = isReady ? 'up' : 'down';
+        subscriberCheck = isReady ? 'up' : 'down';
+      }
+    } catch {
+      eventBusCheck = 'down';
+      publisherCheck = 'down';
+      subscriberCheck = 'down';
+    }
+
     const isDegraded =
       redisCheck === 'down' ||
       jobsCheck === 'down' ||
@@ -117,6 +138,10 @@ export class HealthController {
         storage: storageCheck,
         virusScanner: virusScannerCheck,
         featureFlags: featureFlagsCheck,
+        eventBus: eventBusCheck,
+        publisher: publisherCheck,
+        subscriber: subscriberCheck,
+        redisPubSub: redisPubSubCheck,
       },
     };
   }

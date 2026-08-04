@@ -47,6 +47,13 @@ export class MetricsService implements OnModuleInit {
   public readonly featureFlagCacheHitsTotal: Counter<string>;
   public readonly featureFlagCacheMissesTotal: Counter<string>;
 
+  public readonly eventsPublishedTotal: Counter<string>;
+  public readonly eventsConsumedTotal: Counter<string>;
+  public readonly eventsFailedTotal: Counter<string>;
+  public readonly eventsRetryTotal: Counter<string>;
+  public readonly eventsDlqTotal: Counter<string>;
+  public readonly eventProcessingDurationSeconds: Histogram<string>;
+
   constructor(
     @Optional() private readonly redisService?: RedisService,
     @Optional() private readonly queueService?: QueueService,
@@ -121,6 +128,49 @@ export class MetricsService implements OnModuleInit {
       name: 'feature_flag_cache_misses_total',
       help: 'Total feature flag cache misses',
       labelNames: ['flag'],
+      registers: [this.registry],
+    });
+
+    this.eventsPublishedTotal = new Counter({
+      name: 'events_published_total',
+      help: 'Total domain events published',
+      labelNames: ['type', 'channel'],
+      registers: [this.registry],
+    });
+
+    this.eventsConsumedTotal = new Counter({
+      name: 'events_consumed_total',
+      help: 'Total domain events consumed successfully',
+      labelNames: ['type', 'subscriber'],
+      registers: [this.registry],
+    });
+
+    this.eventsFailedTotal = new Counter({
+      name: 'events_failed_total',
+      help: 'Total domain events processing failures',
+      labelNames: ['type', 'subscriber'],
+      registers: [this.registry],
+    });
+
+    this.eventsRetryTotal = new Counter({
+      name: 'events_retry_total',
+      help: 'Total domain events retried',
+      labelNames: ['type', 'subscriber'],
+      registers: [this.registry],
+    });
+
+    this.eventsDlqTotal = new Counter({
+      name: 'events_dlq_total',
+      help: 'Total domain events sent to Dead Letter Queue',
+      labelNames: ['type'],
+      registers: [this.registry],
+    });
+
+    this.eventProcessingDurationSeconds = new Histogram({
+      name: 'event_processing_duration_seconds',
+      help: 'Histogram of event processing duration in seconds',
+      labelNames: ['type', 'subscriber'],
+      buckets: [0.001, 0.005, 0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5],
       registers: [this.registry],
     });
 

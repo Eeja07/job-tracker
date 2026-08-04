@@ -1,0 +1,17 @@
+export enum EventType {
+  USER_REGISTERED = 'UserRegistered',
+  APPLICATION_CREATED = 'ApplicationCreated',
+  APPLICATION_UPDATED = 'ApplicationUpdated',
+  APPLICATION_STATUS_CHANGED = 'ApplicationStatusChanged',
+  ATTACHMENT_UPLOADED = 'AttachmentUploaded',
+  ATTACHMENT_DELETED = 'AttachmentDeleted',
+  COMPANY_CREATED = 'CompanyCreated',
+  COMPANY_DELETED = 'CompanyDeleted',
+  AUDIT_CREATED = 'AuditCreated',
+  FEATURE_FLAG_UPDATED = 'FeatureFlagUpdated',
+  ROLE_ASSIGNED = 'RoleAssigned',
+  ROLE_REMOVED = 'RoleRemoved',
+  EMAIL_SENT = 'EmailSent',
+  JOB_COMPLETED = 'JobCompleted',
+  JOB_FAILED = 'JobFailed',
+}
