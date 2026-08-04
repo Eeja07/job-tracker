@@ -37,8 +37,14 @@ export function applyVersionMiddleware(req: RequestWithApiVersion, res: Response
   const finalVersion = extractedVersion || '1';
   req.apiVersion = finalVersion;
 
-  // 5. Rewrite unversioned URL before router matching
-  if (req.url && !req.url.match(/\/api\/v[0-9]+(\/|$)/i) && req.url.startsWith('/api/')) {
+  // 5. Rewrite unversioned URL before router matching (except docs & metrics)
+  if (
+    req.url &&
+    !req.url.startsWith('/api/docs') &&
+    !req.url.startsWith('/docs') &&
+    !req.url.match(/\/api\/v[0-9]+(\/|$)/i) &&
+    req.url.startsWith('/api/')
+  ) {
     const subPath = req.url.slice(5);
     req.url = `/api/v${finalVersion}/${subPath}`;
   }

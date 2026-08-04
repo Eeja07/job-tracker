@@ -69,6 +69,10 @@ export class EventPublisherService {
 
     if (this.redisService) {
       try {
+        const client = this.redisService.getClient?.();
+        if (client && typeof client.xadd === 'function' && this.redisService.isReady()) {
+          await client.xadd(channel, '*', 'event', payloadString);
+        }
         await this.redisService.publish(channel, payloadString);
       } catch (err: any) {
         this.logger.error(

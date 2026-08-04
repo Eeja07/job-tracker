@@ -15,7 +15,9 @@ describe('EventSubscriberService', () => {
     const mockRedis = {
       subscribe: jest.fn().mockResolvedValue(undefined),
       exists: jest.fn().mockResolvedValue(false),
+      acquireLock: jest.fn().mockResolvedValue('claim-token-123'),
       set: jest.fn().mockResolvedValue(undefined),
+      isReady: jest.fn().mockReturnValue(true),
     };
 
     const mockMetrics = {
@@ -51,7 +53,7 @@ describe('EventSubscriberService', () => {
     channel: 'events:application',
   };
 
-  it('should dispatch incoming event to matching subscriber and mark processed', async () => {
+  it('should dispatch incoming event to matching subscriber with atomic claim', async () => {
     const mockSubscriber: jest.Mocked<IEventSubscriber> = {
       name: 'TestSubscriber',
       subscribedEvents: [EventType.APPLICATION_CREATED],
@@ -62,16 +64,15 @@ describe('EventSubscriberService', () => {
     await service.dispatchToSubscriber(mockSubscriber, mockEvent);
 
     expect(mockSubscriber.handle).toHaveBeenCalledWith(mockEvent);
-    expect(redisService.set).toHaveBeenCalledWith(
+    expect(redisService.acquireLock).toHaveBeenCalledWith(
       expect.stringContaining('events:processed:TestSubscriber:event-uuid-123'),
-      'true',
       86400,
     );
     expect(metricsService.eventsConsumedTotal.inc).toHaveBeenCalled();
   });
 
-  it('should skip execution if event was already processed (Idempotency)', async () => {
-    redisService.exists.mockResolvedValue(true);
+  it('should skip execution if atomic claim fails (Idempotency)', async () => {
+    redisService.acquireLock.mockResolvedValue(null);
 
     const mockSubscriber: jest.Mocked<IEventSubscriber> = {
       name: 'TestSubscriber',
@@ -107,3 +108,4 @@ describe('EventSubscriberService', () => {
     );
   });
 });
+
