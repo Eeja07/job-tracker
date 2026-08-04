@@ -1,8 +1,20 @@
+import { Readable } from 'stream';
+
+export interface ReadStreamResult {
+  stream: Readable;
+  contentLength: number;
+  totalLength: number;
+  mimeType?: string;
+}
+
 export interface StorageProvider {
   /**
-   * Uploads a file to storage and returns the relative storage path/key.
+   * Uploads a file to storage and returns the storage key.
    */
-  upload(file: Express.Multer.File, key?: string): Promise<string>;
+  upload(
+    file: Express.Multer.File | { buffer: Buffer; filename: string; mimetype: string },
+    key?: string,
+  ): Promise<string>;
 
   /**
    * Downloads a file from storage by key/path and returns its content buffer.
@@ -10,17 +22,22 @@ export interface StorageProvider {
   download(key: string): Promise<Buffer>;
 
   /**
-   * Deletes a file from storage by key/path.
+   * Obtains a readable stream for a file, supporting optional byte-range streaming.
+   */
+  getReadStream(key: string, start?: number, end?: number): Promise<ReadStreamResult>;
+
+  /**
+   * Deletes a file from storage by key.
    */
   delete(key: string): Promise<void>;
 
   /**
-   * Checks if a file exists in storage by key/path.
+   * Checks if a file exists in storage by key.
    */
   exists(key: string): Promise<boolean>;
 
   /**
-   * Generates a signed/accessible URL for the file.
+   * Generates a signed/accessible URL for GET or PUT operations.
    */
-  signedUrl(key: string, expiresInSeconds?: number): Promise<string>;
+  signedUrl(key: string, mode?: 'GET' | 'PUT', expiresInSeconds?: number): Promise<string>;
 }

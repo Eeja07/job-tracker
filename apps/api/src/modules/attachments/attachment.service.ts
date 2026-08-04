@@ -3,6 +3,7 @@ import { Attachment } from '@prisma/client';
 import { AttachmentRepository } from '../../repositories/attachment/attachment.repository';
 import { ApplicationRepository } from '../../repositories/application/application.repository';
 import { StorageService } from '../storage/storage.service';
+import { ReadStreamResult } from '../storage/interfaces/storage-provider.interface';
 import { UploadAttachmentDto } from './dto/upload-attachment.dto';
 
 @Injectable()
@@ -28,7 +29,7 @@ export class AttachmentService {
       throw new NotFoundException(`Application with ID '${dto.applicationId}' was not found`);
     }
 
-    // Upload physical file via StorageService
+    // Upload physical file via StorageService (runs virus scan + magic bytes validation)
     const uploadResult = await this.storageService.uploadFile(file);
 
     // Persist attachment metadata record
@@ -72,6 +73,27 @@ export class AttachmentService {
     const attachment = await this.findOne(id, userId);
     const buffer = await this.storageService.downloadFile(attachment.storagePath);
     return { buffer, attachment };
+  }
+
+  async getReadStream(
+    id: string,
+    userId: string,
+    start?: number,
+    end?: number,
+  ): Promise<{ streamResult: ReadStreamResult; attachment: Attachment }> {
+    const attachment = await this.findOne(id, userId);
+    const streamResult = await this.storageService.getReadStream(attachment.storagePath, start, end);
+    return { streamResult, attachment };
+  }
+
+  async getSignedUrl(
+    id: string,
+    userId: string,
+    mode: 'GET' | 'PUT' = 'GET',
+    expiresInSeconds = 900,
+  ): Promise<string> {
+    const attachment = await this.findOne(id, userId);
+    return this.storageService.getSignedUrl(attachment.storagePath, mode, expiresInSeconds);
   }
 
   async remove(id: string, userId: string): Promise<void> {

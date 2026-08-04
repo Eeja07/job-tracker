@@ -35,11 +35,61 @@ export class MetricsService implements OnModuleInit {
   public readonly rbacPermissionChecksTotal: Counter<string>;
   public readonly rbacPermissionDeniedTotal: Counter<string>;
 
+  public readonly storageUploadTotal: Counter<string>;
+  public readonly storageDownloadTotal: Counter<string>;
+  public readonly storageUploadFailedTotal: Counter<string>;
+  public readonly virusScanDurationSeconds: Histogram<string>;
+  public readonly storageBytesUploadedTotal: Counter<string>;
+  public readonly storageBytesDownloadedTotal: Counter<string>;
+
   constructor(
     @Optional() private readonly redisService?: RedisService,
     @Optional() private readonly queueService?: QueueService,
   ) {
     this.registry = new Registry();
+
+    this.storageUploadTotal = new Counter({
+      name: 'storage_upload_total',
+      help: 'Total number of storage upload attempts',
+      labelNames: ['provider'],
+      registers: [this.registry],
+    });
+
+    this.storageDownloadTotal = new Counter({
+      name: 'storage_download_total',
+      help: 'Total number of storage download requests',
+      labelNames: ['provider'],
+      registers: [this.registry],
+    });
+
+    this.storageUploadFailedTotal = new Counter({
+      name: 'storage_upload_failed_total',
+      help: 'Total number of failed storage uploads',
+      labelNames: ['provider', 'reason'],
+      registers: [this.registry],
+    });
+
+    this.virusScanDurationSeconds = new Histogram({
+      name: 'virus_scan_duration_seconds',
+      help: 'Duration of virus scan execution in seconds',
+      labelNames: ['scanner'],
+      buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5],
+      registers: [this.registry],
+    });
+
+    this.storageBytesUploadedTotal = new Counter({
+      name: 'storage_bytes_uploaded_total',
+      help: 'Total bytes uploaded to object storage',
+      labelNames: ['provider'],
+      registers: [this.registry],
+    });
+
+    this.storageBytesDownloadedTotal = new Counter({
+      name: 'storage_bytes_downloaded_total',
+      help: 'Total bytes downloaded from object storage',
+      labelNames: ['provider'],
+      registers: [this.registry],
+    });
 
     this.httpRequestsTotal = new Counter({
       name: 'http_requests_total',

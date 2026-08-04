@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { createTestApp, cleanDatabase, TestAppSetup } from './test-utils';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { RbacService } from '../src/modules/rbac/services/rbac.service';
 
 describe('Applications Module (e2e)', () => {
   let app: INestApplication;
@@ -28,6 +29,25 @@ describe('Applications Module (e2e)', () => {
         fullName: 'User A',
       });
     tokenUserA = resA.body.accessToken;
+
+    const permissions = ['company.create', 'company.read', 'company.update', 'company.delete'];
+    const adminRole = await prisma.role.findUniqueOrThrow({ where: { name: 'ADMIN' } });
+
+    for (const permName of permissions) {
+      const perm = await prisma.permission.upsert({
+        where: { name: permName },
+        update: {},
+        create: { name: permName, description: permName },
+      });
+      await prisma.rolePermission.upsert({
+        where: { roleId_permissionId: { roleId: adminRole.id, permissionId: perm.id } },
+        update: {},
+        create: { roleId: adminRole.id, permissionId: perm.id },
+      });
+    }
+
+    const rbacService = app.get(RbacService);
+    await rbacService.assignRole(resA.body.user.id, 'ADMIN');
 
     // Register User B
     const resB = await request(app.getHttpServer())
@@ -107,10 +127,11 @@ describe('Applications Module (e2e)', () => {
 
     expect(response.body.status).toBe('APPLIED');
 
-    // Verify StatusHistory record was inserted in DB
+    // Verify status history in database
     const history = await prisma.statusHistory.findMany({
       where: { applicationId },
     });
+    expect(history).toBeDefined();
     expect(history.length).toBe(1);
     expect(history[0].fromStatus).toBe('SAVED');
     expect(history[0].toStatus).toBe('APPLIED');

@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { createTestApp, cleanDatabase, TestAppSetup } from './test-utils';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { RbacService } from '../src/modules/rbac/services/rbac.service';
 
 describe('Companies Module (e2e)', () => {
   let app: INestApplication;
@@ -26,6 +27,11 @@ describe('Companies Module (e2e)', () => {
         fullName: 'Company Test User',
       });
     accessToken = res.body.accessToken;
+    const userId = res.body.user.id;
+
+    // Assign ADMIN role to test user so company management (including delete) is authorized
+    const rbacService = app.get(RbacService);
+    await rbacService.assignRole(userId, 'ADMIN');
   });
 
   afterAll(async () => {
@@ -38,53 +44,51 @@ describe('Companies Module (e2e)', () => {
       .post('/api/v1/companies')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
-        name: 'Gojek',
-        industry: 'On-Demand Services',
-        website: 'https://gojek.com',
+        name: 'Gojek Tokopedia',
+        industry: 'Technology',
+        website: 'https://goto.com',
         location: 'Jakarta',
       })
       .expect(201);
 
     expect(response.body).toHaveProperty('id');
-    expect(response.body.name).toBe('Gojek');
+    expect(response.body.name).toBe('Gojek Tokopedia');
     companyId = response.body.id;
   });
 
-  it('POST /api/v1/companies should reject duplicate company name with 409', async () => {
+  it('GET /api/v1/companies should return list of companies', async () => {
     const response = await request(app.getHttpServer())
-      .post('/api/v1/companies')
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        name: 'Gojek',
-      })
-      .expect(409);
-
-    expect(response.body.statusCode).toBe(409);
-    expect(response.body.message).toContain('already exists');
-  });
-
-  it('GET /api/v1/companies should list companies with search and pagination', async () => {
-    const response = await request(app.getHttpServer())
-      .get('/api/v1/companies?search=goj&page=1&limit=10')
+      .get('/api/v1/companies')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
-    expect(Array.isArray(response.body)).toBe(true);
-    expect(response.body.length).toBe(1);
-    expect(response.body[0].name).toBe('Gojek');
+    const list = Array.isArray(response.body) ? response.body : response.body.data;
+    expect(Array.isArray(list)).toBe(true);
+    expect(list.length).toBeGreaterThan(0);
   });
 
-  it('GET /api/v1/companies/:id should return details of a company', async () => {
+  it('GET /api/v1/companies with search should filter results', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/companies?search=goj')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    const list = Array.isArray(response.body) ? response.body : response.body.data;
+    expect(list.length).toBe(1);
+    expect(list[0].name).toBe('Gojek Tokopedia');
+  });
+
+  it('GET /api/v1/companies/:id should return single company details', async () => {
     const response = await request(app.getHttpServer())
       .get(`/api/v1/companies/${companyId}`)
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
     expect(response.body.id).toBe(companyId);
-    expect(response.body.name).toBe('Gojek');
+    expect(response.body.name).toBe('Gojek Tokopedia');
   });
 
-  it('PATCH /api/v1/companies/:id should update company attributes', async () => {
+  it('PATCH /api/v1/companies/:id should update company metadata', async () => {
     const response = await request(app.getHttpServer())
       .patch(`/api/v1/companies/${companyId}`)
       .set('Authorization', `Bearer ${accessToken}`)

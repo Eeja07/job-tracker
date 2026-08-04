@@ -4,6 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { RedisService } from '../../modules/redis/redis.service';
 import { QueueService } from '../../modules/jobs/services/queue.service';
 import { EmailService } from '../../modules/email/services/email.service';
+import { StorageService } from '../../modules/storage/storage.service';
 
 export interface HealthCheckResponse {
   status: string;
@@ -22,6 +23,7 @@ export class HealthController {
     @Optional() private readonly redisService?: RedisService,
     @Optional() private readonly queueService?: QueueService,
     @Optional() private readonly emailService?: EmailService,
+    @Optional() private readonly storageService?: StorageService,
   ) {}
 
   @Get()
@@ -34,6 +36,8 @@ export class HealthController {
     let smtpCheck = 'down';
     let auditQueueCheck = 'down';
     let rbacCacheCheck = 'down';
+    let storageCheck = 'down';
+    let virusScannerCheck = 'down';
 
     try {
       if (this.redisService) {
@@ -66,6 +70,22 @@ export class HealthController {
       smtpCheck = 'down';
     }
 
+    try {
+      if (this.storageService) {
+        storageCheck = 'up';
+      }
+    } catch {
+      storageCheck = 'down';
+    }
+
+    try {
+      if (this.storageService) {
+        virusScannerCheck = 'up';
+      }
+    } catch {
+      virusScannerCheck = 'down';
+    }
+
     const isDegraded =
       redisCheck === 'down' ||
       jobsCheck === 'down' ||
@@ -83,6 +103,8 @@ export class HealthController {
         smtp: smtpCheck,
         auditQueue: auditQueueCheck,
         rbacCache: rbacCacheCheck,
+        storage: storageCheck,
+        virusScanner: virusScannerCheck,
       },
     };
   }

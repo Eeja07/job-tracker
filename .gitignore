@@ -50,3 +50,7 @@ yarn-error.log*
 AGENTS.md
 CLAUDE.md
 GEMINI.md
+
+# Storage upload artifacts
+apps/api/storage/
+storage/

@@ -5,6 +5,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { RedisService } from '../../modules/redis/redis.service';
 import { QueueService } from '../../modules/jobs/services/queue.service';
 import { EmailService } from '../../modules/email/services/email.service';
+import { StorageService } from '../../modules/storage/storage.service';
 
 describe('HealthController', () => {
   let controller: HealthController;
@@ -30,6 +31,10 @@ describe('HealthController', () => {
       verifyConnection: jest.fn().mockResolvedValue(true),
     };
 
+    const mockStorageService = {
+      fileExists: jest.fn().mockResolvedValue(true),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [HealthController],
       providers: [
@@ -37,6 +42,7 @@ describe('HealthController', () => {
         { provide: RedisService, useValue: mockRedis },
         { provide: QueueService, useValue: mockQueueService },
         { provide: EmailService, useValue: mockEmailService },
+        { provide: StorageService, useValue: mockStorageService },
       ],
     }).compile();
 
@@ -57,6 +63,8 @@ describe('HealthController', () => {
         smtp: 'up',
         auditQueue: 'up',
         rbacCache: 'up',
+        storage: 'up',
+        virusScanner: 'up',
       });
     });
   });

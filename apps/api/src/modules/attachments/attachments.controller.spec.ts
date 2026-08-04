@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AttachmentsController } from './attachments.controller';
 import { AttachmentService } from './attachment.service';
+import { StorageService } from '../storage/storage.service';
 import { AttachmentType, StorageProvider } from '@prisma/client';
 
 describe('AttachmentsController', () => {
@@ -11,7 +12,14 @@ describe('AttachmentsController', () => {
     findByApplication: jest.fn(),
     findOne: jest.fn(),
     download: jest.fn(),
+    getReadStream: jest.fn(),
+    getSignedUrl: jest.fn(),
     remove: jest.fn(),
+  };
+
+  const mockStorageService = {
+    getReadStream: jest.fn(),
+    getSignedUrl: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -19,7 +27,10 @@ describe('AttachmentsController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AttachmentsController],
-      providers: [{ provide: AttachmentService, useValue: mockAttachmentService }],
+      providers: [
+        { provide: AttachmentService, useValue: mockAttachmentService },
+        { provide: StorageService, useValue: mockStorageService },
+      ],
     }).compile();
 
     controller = module.get<AttachmentsController>(AttachmentsController);
@@ -37,8 +48,8 @@ describe('AttachmentsController', () => {
       originalname: 'cv.pdf',
       encoding: '7bit',
       mimetype: 'application/pdf',
-      buffer: Buffer.from('pdf'),
-      size: 3,
+      buffer: Buffer.from('%PDF-1.4 sample'),
+      size: 15,
       stream: null as any,
       destination: '',
       filename: '',

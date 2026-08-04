@@ -1,82 +1,116 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
-import { randomUUID } from 'crypto';
-import { StorageProvider } from '../interfaces/storage-provider.interface';
+import { createHmac } from 'crypto';
+import { StorageProvider, ReadStreamResult } from '../interfaces/storage-provider.interface';
 
 @Injectable()
 export class LocalStorageProvider implements StorageProvider {
   private readonly logger = new Logger(LocalStorageProvider.name);
-  private readonly baseDir: string;
+  private readonly uploadDir: string;
+  private readonly secretKey: string;
 
-  constructor(baseDir?: string) {
-    this.baseDir = baseDir || path.resolve(process.cwd(), 'storage', 'uploads');
+  constructor(uploadDir?: string, secretKey = 'storage-local-secret-key') {
+    this.uploadDir = uploadDir || path.join(process.cwd(), 'storage', 'uploads');
+    this.secretKey = secretKey;
+    if (!fs.existsSync(this.uploadDir)) {
+      fs.mkdirSync(this.uploadDir, { recursive: true });
+    }
   }
 
-  async upload(file: Express.Multer.File, key?: string): Promise<string> {
-    let relativePath: string;
+  async upload(
+    file: Express.Multer.File | { buffer: Buffer; filename: string; mimetype: string },
+    key?: string,
+  ): Promise<string> {
+    const storageKey = key || this.generateKey(file.filename || (file as any).originalname || 'file');
+    const fullPath = path.join(this.uploadDir, storageKey);
+    const parentDir = path.dirname(fullPath);
 
-    if (key) {
-      relativePath = key;
-    } else {
-      const now = new Date();
-      const year = now.getFullYear().toString();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      const ext = path.extname(file.originalname || '');
-      const uuidFilename = `${randomUUID()}${ext}`;
-
-      relativePath = path.join(year, month, day, uuidFilename);
+    if (!fs.existsSync(parentDir)) {
+      await fs.promises.mkdir(parentDir, { recursive: true });
     }
 
-    const absolutePath = path.resolve(this.baseDir, relativePath);
-    const directoryPath = path.dirname(absolutePath);
-
-    await fs.promises.mkdir(directoryPath, { recursive: true });
-    await fs.promises.writeFile(absolutePath, file.buffer);
-
-    this.logger.log(`File saved locally: ${relativePath}`);
-    return relativePath.replace(/\\/g, '/');
+    await fs.promises.writeFile(fullPath, file.buffer);
+    this.logger.log(`File saved locally: ${storageKey}`);
+    return storageKey;
   }
 
   async download(key: string): Promise<Buffer> {
-    const absolutePath = path.resolve(this.baseDir, key);
-
-    try {
-      return await fs.promises.readFile(absolutePath);
-    } catch (error: any) {
-      if (error.code === 'ENOENT') {
-        throw new NotFoundException(`File not found at path: ${key}`);
-      }
-      throw error;
+    const fullPath = path.join(this.uploadDir, key);
+    if (!fs.existsSync(fullPath)) {
+      throw new NotFoundException(`Local file key '${key}' not found`);
     }
+    return fs.promises.readFile(fullPath);
+  }
+
+  async getReadStream(key: string, start?: number, end?: number): Promise<ReadStreamResult> {
+    const fullPath = path.join(this.uploadDir, key);
+    if (!fs.existsSync(fullPath)) {
+      throw new NotFoundException(`Local file key '${key}' not found`);
+    }
+
+    const stats = await fs.promises.stat(fullPath);
+    const totalLength = stats.size;
+
+    const streamOptions: { start?: number; end?: number } = {};
+    if (typeof start === 'number') streamOptions.start = start;
+    if (typeof end === 'number') streamOptions.end = end;
+
+    const stream = fs.createReadStream(fullPath, streamOptions);
+    const contentLength =
+      typeof start === 'number' && typeof end === 'number'
+        ? end - start + 1
+        : totalLength;
+
+    return {
+      stream,
+      contentLength,
+      totalLength,
+    };
   }
 
   async delete(key: string): Promise<void> {
-    const absolutePath = path.resolve(this.baseDir, key);
-
-    try {
-      await fs.promises.unlink(absolutePath);
+    const fullPath = path.join(this.uploadDir, key);
+    if (fs.existsSync(fullPath)) {
+      await fs.promises.unlink(fullPath);
       this.logger.log(`File deleted locally: ${key}`);
-    } catch (error: any) {
-      if (error.code !== 'ENOENT') {
-        throw error;
-      }
     }
   }
 
   async exists(key: string): Promise<boolean> {
-    const absolutePath = path.resolve(this.baseDir, key);
-
-    try {
-      await fs.promises.access(absolutePath, fs.constants.F_OK);
-      return true;
-    } catch {
-      return false;
-    }
+    const fullPath = path.join(this.uploadDir, key);
+    return fs.existsSync(fullPath);
   }
 
-  async signedUrl(key: string, _expiresInSeconds = 3600): Promise<string> {
-    return `/storage/uploads/${key.replace(/\\/g, '/')}`;
+  async signedUrl(key: string, mode: 'GET' | 'PUT' = 'GET', expiresInSeconds = 900): Promise<string> {
+    const expires = Math.floor(Date.now() / 1000) + expiresInSeconds;
+    const signature = createHmac('sha256', this.secretKey)
+      .update(`${mode}:${key}:${expires}`)
+      .digest('hex');
+
+    return `/api/v1/attachments/signed-access?key=${encodeURIComponent(key)}&mode=${mode}&expires=${expires}&signature=${signature}`;
+  }
+
+  public verifySignedToken(key: string, mode: 'GET' | 'PUT', expiresStr: string, signature: string): boolean {
+    const expires = parseInt(expiresStr, 10);
+    if (isNaN(expires) || Math.floor(Date.now() / 1000) > expires) {
+      return false;
+    }
+
+    const expectedSignature = createHmac('sha256', this.secretKey)
+      .update(`${mode}:${key}:${expires}`)
+      .digest('hex');
+
+    return signature === expectedSignature;
+  }
+
+  private generateKey(filename: string): string {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const ext = path.extname(filename);
+    const uuid = crypto.randomUUID();
+    return `${year}/${month}/${day}/${uuid}${ext}`;
   }
 }
