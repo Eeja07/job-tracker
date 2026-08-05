@@ -1,58 +1,18 @@
 services:
-  job-tracker-postgres:
-    image: postgres:16-alpine
-    container_name: job-tracker-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-job_tracker}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - homelab
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-job_tracker}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  job-tracker-redis:
-    image: redis:7-alpine
-    container_name: job-tracker-redis
-    restart: unless-stopped
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
-    networks:
-      - homelab
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   job-tracker-api:
     build:
       context: /opt/apps/job-tracker
       dockerfile: apps/api/Dockerfile
     container_name: job-tracker-api
     restart: unless-stopped
-    ports:
-      - "3000:3000"
     environment:
       NODE_ENV: production
       PORT: "3000"
-      DATABASE_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@job-tracker-postgres:5432/${POSTGRES_DB:-job_tracker}?schema=public"
-      REDIS_HOST: job-tracker-redis
-      REDIS_PORT: "6379"
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/job_tracker?schema=public}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-}
-    depends_on:
-      job-tracker-postgres:
-        condition: service_healthy
-      job-tracker-redis:
-        condition: service_healthy
     networks:
       - homelab
 
@@ -62,12 +22,10 @@ services:
       dockerfile: apps/web/Dockerfile
     container_name: job-tracker-web
     restart: unless-stopped
-    ports:
-      - "3001:3001"
     environment:
       NODE_ENV: production
       PORT: "3001"
-      NEXT_PUBLIC_API_URL: "http://job-tracker.eeja.fun/api"
+      NEXT_PUBLIC_API_URL: "http://job.eeja.fun/api"
     depends_on:
       - job-tracker-api
     networks:
@@ -76,7 +34,3 @@ services:
 networks:
   homelab:
     external: true
-
-volumes:
-  postgres_data:
-  redis_data:
