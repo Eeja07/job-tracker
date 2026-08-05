@@ -111,7 +111,7 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
               <span className={styles.metaValue}>
                 <Calendar size={14} className={styles.metaIcon} />
                 {formatDate(app.appliedAt)}
-                <span style={{ fontSize: "0.75rem", color: "var(--primary, #3b82f6)", fontWeight: 600, marginLeft: "6px" }}>
+                <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600, marginLeft: "6px" }}>
                   ({getDaysAgo(app.appliedAt)})
                 </span>
               </span>
@@ -186,12 +186,11 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
                     gap: "8px",
                     padding: "0.5rem 0.75rem",
                     borderRadius: "var(--radius-sm)",
-                    border: "1px solid",
+                    border: "1px solid var(--border)",
                     fontSize: "0.82rem",
                     fontWeight: 500,
-                    borderColor: listingStatus === "ACTIVE" ? "rgba(16,185,129,0.3)" : listingStatus === "CLOSED" ? "rgba(239,68,68,0.3)" : "var(--border)",
-                    background: listingStatus === "ACTIVE" ? "rgba(16,185,129,0.08)" : listingStatus === "CLOSED" ? "rgba(239,68,68,0.08)" : "var(--bg-subtle)",
-                    color: listingStatus === "ACTIVE" ? "#10b981" : listingStatus === "CLOSED" ? "#ef4444" : "var(--text-muted)",
+                    background: "var(--bg-subtle)",
+                    color: "var(--text)",
                   }}>
                     {listingStatus === "ACTIVE" && <CheckCircle size={14} />}
                     {listingStatus === "CLOSED" && <AlertTriangle size={14} />}
@@ -220,13 +219,13 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
                       <FileText size={16} className={styles.docIcon} />
                       <div>
                         <div className={styles.docName}>{app.cvName}</div>
-                        <span style={{ fontSize: "0.75rem", color: "#60a5fa" }}>Klik untuk Pratinjau (Preview)</span>
+                        <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Klik untuk Pratinjau (Preview)</span>
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
                       <button
                         title="Pratinjau CV"
-                        style={{ background: "none", border: "none", color: "#60a5fa", cursor: "pointer", display: "flex" }}
+                        style={{ background: "none", border: "none", color: "var(--text)", cursor: "pointer", display: "flex" }}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (app.cvUrl) setPreviewDoc({ name: app.cvName!, url: app.cvUrl });
@@ -238,7 +237,7 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
                         href={app.cvUrl || "#"}
                         download={app.cvName}
                         title="Unduh CV"
-                        style={{ color: "#9ca3af", display: "flex" }}
+                        style={{ color: "var(--text-muted)", display: "flex" }}
                         onClick={(e) => e.stopPropagation()}
                       >
                         <Download size={15} />
@@ -265,7 +264,7 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
                       <FileText size={16} className={styles.docIcon} />
                       <div>
                         <div className={styles.docName}>{app.portfolioName}</div>
-                        <span style={{ fontSize: "0.75rem", color: "#60a5fa" }}>Klik untuk Buka Portofolio</span>
+                        <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Klik untuk Buka Portofolio</span>
                       </div>
                     </div>
                     <ExternalLink size={15} style={{ opacity: 0.6 }} />
@@ -329,8 +328,8 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
               width: "100%",
               maxWidth: "900px",
               height: "85vh",
-              background: "#111827",
-              border: "1px solid rgba(255,255,255,0.15)",
+              background: "var(--bg-card)",
+              border: "1px solid var(--border)",
               borderRadius: "12px",
               display: "flex",
               flexDirection: "column",
@@ -342,16 +341,16 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
             <div
               style={{
                 padding: "1rem 1.25rem",
-                borderBottom: "1px solid rgba(255,255,255,0.1)",
+                borderBottom: "1px solid var(--border)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                background: "rgba(255,255,255,0.03)",
+                background: "var(--bg-subtle)",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <FileText size={18} style={{ color: "#3b82f6" }} />
-                <span style={{ fontWeight: 600, color: "#fff", fontSize: "0.95rem" }}>{previewDoc.name}</span>
+                <FileText size={18} style={{ color: "var(--text)" }} />
+                <span style={{ fontWeight: 600, color: "var(--text)", fontSize: "0.95rem" }}>{previewDoc.name}</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
                 <a
@@ -363,9 +362,9 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
                     alignItems: "center",
                     gap: "0.3rem",
                     fontSize: "0.8rem",
-                    color: "#60a5fa",
+                    color: "var(--btn-text)",
                     textDecoration: "none",
-                    background: "rgba(59,130,246,0.15)",
+                    background: "var(--btn-bg)",
                     padding: "0.35rem 0.75rem",
                     borderRadius: "6px",
                   }}
@@ -375,9 +374,9 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
                 <button
                   onClick={() => setPreviewDoc(null)}
                   style={{
-                    background: "rgba(255,255,255,0.1)",
-                    border: "none",
-                    color: "#fff",
+                    background: "var(--bg-subtle)",
+                    border: "1px solid var(--border)",
+                    color: "var(--text)",
                     borderRadius: "6px",
                     width: 30,
                     height: 30,
@@ -393,7 +392,7 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
             </div>
 
             {/* Body Document Frame */}
-            <div style={{ flex: 1, background: "#1f2937", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ flex: 1, background: "var(--bg-subtle)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               {previewDoc.url.startsWith("data:image/") ? (
                 <img src={previewDoc.url} alt={previewDoc.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
               ) : (

@@ -1,8 +1,8 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -20,7 +20,7 @@
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   overflow: hidden;
   color: var(--text);
   animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -72,9 +72,9 @@
 }
 
 .closeBtn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #9ca3af;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
   border-radius: 8px;
   width: 32px;
   height: 32px;
@@ -86,8 +86,8 @@
 }
 
 .closeBtn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #ffffff;
+  background: var(--border);
+  color: var(--text);
 }
 
 .modalBody {
@@ -102,8 +102,8 @@
   width: 100%;
   border-radius: 12px;
   overflow: hidden;
-  background: #080c14;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -114,7 +114,7 @@
 }
 
 .heroImageContainer:hover {
-  border-color: rgba(59, 130, 246, 0.5);
+  border-color: var(--border-focus);
 }
 
 .heroImage {
@@ -130,10 +130,10 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1rem;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-subtle);
   padding: 1.25rem;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
 }
 
 .metaItem {
@@ -145,7 +145,7 @@
 .metaLabel {
   font-size: 0.75rem;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -153,7 +153,7 @@
 .metaValue {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #e5e7eb;
+  color: var(--text);
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -168,7 +168,7 @@
 .sectionTitle {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #9ca3af;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -176,13 +176,13 @@
 }
 
 .contentBox {
-  background: #0b0f19;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 1rem 1.25rem;
   font-size: 0.9rem;
   line-height: 1.6;
-  color: #d1d5db;
+  color: var(--text);
   white-space: pre-wrap;
 }
 
@@ -196,18 +196,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #0b0f19;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 0.75rem 1rem;
   text-decoration: none;
-  color: #f3f4f6;
+  color: var(--text);
   transition: all 0.2s ease;
 }
 
 .docCard:hover {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: rgba(59, 130, 246, 0.4);
+  background: var(--bg-card-hover);
+  border-color: var(--border-focus);
 }
 
 .docInfo {
@@ -218,13 +218,14 @@
 }
 
 .docIcon {
-  color: #3b82f6;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
 .docName {
   font-size: 0.85rem;
   font-weight: 500;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -240,15 +241,15 @@
   aspect-ratio: 16/10;
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   cursor: pointer;
-  background: #090d16;
+  background: var(--bg-subtle);
   transition: transform 0.15s ease;
 }
 
 .galleryThumb:hover {
   transform: scale(1.05);
-  border-color: #3b82f6;
+  border-color: var(--border-focus);
 }
 
 .galleryThumb img {
@@ -259,41 +260,41 @@
 
 .modalFooter {
   padding: 1rem 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 0.75rem;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-subtle);
 }
 
 .editBtn {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #2563eb;
-  color: white;
+  background: var(--btn-bg);
+  color: var(--btn-text);
   border: none;
-  padding: 0.5rem 1.25rem;
+  padding: 0.55rem 1.25rem;
   border-radius: 8px;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: opacity 0.15s ease;
 }
 
 .editBtn:hover {
-  background: #1d4ed8;
+  opacity: 0.9;
 }
 
 .deleteBtn {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  padding: 0.5rem 1rem;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 0.55rem 1rem;
   border-radius: 8px;
   font-weight: 600;
   font-size: 0.85rem;
@@ -302,7 +303,9 @@
 }
 
 .deleteBtn:hover {
-  background: rgba(239, 68, 68, 0.25);
+  background: var(--bg-card);
+  color: var(--text);
+  border-color: var(--border-focus);
 }
 
 @keyframes fadeIn {
