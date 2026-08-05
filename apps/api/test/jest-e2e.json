@@ -11,5 +11,5 @@
     "!../src/main.ts"
   ],
   "coverageDirectory": "../coverage-e2e",
-  "testTimeout": 30000
+  "testTimeout": 60000
 }

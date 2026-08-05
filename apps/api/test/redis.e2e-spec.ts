@@ -45,8 +45,8 @@ describe('Redis Infrastructure & Cache Integration (e2e)', () => {
   });
 
   afterAll(async () => {
-    await cleanDatabase(prisma);
-    await app.close();
+    if (prisma) await cleanDatabase(prisma);
+    if (app) await app.close();
   });
 
   describe('Dashboard Cache & Invalidation', () => {

@@ -100,10 +100,10 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       this.channelHandlers.clear();
       this.isSubListenerRegistered = false;
       if (this.subClient) {
-        await this.subClient.quit().catch(() => this.subClient?.disconnect());
+        this.subClient.disconnect();
       }
       if (this.client) {
-        await this.client.quit().catch(() => this.client?.disconnect());
+        this.client.disconnect();
       }
     } catch (err: any) {
       this.logger.warn(`Error closing Redis connection: ${err.message}`);

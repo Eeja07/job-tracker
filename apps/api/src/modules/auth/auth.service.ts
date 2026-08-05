@@ -90,10 +90,11 @@ export class AuthService {
       throw new ConflictException('Email is already registered');
     }
 
+    const isTest = process.env.NODE_ENV === 'test';
     const passwordHash = await argon2.hash(dto.password, {
       type: argon2.argon2id,
-      memoryCost: 65536,
-      timeCost: 3,
+      memoryCost: isTest ? 4096 : 65536,
+      timeCost: isTest ? 1 : 3,
     });
 
     // Atomic transaction for User creation + default USER role assignment

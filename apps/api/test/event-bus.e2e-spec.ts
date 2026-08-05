@@ -22,7 +22,7 @@ describe('Event Bus Module (e2e)', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) await app.close();
   });
 
   describe('Event Publishing & Subscription Flow', () => {

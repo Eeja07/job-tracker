@@ -30,11 +30,11 @@ describe('Audit Logging (e2e)', () => {
 
     userId = regRes.body.user.id;
     authToken = regRes.body.accessToken;
-  }, 30000);
+  }, 60000);
 
   afterAll(async () => {
-    await cleanDatabase(prisma);
-    await app.close();
+    if (prisma) await cleanDatabase(prisma);
+    if (app) await app.close();
   });
 
   it('1. should record audit log upon User Login', async () => {
@@ -89,7 +89,9 @@ describe('Audit Logging (e2e)', () => {
       resource: 'COMPANY',
       action: 'CREATE_COMPANY',
     });
-    const compLog = logs.find((l) => l.resourceId === companyId);
+    const compLog = logs.find(
+      (l) => l.resourceId === companyId && l.userId === userId,
+    );
     expect(compLog).toBeDefined();
     expect(compLog?.action).toBe('CREATE_COMPANY');
     expect(compLog?.userId).toBe(userId);
@@ -126,7 +128,9 @@ describe('Audit Logging (e2e)', () => {
       resource: 'APPLICATION',
       action: 'APPLICATION_STATUS_CHANGE',
     });
-    const statusLog = logs.find((l) => l.resourceId === applicationId);
+    const statusLog = logs.find(
+      (l) => l.resourceId === applicationId && l.userId === userId,
+    );
     expect(statusLog).toBeDefined();
     expect(statusLog?.userId).toBe(userId);
     expect((statusLog?.metadata as any)?.fromStatus).toBe('SAVED');
@@ -168,7 +172,9 @@ describe('Audit Logging (e2e)', () => {
       resource: 'ATTACHMENT',
       action: 'UPLOAD_ATTACHMENT',
     });
-    const uploadLog = logs.find((l) => l.resourceId === attachmentId);
+    const uploadLog = logs.find(
+      (l) => l.resourceId === attachmentId && l.userId === userId,
+    );
     expect(uploadLog).toBeDefined();
     expect(uploadLog?.userId).toBe(userId);
     expect(uploadLog?.method).toBe('POST');

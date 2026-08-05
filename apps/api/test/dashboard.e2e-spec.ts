@@ -55,8 +55,8 @@ describe('Dashboard Module (e2e)', () => {
   });
 
   afterAll(async () => {
-    await cleanDatabase(prisma);
-    await app.close();
+    if (prisma) await cleanDatabase(prisma);
+    if (app) await app.close();
   });
 
   it('GET /api/v1/dashboard should reject unauthenticated requests with 401', async () => {

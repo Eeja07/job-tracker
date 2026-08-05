@@ -35,8 +35,8 @@ describe('Companies Module (e2e)', () => {
   });
 
   afterAll(async () => {
-    await cleanDatabase(prisma);
-    await app.close();
+    if (prisma) await cleanDatabase(prisma);
+    if (app) await app.close();
   });
 
   it('POST /api/v1/companies should create a new company', async () => {

@@ -10,6 +10,9 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { GlobalExceptionFilter } from '../src/core/filters/http-exception.filter';
 import { LoggingInterceptor } from '../src/core/interceptors/logging.interceptor';
 import { applyVersionMiddleware } from '../src/core/versioning/middlewares/version.middleware';
+import iconv from 'iconv-lite';
+
+iconv.getCodec('utf-8');
 
 export interface TestAppSetup {
   app: INestApplication;

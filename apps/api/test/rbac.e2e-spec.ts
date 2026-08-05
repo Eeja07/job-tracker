@@ -111,8 +111,8 @@ describe('RBAC Module (e2e)', () => {
   });
 
   afterAll(async () => {
-    await cleanDatabase(prisma);
-    await app.close();
+    if (prisma) await cleanDatabase(prisma);
+    if (app) await app.close();
   });
 
   describe('Unauthorized Access (401)', () => {

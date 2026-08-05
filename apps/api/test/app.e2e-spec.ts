@@ -16,8 +16,8 @@ describe('AppController (e2e)', () => {
   });
 
   afterAll(async () => {
-    await cleanDatabase(prisma);
-    await app.close();
+    if (prisma) await cleanDatabase(prisma);
+    if (app) await app.close();
   });
 
   it('GET /api/v1 should return Hello World!', async () => {

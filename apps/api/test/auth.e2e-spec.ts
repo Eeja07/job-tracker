@@ -25,8 +25,8 @@ describe('Authentication Module (e2e)', () => {
   });
 
   afterAll(async () => {
-    await cleanDatabase(prisma);
-    await app.close();
+    if (prisma) await cleanDatabase(prisma);
+    if (app) await app.close();
   });
 
   it('POST /api/v1/auth/register should create a new user and return tokens', async () => {

@@ -16,8 +16,8 @@ describe('Health & Observability (e2e)', () => {
   });
 
   afterAll(async () => {
-    await cleanDatabase(prisma);
-    await app.close();
+    if (prisma) await cleanDatabase(prisma);
+    if (app) await app.close();
   });
 
   it('GET /api/v1/health should return overall health status', async () => {

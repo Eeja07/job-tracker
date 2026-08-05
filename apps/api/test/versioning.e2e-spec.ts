@@ -23,7 +23,7 @@ describe('API Versioning & Deprecation Strategy (e2e)', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) await app.close();
   });
 
   describe('URI Versioning & Deprecation Headers', () => {
