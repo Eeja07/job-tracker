@@ -35,6 +35,10 @@ export interface Application {
   cvText?: string;
   portfolioName?: string;
   portfolioUrl?: string;
+  coverLetterName?: string;
+  coverLetterUrl?: string;
+  coverLetterText?: string;
+  coverLetter?: string;
   createdAt: string;
   updatedAt: string;
 }

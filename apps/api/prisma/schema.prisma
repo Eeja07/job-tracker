@@ -144,6 +144,9 @@ model Application {
   cvText              String?            @map("cv_text") @db.Text
   portfolioName       String?            @map("portfolio_name") @db.VarChar(255)
   portfolioUrl        String?            @map("portfolio_url") @db.Text
+  coverLetterName     String?            @map("cover_letter_name") @db.VarChar(255)
+  coverLetterUrl      String?            @map("cover_letter_url") @db.Text
+  coverLetterText     String?            @map("cover_letter_text") @db.Text
   createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt           DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
 

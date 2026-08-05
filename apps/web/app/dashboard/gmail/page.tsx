@@ -10,6 +10,8 @@ export default function GmailSyncPage() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [jobOnly, setJobOnly] = useState(true);
+  const [typeFilter, setTypeFilter] = useState<string>("");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
 
   const loadData = async () => {
@@ -31,6 +33,17 @@ export default function GmailSyncPage() {
   useEffect(() => {
     loadData();
   }, [jobOnly]);
+
+  const filteredEmails = emails
+    .filter((m) => {
+      if (!typeFilter) return true;
+      return m.detectedType === typeFilter;
+    })
+    .sort((a, b) => {
+      const timeA = new Date(a.receivedAt).getTime();
+      const timeB = new Date(b.receivedAt).getTime();
+      return sortOrder === "asc" ? timeA - timeB : timeB - timeA;
+    });
 
   const handleConnect = async () => {
     try {
@@ -134,9 +147,9 @@ export default function GmailSyncPage() {
 
       {/* Filter & Messages List */}
       <div className={styles.inboxSection}>
-        <div className={styles.inboxHeader}>
+        <div className={styles.inboxHeader} style={{ flexWrap: "wrap", gap: "0.75rem" }}>
           <h2 className={styles.inboxTitle}>Email Loker Masuk & Terlacak</h2>
-          <div className={styles.filterGroup}>
+          <div className={styles.filterGroup} style={{ flexWrap: "wrap", gap: "0.5rem" }}>
             <button
               className={`${styles.filterBtn} ${jobOnly ? styles.filterActive : ""}`}
               onClick={() => setJobOnly(true)}
@@ -149,14 +162,58 @@ export default function GmailSyncPage() {
             >
               Semua Email
             </button>
+
+            {/* Filter by Status/Type */}
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className={styles.filterBtn}
+              style={{
+                background: "var(--bg-subtle)",
+                color: "var(--text)",
+                border: "1px solid var(--border)",
+                padding: "0.35rem 0.65rem",
+                borderRadius: "var(--radius-sm)",
+                fontSize: "0.8rem",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              <option value="">Semua Status / Tipe</option>
+              <option value="INTERVIEW">Undangan Interview</option>
+              <option value="OFFER">Job Offer Diterima</option>
+              <option value="REJECTED">Lamaran Ditolak</option>
+              <option value="SCREENING">Lolos Screening</option>
+              <option value="APPLIED_CONFIRM">Lamaran Dikonfirmasi</option>
+            </select>
+
+            {/* Sort Order */}
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as "desc" | "asc")}
+              className={styles.filterBtn}
+              style={{
+                background: "var(--bg-subtle)",
+                color: "var(--text)",
+                border: "1px solid var(--border)",
+                padding: "0.35rem 0.65rem",
+                borderRadius: "var(--radius-sm)",
+                fontSize: "0.8rem",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              <option value="desc">Urutkan: Terbaru</option>
+              <option value="asc">Urutkan: Terlama</option>
+            </select>
           </div>
         </div>
 
         {loading ? (
           <div className={styles.loadingBox}>Memuat daftar email...</div>
-        ) : emails.length === 0 ? (
+        ) : filteredEmails.length === 0 ? (
           <div className={styles.emptyBox}>
-            <p>Belum ada pesan email {jobOnly ? "terkait loker" : ""} yang ditemukan.</p>
+            <p>Belum ada pesan email {jobOnly ? "terkait loker" : ""} yang sesuai filter.</p>
             {status?.connected && (
               <button className={styles.subtleBtn} onClick={handleSync}>
                 Jalankan Sinkronisasi Gmail
@@ -165,7 +222,7 @@ export default function GmailSyncPage() {
           </div>
         ) : (
           <div className={styles.emailList}>
-            {emails.map((m) => (
+            {filteredEmails.map((m) => (
               <div
                 key={m.id}
                 className={styles.emailCard}

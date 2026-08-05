@@ -34,6 +34,9 @@ export interface CreateApplicationData {
   cvText?: string;
   portfolioName?: string;
   portfolioUrl?: string;
+  coverLetterName?: string;
+  coverLetterUrl?: string;
+  coverLetterText?: string;
 }
 
 export interface UpdateApplicationData {
@@ -60,6 +63,9 @@ export interface UpdateApplicationData {
   cvText?: string;
   portfolioName?: string;
   portfolioUrl?: string;
+  coverLetterName?: string;
+  coverLetterUrl?: string;
+  coverLetterText?: string;
 }
 
 export interface ApplicationFilterParams {

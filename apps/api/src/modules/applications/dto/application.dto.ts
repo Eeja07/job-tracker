@@ -194,6 +194,21 @@ export class CreateApplicationDto {
   @IsOptional()
   @IsString()
   portfolioName?: string;
+
+  @ApiPropertyOptional({ description: 'Cover letter filename' })
+  @IsOptional()
+  @IsString()
+  coverLetterName?: string;
+
+  @ApiPropertyOptional({ description: 'Cover letter URL or base64' })
+  @IsOptional()
+  @IsString()
+  coverLetterUrl?: string;
+
+  @ApiPropertyOptional({ description: 'Cover letter text content' })
+  @IsOptional()
+  @IsString()
+  coverLetterText?: string;
 }
 
 export class UpdateApplicationDto extends PartialType(CreateApplicationDto) {}

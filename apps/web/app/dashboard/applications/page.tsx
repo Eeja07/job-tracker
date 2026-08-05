@@ -3,12 +3,14 @@ import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { applicationsApi, type Application, type ApplicationStatus } from "@/lib/api";
 import { STATUS_CONFIG, WORK_MODE_LABELS, SOURCE_LABELS, formatCurrency, formatDate, getDaysAgo } from "@/lib/utils";
-import { Plus, Search, ExternalLink, Trash2, X, Loader2, Edit2, Eye, FileText, Image as ImageIcon, CheckSquare, RefreshCw, CheckCircle, AlertTriangle } from "lucide-react";
+import { Plus, Search, ExternalLink, Trash2, X, Loader2, Edit2, Eye, FileText, Image as ImageIcon, CheckSquare, RefreshCw, CheckCircle, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import ApplicationModal from "@/components/ApplicationModal";
 import ApplicationDetailModal from "@/components/ApplicationDetailModal";
 import styles from "./page.module.css";
 
 const STATUSES = ["SAVED","APPLIED","SCREENING","INTERVIEWING","OFFER","REJECTED","WITHDRAWN"] as const;
+
+type SortCol = "jobTitle" | "status" | "workMode" | "salaryMin" | "appliedAt";
 
 export default function ApplicationsPage() {
   const searchParams = useSearchParams();
@@ -27,6 +29,45 @@ export default function ApplicationsPage() {
   const [checkingAll, setCheckingAll] = useState(false);
   const [checkAllResults, setCheckAllResults] = useState<Array<{ applicationId: string; jobTitle: string; listingStatus: string; detail?: string }> | null>(null);
   const [showCheckResults, setShowCheckResults] = useState(false);
+
+  const [sortCol, setSortCol] = useState<SortCol | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const handleSort = (col: SortCol) => {
+    if (sortCol === col) {
+      setSortDir(prev => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortCol(col);
+      setSortDir("asc");
+    }
+  };
+
+  const sortedApps = [...apps].sort((a, b) => {
+    if (!sortCol) return 0;
+    let valA: any = "";
+    let valB: any = "";
+
+    if (sortCol === "jobTitle") {
+      valA = (a.jobTitle || "").toLowerCase();
+      valB = (b.jobTitle || "").toLowerCase();
+    } else if (sortCol === "status") {
+      valA = a.status || "";
+      valB = b.status || "";
+    } else if (sortCol === "workMode") {
+      valA = a.workMode || "";
+      valB = b.workMode || "";
+    } else if (sortCol === "salaryMin") {
+      valA = a.salaryMin || 0;
+      valB = b.salaryMin || 0;
+    } else if (sortCol === "appliedAt") {
+      valA = new Date(a.appliedAt || 0).getTime();
+      valB = new Date(b.appliedAt || 0).getTime();
+    }
+
+    if (valA < valB) return sortDir === "asc" ? -1 : 1;
+    if (valA > valB) return sortDir === "asc" ? 1 : -1;
+    return 0;
+  });
 
   const limit = 15;
 
@@ -188,16 +229,41 @@ export default function ApplicationsPage() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Posisi & Perusahaan</th>
-                <th>Status</th>
-                <th>Work Mode</th>
-                <th>Salary Range</th>
-                <th>Tanggal Apply</th>
+                <th onClick={() => handleSort("jobTitle")} style={{ cursor: "pointer", userSelect: "none" }}>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                    Posisi & Perusahaan
+                    {sortCol === "jobTitle" ? (sortDir === "asc" ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : <ArrowUpDown size={12} style={{ opacity: 0.4 }} />}
+                  </div>
+                </th>
+                <th onClick={() => handleSort("status")} style={{ cursor: "pointer", userSelect: "none" }}>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                    Status
+                    {sortCol === "status" ? (sortDir === "asc" ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : <ArrowUpDown size={12} style={{ opacity: 0.4 }} />}
+                  </div>
+                </th>
+                <th onClick={() => handleSort("workMode")} style={{ cursor: "pointer", userSelect: "none" }}>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                    Work Mode
+                    {sortCol === "workMode" ? (sortDir === "asc" ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : <ArrowUpDown size={12} style={{ opacity: 0.4 }} />}
+                  </div>
+                </th>
+                <th onClick={() => handleSort("salaryMin")} style={{ cursor: "pointer", userSelect: "none" }}>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                    Salary Range
+                    {sortCol === "salaryMin" ? (sortDir === "asc" ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : <ArrowUpDown size={12} style={{ opacity: 0.4 }} />}
+                  </div>
+                </th>
+                <th onClick={() => handleSort("appliedAt")} style={{ cursor: "pointer", userSelect: "none" }}>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                    Tanggal Apply
+                    {sortCol === "appliedAt" ? (sortDir === "asc" ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : <ArrowUpDown size={12} style={{ opacity: 0.4 }} />}
+                  </div>
+                </th>
                 <th style={{ textAlign: "right" }}>Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {apps.map(app => {
+              {sortedApps.map(app => {
                 const cfg = STATUS_CONFIG[app.status];
                 const companyName = app.company?.name ?? "—";
                 const initial = companyName.charAt(0).toUpperCase();
@@ -225,7 +291,7 @@ export default function ApplicationsPage() {
                           </span>
                           
                           {/* Attachment badges */}
-                          {(app.cvName || app.portfolioName || app.requirements || app.notesContent || (app.notesImages && app.notesImages.length > 0)) && (
+                          {(app.cvName || app.portfolioName || app.coverLetterName || app.coverLetterUrl || (app as any).coverLetter || app.requirements || app.notesContent || (app.notesImages && app.notesImages.length > 0)) && (
                             <div className={styles.badgesRow}>
                               {app.cvName && (
                                 <span className={styles.miniBadge} title={`CV: ${app.cvName}`}>
@@ -235,6 +301,11 @@ export default function ApplicationsPage() {
                               {app.portfolioName && (
                                 <span className={styles.miniBadge} title={`Portfolio: ${app.portfolioName}`}>
                                   <FileText size={10} /> Portofolio
+                                </span>
+                              )}
+                              {(app.coverLetterName || app.coverLetterUrl || (app as any).coverLetter) && (
+                                <span className={styles.miniBadge} title={`Cover Letter: ${app.coverLetterName || 'Surat Lamaran'}`}>
+                                  <FileText size={10} /> Cover Letter
                                 </span>
                               )}
                               {app.requirements && (

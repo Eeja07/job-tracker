@@ -130,6 +130,9 @@ export class ApplicationService {
       cvText: dto.cvText || undefined,
       portfolioName: dto.portfolioName || undefined,
       portfolioUrl: dto.portfolioUrl || undefined,
+      coverLetterName: dto.coverLetterName || undefined,
+      coverLetterUrl: dto.coverLetterUrl || dto.coverLetter || undefined,
+      coverLetterText: dto.coverLetterText || dto.coverLetter || undefined,
     });
 
     await this.invalidateDashboardCache(userId);
@@ -234,6 +237,12 @@ export class ApplicationService {
       updateData.portfolioName = dto.portfolioName;
     if (dto.portfolioUrl !== undefined)
       updateData.portfolioUrl = dto.portfolioUrl;
+    if (dto.coverLetterName !== undefined)
+      updateData.coverLetterName = dto.coverLetterName;
+    if (dto.coverLetterUrl !== undefined || dto.coverLetter !== undefined)
+      updateData.coverLetterUrl = dto.coverLetterUrl || dto.coverLetter;
+    if (dto.coverLetterText !== undefined)
+      updateData.coverLetterText = dto.coverLetterText;
 
     const result = await this.applicationRepository.update(id, updateData);
 

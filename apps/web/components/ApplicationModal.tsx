@@ -36,6 +36,8 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
     cvUrl: (app as any)?.cvUrl ?? "",
     portfolioName: (app as any)?.portfolioName ?? "",
     portfolioUrl: (app as any)?.portfolioUrl ?? "",
+    coverLetterName: (app as any)?.coverLetterName ?? "",
+    coverLetterUrl: (app as any)?.coverLetterUrl ?? (app as any)?.coverLetter ?? "",
   });
   const [notesImages, setNotesImages] = useState<string[]>((app as any)?.notesImages ?? []);
   const [activeTab, setActiveTab] = useState<"general" | "requirements" | "documents" | "notes" | "image">("general");
@@ -49,6 +51,7 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
   const notesFileInputRef = useRef<HTMLInputElement>(null);
   const cvFileInputRef = useRef<HTMLInputElement>(null);
   const portfolioFileInputRef = useRef<HTMLInputElement>(null);
+  const coverLetterFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleScrapeUrl = async () => {
     const rawUrl = form.sourceUrl.trim();
@@ -125,6 +128,16 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
     reader.onload = (e) => {
       if (e.target?.result) {
         setForm(f => ({ ...f, portfolioName: file.name, portfolioUrl: e.target!.result as string }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCoverLetterFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        setForm(f => ({ ...f, coverLetterName: file.name, coverLetterUrl: e.target!.result as string }));
       }
     };
     reader.readAsDataURL(file);
@@ -494,6 +507,55 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
                     <Briefcase size={14} />
                     <span>Link/File Portfolio Terlampir</span>
                     <button type="button" className={styles.removeNoteImgBtn} onClick={() => setForm(f => ({ ...f, portfolioUrl: "", portfolioName: "" }))}>
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Cover Letter (Surat Lamaran) Attachment */}
+              <div className={styles.field}>
+                <label className={styles.label}>Cover Letter / Surat Lamaran Terlampir</label>
+                <input
+                  type="file"
+                  ref={coverLetterFileInputRef}
+                  style={{ display: "none" }}
+                  accept=".pdf,.doc,.docx,.txt"
+                  onChange={e => {
+                    const f = e.target.files?.[0];
+                    if (f) handleCoverLetterFile(f);
+                  }}
+                />
+                <div className={styles.inputGroupRow}>
+                  <input
+                    className={styles.input}
+                    value={form.coverLetterName}
+                    onChange={set("coverLetterName")}
+                    placeholder="Nama / Label Cover Letter (misal: CoverLetter_Frontend.pdf)"
+                  />
+                  <button
+                    type="button"
+                    className={styles.uploadFileBtn}
+                    onClick={() => coverLetterFileInputRef.current?.click()}
+                  >
+                    <Upload size={14} /> Upload File PDF/DOC
+                  </button>
+                </div>
+                <div className={styles.inputWithIcon} style={{ marginTop: "0.4rem" }}>
+                  <LinkIcon size={14} className={styles.inputIcon} />
+                  <input
+                    className={styles.input}
+                    style={{ paddingLeft: "2.2rem" }}
+                    value={form.coverLetterUrl}
+                    onChange={set("coverLetterUrl")}
+                    placeholder="Atau Paste Text / Link Cover Letter (Google Docs, Drive, dll)"
+                  />
+                </div>
+                {form.coverLetterUrl && (
+                  <div className={styles.docBadge}>
+                    <FileText size={14} />
+                    <span>Link/File Cover Letter Terlampir</span>
+                    <button type="button" className={styles.removeNoteImgBtn} onClick={() => setForm(f => ({ ...f, coverLetterUrl: "", coverLetterName: "" }))}>
                       <Trash2 size={12} />
                     </button>
                   </div>

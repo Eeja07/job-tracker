@@ -270,6 +270,33 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
                     <ExternalLink size={15} style={{ opacity: 0.6 }} />
                   </div>
                 )}
+
+                {(app.coverLetterName || app.coverLetterUrl || (app as any).coverLetter) && (
+                  <div
+                    className={styles.docCard}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      const url = app.coverLetterUrl || (app as any).coverLetter;
+                      const name = app.coverLetterName || "Cover_Letter.pdf";
+                      if (url) {
+                        if (url.startsWith("data:") || url.startsWith("http")) {
+                          setPreviewDoc({ name, url });
+                        } else {
+                          alert(`Cover Letter:\n\n${url}`);
+                        }
+                      }
+                    }}
+                  >
+                    <div className={styles.docInfo}>
+                      <FileText size={16} className={styles.docIcon} />
+                      <div>
+                        <div className={styles.docName}>{app.coverLetterName || "Cover Letter (Surat Lamaran)"}</div>
+                        <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Klik untuk Buka Cover Letter</span>
+                      </div>
+                    </div>
+                    <ExternalLink size={15} style={{ opacity: 0.6 }} />
+                  </div>
+                )}
               </div>
             </div>
           )}
