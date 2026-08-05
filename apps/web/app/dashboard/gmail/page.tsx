@@ -9,7 +9,6 @@ export default function GmailSyncPage() {
   const [emails, setEmails] = useState<EmailMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [jobOnly, setJobOnly] = useState(true);
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
@@ -19,7 +18,7 @@ export default function GmailSyncPage() {
     try {
       const [st, em] = await Promise.all([
         gmailApi.getStatus(),
-        gmailApi.getEmails(jobOnly),
+        gmailApi.getEmails(true, 200),
       ]);
       setStatus(st);
       setEmails(Array.isArray(em) ? em : []);
@@ -32,7 +31,7 @@ export default function GmailSyncPage() {
 
   useEffect(() => {
     loadData();
-  }, [jobOnly]);
+  }, []);
 
   const filteredEmails = emails
     .filter((m) => {
@@ -150,19 +149,6 @@ export default function GmailSyncPage() {
         <div className={styles.inboxHeader} style={{ flexWrap: "wrap", gap: "0.75rem" }}>
           <h2 className={styles.inboxTitle}>Email Loker Masuk & Terlacak</h2>
           <div className={styles.filterGroup} style={{ flexWrap: "wrap", gap: "0.5rem" }}>
-            <button
-              className={`${styles.filterBtn} ${jobOnly ? styles.filterActive : ""}`}
-              onClick={() => setJobOnly(true)}
-            >
-              Hanya Loker / Balasan HR
-            </button>
-            <button
-              className={`${styles.filterBtn} ${!jobOnly ? styles.filterActive : ""}`}
-              onClick={() => setJobOnly(false)}
-            >
-              Semua Email
-            </button>
-
             {/* Filter by Status/Type */}
             <select
               value={typeFilter}

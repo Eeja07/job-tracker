@@ -4,6 +4,17 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RealtimePublisher } from '../websocket/services/realtime-publisher.service';
 
+// Helper function for strict keyword matching (handles short keywords like 'hr' with word boundaries)
+function isKeywordMatched(text: string, keyword: string): boolean {
+  const cleanKeyword = keyword.toLowerCase().trim();
+  if (cleanKeyword.length <= 4) {
+    const escaped = cleanKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(?:^|[^a-zA-Z0-9])${escaped}(?:$|[^a-zA-Z0-9])`, 'i');
+    return regex.test(text);
+  }
+  return text.toLowerCase().includes(cleanKeyword);
+}
+
 // Keywords to detect job-related emails
 const JOB_KEYWORDS = [
   'lamaran',
@@ -254,11 +265,11 @@ export class GmailService implements OnModuleInit {
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-    // Fetch last 50 messages in INBOX (only those not yet synced)
+    // Fetch last 200 messages in INBOX
     const listRes = await gmail.users.messages.list({
       userId: 'me',
       labelIds: ['INBOX'],
-      maxResults: 50,
+      maxResults: 200,
     });
 
     const messages = listRes.data.messages || [];
@@ -301,17 +312,17 @@ export class GmailService implements OnModuleInit {
 
         const receivedAt = dateStr ? new Date(dateStr) : new Date();
 
-        // Detect if job-related
+        // Detect if job-related using strict word-boundary matching
         const searchText = `${subject} ${snippet} ${fromEmail}`.toLowerCase();
         const isJobRelated = JOB_KEYWORDS.some((k) =>
-          searchText.includes(k.toLowerCase()),
+          isKeywordMatched(searchText, k),
         );
 
         // Detect email type
         let detectedType: string | null = null;
         if (isJobRelated) {
           for (const [type, keywords] of Object.entries(EMAIL_TYPE_KEYWORDS)) {
-            if (keywords.some((k) => searchText.includes(k.toLowerCase()))) {
+            if (keywords.some((k) => isKeywordMatched(searchText, k))) {
               detectedType = type;
               break;
             }
@@ -398,6 +409,31 @@ export class GmailService implements OnModuleInit {
       }
     }
 
+    // Re-evaluate existing stored messages to fix false-positive job-related flags
+    const existingMessages = await this.prisma.emailMessage.findMany({
+      where: { userId },
+    });
+
+    for (const msg of existingMessages) {
+      const searchText = `${msg.subject || ''} ${msg.snippet || ''} ${msg.fromEmail || ''}`.toLowerCase();
+      const correctJobRelated = JOB_KEYWORDS.some((k) => isKeywordMatched(searchText, k));
+      let correctDetectedType: string | null = null;
+      if (correctJobRelated) {
+        for (const [type, keywords] of Object.entries(EMAIL_TYPE_KEYWORDS)) {
+          if (keywords.some((k) => isKeywordMatched(searchText, k))) {
+            correctDetectedType = type;
+            break;
+          }
+        }
+      }
+      if (msg.isJobRelated !== correctJobRelated || msg.detectedType !== correctDetectedType) {
+        await this.prisma.emailMessage.update({
+          where: { id: msg.id },
+          data: { isJobRelated: correctJobRelated, detectedType: correctDetectedType },
+        });
+      }
+    }
+
     // Update lastSyncAt
     await this.prisma.gmailToken.update({
       where: { userId },
@@ -471,7 +507,7 @@ export class GmailService implements OnModuleInit {
     }
   }
 
-  async getEmailMessages(userId: string, jobRelatedOnly = false, limit = 30) {
+  async getEmailMessages(userId: string, jobRelatedOnly = false, limit = 200) {
     return this.prisma.emailMessage.findMany({
       where: {
         userId,

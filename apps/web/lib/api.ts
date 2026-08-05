@@ -215,7 +215,7 @@ export const gmailApi = {
   getStatus: () => request<GmailStatus>("/api/v1/gmail/status"),
   disconnect: () => request<{ message: string }>("/api/v1/gmail/disconnect", { method: "POST" }),
   sync: () => request<{ success: boolean; newMessages: number; jobRelated: number }>("/api/v1/gmail/sync", { method: "POST" }),
-  getEmails: (jobOnly = false) => request<EmailMessage[]>(`/api/v1/gmail/emails?jobOnly=${jobOnly}`),
+  getEmails: (jobOnly = false, limit = 200) => request<EmailMessage[]>(`/api/v1/gmail/emails?jobOnly=${jobOnly}&limit=${limit}`),
 };
 
 export const notificationApi = {
