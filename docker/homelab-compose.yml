@@ -8,7 +8,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: "3000"
-      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/job_tracker?schema=public}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://eeja:secretpassword@postgres:5432/job-tracker?schema=public}
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-}
