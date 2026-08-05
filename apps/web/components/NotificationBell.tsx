@@ -79,10 +79,12 @@ export default function NotificationBell() {
         if (newItems.length > 0) {
           playNotificationSound();
           const firstNew = newItems[0];
-          triggerDesktopNotification(
-            firstNew.title || "Email Loker Baru!",
-            firstNew.body || "Ada pembaruan email loker terbaru."
-          );
+          if (firstNew) {
+            triggerDesktopNotification(
+              firstNew.title || "Email Loker Baru!",
+              firstNew.body || "Ada pembaruan email loker terbaru."
+            );
+          }
         }
       }
 
