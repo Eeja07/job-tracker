@@ -66,9 +66,9 @@
 }
 
 .iconDisconnected {
-  background: var(--status-rejected-bg);
-  color: var(--status-rejected-color);
-  border-color: var(--status-rejected-border);
+  background: var(--status-saved-bg);
+  color: var(--status-saved-color);
+  border-color: var(--status-saved-border);
 }
 
 .connectedBadgeIcon {
@@ -76,7 +76,7 @@
 }
 
 .disconnectedBadgeIcon {
-  color: var(--status-rejected-color);
+  color: var(--status-saved-color);
 }
 
 .cardTitle {
