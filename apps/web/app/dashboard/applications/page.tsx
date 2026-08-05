@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { applicationsApi, type Application, type ApplicationStatus } from "@/lib/api";
-import { STATUS_CONFIG, WORK_MODE_LABELS, SOURCE_LABELS, formatCurrency, formatDate } from "@/lib/utils";
+import { STATUS_CONFIG, WORK_MODE_LABELS, SOURCE_LABELS, formatCurrency, formatDate, getDaysAgo } from "@/lib/utils";
 import { Plus, Search, ExternalLink, Trash2, X, Loader2, Edit2, Eye, FileText, Image as ImageIcon, CheckSquare, RefreshCw, CheckCircle, AlertTriangle } from "lucide-react";
 import ApplicationModal from "@/components/ApplicationModal";
 import ApplicationDetailModal from "@/components/ApplicationDetailModal";
@@ -277,7 +277,12 @@ export default function ApplicationsPage() {
                       </span>
                     </td>
                     <td>
-                      <span className={styles.textCell}>{formatDate(app.appliedAt)}</span>
+                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        <span className={styles.textCell}>{formatDate(app.appliedAt)}</span>
+                        <span style={{ fontSize: "0.72rem", color: "var(--primary, #3b82f6)", fontWeight: 600 }}>
+                          {getDaysAgo(app.appliedAt)}
+                        </span>
+                      </div>
                     </td>
                     <td style={{ textAlign: "right" }}>
                       <div className={styles.actionBtns}>

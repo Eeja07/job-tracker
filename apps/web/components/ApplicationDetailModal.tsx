@@ -2,7 +2,7 @@
 import { useState } from "react";
 import type { Application } from "@/lib/api";
 import { applicationsApi } from "@/lib/api";
-import { STATUS_CONFIG, WORK_MODE_LABELS, SOURCE_LABELS, formatCurrency, formatDate } from "@/lib/utils";
+import { STATUS_CONFIG, WORK_MODE_LABELS, SOURCE_LABELS, formatCurrency, formatDate, getDaysAgo } from "@/lib/utils";
 import { X, Edit2, Trash2, ExternalLink, FileText, Image as ImageIcon, Briefcase, Calendar, MapPin, DollarSign, CheckSquare, Download, Eye, RefreshCw, CheckCircle, AlertTriangle, HelpCircle } from "lucide-react";
 import styles from "./ApplicationDetailModal.module.css";
 
@@ -111,6 +111,9 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
               <span className={styles.metaValue}>
                 <Calendar size={14} className={styles.metaIcon} />
                 {formatDate(app.appliedAt)}
+                <span style={{ fontSize: "0.75rem", color: "var(--primary, #3b82f6)", fontWeight: 600, marginLeft: "6px" }}>
+                  ({getDaysAgo(app.appliedAt)})
+                </span>
               </span>
             </div>
 

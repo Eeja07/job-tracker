@@ -29,6 +29,24 @@ export function formatDate(iso: string): string {
   return new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso));
 }
 
+export function getDaysAgo(iso?: string): string {
+  if (!iso) return "—";
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return "—";
+  
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  
+  const diffTime = today.getTime() - target.getTime();
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) return "Hari ini";
+  if (diffDays < 0) return `H-${Math.abs(diffDays)}`;
+  if (diffDays === 1) return "1 hari lalu";
+  return `${diffDays} hari lalu`;
+}
+
 export function timeAgo(iso: string): string {
   if (!iso) return "—";
   const diff = Date.now() - new Date(iso).getTime();

@@ -27,6 +27,7 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
     salaryMin: app?.salaryMin ? String(app.salaryMin) : "",
     salaryMax: app?.salaryMax ? String(app.salaryMax) : "",
     currency: app?.currency ?? "IDR",
+    appliedAt: app?.appliedAt ? app.appliedAt.split("T")[0] : new Date().toISOString().split("T")[0],
     deadline: app?.deadline ? app.deadline.split("T")[0] : "",
     requirements: (app as any)?.requirements ?? "",
     notesContent: (app as any)?.notesContent ?? "",
@@ -217,6 +218,7 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
         salaryMin: form.salaryMin ? parseInt(form.salaryMin) : undefined,
         salaryMax: form.salaryMax ? parseInt(form.salaryMax) : undefined,
         currency: form.currency || undefined,
+        appliedAt: form.appliedAt ? new Date(form.appliedAt).toISOString() : undefined,
         deadline: form.deadline ? new Date(form.deadline).toISOString() : undefined,
         requirements: form.requirements || undefined,
         notesContent: form.notesContent || undefined,
@@ -372,9 +374,15 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
                 </div>
               </div>
 
-              <div className={styles.field} style={{ maxWidth: "220px" }}>
-                <label className={styles.label}>Deadline Lamaran</label>
-                <input className={styles.input} value={form.deadline} onChange={set("deadline")} type="date" />
+              <div className={styles.grid2}>
+                <div className={styles.field}>
+                  <label className={styles.label}>Tanggal Melamar (Applied Date)</label>
+                  <input className={styles.input} value={form.appliedAt} onChange={set("appliedAt")} type="date" />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label}>Deadline Lamaran (Opsional)</label>
+                  <input className={styles.input} value={form.deadline} onChange={set("deadline")} type="date" />
+                </div>
               </div>
             </>
           )}
