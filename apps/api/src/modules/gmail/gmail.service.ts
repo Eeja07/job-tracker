@@ -96,10 +96,14 @@ export class GmailService {
   ) {}
 
   createOAuth2Client(): any {
+    const redirectUri =
+      this.config.get<string>('GOOGLE_REDIRECT_URI') ||
+      'https://job.eeja.fun/api/v1/gmail/callback';
+
     return new google.auth.OAuth2(
       this.config.get<string>('GOOGLE_CLIENT_ID'),
       this.config.get<string>('GOOGLE_CLIENT_SECRET'),
-      this.config.get<string>('GOOGLE_REDIRECT_URI'),
+      redirectUri,
     );
   }
 
