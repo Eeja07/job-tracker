@@ -25,7 +25,6 @@ import { ConfigService } from '@nestjs/config';
 
 @ApiTags('Gmail')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller({ path: 'gmail', version: '1' })
 export class GmailController {
   constructor(
@@ -34,6 +33,7 @@ export class GmailController {
   ) {}
 
   @Get('connect')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get Gmail OAuth URL to connect account' })
   async getConnectUrl(@NestRequest() req: any) {
     const userId = (req as AuthenticatedRequest).user.sub;
@@ -52,21 +52,22 @@ export class GmailController {
       await this.gmailService.handleCallback(code, userId);
       const webUrl = this.config.get<string>(
         'FRONTEND_URL',
-        'http://localhost:3001',
+        'https://job.eeja.fun',
       );
-      return { url: `${webUrl}/dashboard?gmail=connected` };
+      return { url: `${webUrl}/dashboard/gmail?status=connected` };
     } catch (err: any) {
       const webUrl = this.config.get<string>(
         'FRONTEND_URL',
-        'http://localhost:3001',
+        'https://job.eeja.fun',
       );
       return {
-        url: `${webUrl}/dashboard?gmail=error&msg=${encodeURIComponent(err.message)}`,
+        url: `${webUrl}/dashboard/gmail?status=error&msg=${encodeURIComponent(err.message)}`,
       };
     }
   }
 
   @Get('status')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: 'Check Gmail connection status and unread notification count',
   })
@@ -76,6 +77,7 @@ export class GmailController {
   }
 
   @Post('disconnect')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Disconnect Gmail account' })
   async disconnect(@NestRequest() req: any) {
@@ -85,6 +87,7 @@ export class GmailController {
   }
 
   @Post('sync')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Manually trigger Gmail sync (fetch new emails)' })
   async sync(@NestRequest() req: any) {
@@ -94,6 +97,7 @@ export class GmailController {
   }
 
   @Get('emails')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get synced email messages' })
   async getEmails(
     @NestRequest() req: any,
@@ -109,6 +113,7 @@ export class GmailController {
   }
 
   @Get('notifications')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get in-app notifications' })
   async getNotifications(
     @NestRequest() req: any,
@@ -122,6 +127,7 @@ export class GmailController {
   }
 
   @Patch('notifications/:id/read')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Mark a notification as read' })
   async markRead(@NestRequest() req: any, @Param('id') id: string) {
@@ -131,6 +137,7 @@ export class GmailController {
   }
 
   @Patch('notifications/read-all')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Mark all notifications as read' })
   async markAllRead(@NestRequest() req: any) {
