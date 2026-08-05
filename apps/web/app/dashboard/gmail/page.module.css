@@ -46,6 +46,8 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  min-width: 0;
+  flex: 1;
 }
 
 .iconBg {
@@ -87,11 +89,14 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 0.2rem;
+  flex-wrap: wrap;
 }
 
 .cardDesc {
   font-size: 0.82rem;
   color: var(--text-muted);
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .connectBtn {
