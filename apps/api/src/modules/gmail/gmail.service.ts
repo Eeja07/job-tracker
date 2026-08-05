@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { google } from 'googleapis';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -86,7 +86,7 @@ const EMAIL_TYPE_KEYWORDS: Record<string, string[]> = {
 };
 
 @Injectable()
-export class GmailService {
+export class GmailService implements OnModuleInit {
   private readonly logger = new Logger(GmailService.name);
 
   constructor(
@@ -94,6 +94,32 @@ export class GmailService {
     private readonly prisma: PrismaService,
     private readonly realtime: RealtimePublisher,
   ) {}
+
+  onModuleInit() {
+    this.logger.log('Initializing automatic background Gmail sync timer (every 2 mins)');
+    setInterval(() => {
+      this.syncAllUsersInBackground().catch((err) => {
+        this.logger.error(`Error in automatic background Gmail sync: ${err.message}`);
+      });
+    }, 2 * 60 * 1000);
+  }
+
+  async syncAllUsersInBackground(): Promise<void> {
+    try {
+      const tokens = await this.prisma.gmailToken.findMany({
+        select: { userId: true },
+      });
+      for (const t of tokens) {
+        try {
+          await this.syncEmails(t.userId);
+        } catch (err: any) {
+          this.logger.error(`Background sync failed for user ${t.userId}: ${err.message}`);
+        }
+      }
+    } catch (err: any) {
+      this.logger.error(`Failed to fetch connected Gmail users for auto-sync: ${err.message}`);
+    }
+  }
 
   createOAuth2Client(): any {
     const redirectUri =

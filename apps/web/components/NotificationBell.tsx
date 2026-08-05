@@ -175,7 +175,7 @@ export default function NotificationBell() {
                       </div>
                     </div>
                     <p className={styles.notifBody}>{n.body}</p>
-                    <div style={{ fontSize: "0.72rem", color: "var(--primary, #3b82f6)", marginTop: "4px", fontWeight: 500 }}>
+                    <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "4px", fontWeight: 500 }}>
                       Klik untuk baca detail &rarr;
                     </div>
                   </div>
@@ -233,7 +233,7 @@ export default function NotificationBell() {
                   style={{
                     fontSize: "0.7rem",
                     fontWeight: 700,
-                    color: "var(--primary, #3b82f6)",
+                    color: "var(--text-muted)",
                     textTransform: "uppercase",
                     letterSpacing: "0.05em",
                   }}
@@ -289,8 +289,8 @@ export default function NotificationBell() {
                 style={{
                   fontSize: "0.82rem",
                   fontWeight: 600,
-                  color: "#fff",
-                  background: "var(--primary, #3b82f6)",
+                  color: "var(--btn-text)",
+                  background: "var(--btn-bg)",
                   padding: "0.5rem 1rem",
                   borderRadius: "6px",
                   textDecoration: "none",

@@ -68,9 +68,10 @@ export default function GmailSyncPage() {
 
   const getGmailWebUrl = (msg: EmailMessage) => {
     if (msg.gmailMessageId) {
-      return `https://mail.google.com/mail/u/0/#search/rfc822msgid:${encodeURIComponent(msg.gmailMessageId)}`;
+      return `https://mail.google.com/mail/u/0/#all/${encodeURIComponent(msg.gmailMessageId)}`;
     }
-    return `https://mail.google.com/mail/u/0/#search/${encodeURIComponent(msg.subject)}`;
+    const cleanSubject = msg.subject ? msg.subject.replace(/[^a-zA-Z0-9 ]/g, " ") : "";
+    return `https://mail.google.com/mail/u/0/#search/${encodeURIComponent(msg.fromEmail)}+${encodeURIComponent(cleanSubject)}`;
   };
 
   return (
