@@ -196,10 +196,17 @@ export default function GmailSyncPage() {
                 </div>
                 <p className={styles.snippet}>{m.snippet}</p>
 
-                <div className={styles.cardFooterHint}>
+                <button
+                  className={styles.cardFooterHint}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedEmail(m);
+                  }}
+                  type="button"
+                >
                   <span>Klik untuk baca isi pesan</span>
                   <ArrowRight size={12} />
-                </div>
+                </button>
               </div>
             ))}
           </div>
