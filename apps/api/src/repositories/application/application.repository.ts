@@ -204,7 +204,7 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
           select: { id: true, name: true },
         },
       },
-      orderBy: { lastStatusChangedAt: 'desc' },
+      orderBy: { appliedAt: 'desc' },
       take: limit,
     });
   }

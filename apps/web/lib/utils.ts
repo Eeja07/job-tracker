@@ -17,11 +17,15 @@ export const SOURCE_LABELS: Record<string, string> = {
 };
 
 export function formatCurrency(amount: number, currency = "IDR"): string {
+  if (!amount && amount !== 0) return "—";
   if (currency === "IDR") {
-    if (amount >= 1_000_000) return `Rp ${(amount / 1_000_000).toFixed(0)}jt`;
     return `Rp ${new Intl.NumberFormat("id-ID").format(amount)}`;
   }
-  return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
+  try {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
+  } catch {
+    return `${currency} ${new Intl.NumberFormat("id-ID").format(amount)}`;
+  }
 }
 
 export function formatDate(iso: string): string {

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { dashboardApi, applicationsApi, type Application } from "@/lib/api";
-import { STATUS_CONFIG, timeAgo } from "@/lib/utils";
+import { STATUS_CONFIG, formatDate, getDaysAgo } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { Plus, ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -33,7 +33,12 @@ export default function DashboardPage() {
       if (apps.status === "fulfilled") {
         const res = apps.value;
         const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
-        setRecent(list.slice(0, 5));
+        const sortedByApplied = [...list].sort((a: Application, b: Application) => {
+          const tA = new Date(a.appliedAt || a.createdAt).getTime();
+          const tB = new Date(b.appliedAt || b.createdAt).getTime();
+          return tB - tA;
+        });
+        setRecent(sortedByApplied.slice(0, 5));
 
         list.forEach((app: Application) => {
           if (app.status) {
@@ -175,7 +180,7 @@ export default function DashboardPage() {
                       <span className={styles.statusBadge} style={{ color: cfg.color, background: cfg.bg, borderColor: cfg.border }}>
                         {cfg.label}
                       </span>
-                      <span className={styles.recentTime}>{timeAgo(app.createdAt)}</span>
+                      <span className={styles.recentTime}>{formatDate(app.appliedAt)} ({getDaysAgo(app.appliedAt)})</span>
                     </div>
                   </div>
                 );
