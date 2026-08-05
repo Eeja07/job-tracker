@@ -76,7 +76,7 @@ async function bootstrap(): Promise<void> {
   const documentV2 = SwaggerModule.createDocument(app, configV2);
   SwaggerModule.setup('docs/v2', app, documentV2);
 
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   const appLogger = app.get(Logger);
   appLogger.log(
     `Server running on port ${port} [API Versions: /api/v1, /api/v2]`,
