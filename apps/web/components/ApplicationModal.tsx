@@ -37,7 +37,8 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
     portfolioName: (app as any)?.portfolioName ?? "",
     portfolioUrl: (app as any)?.portfolioUrl ?? "",
     coverLetterName: (app as any)?.coverLetterName ?? "",
-    coverLetterUrl: (app as any)?.coverLetterUrl ?? (app as any)?.coverLetter ?? "",
+    coverLetterUrl: (app as any)?.coverLetterUrl ?? "",
+    coverLetterText: (app as any)?.coverLetterText ?? (app as any)?.coverLetter ?? "",
   });
   const [notesImages, setNotesImages] = useState<string[]>((app as any)?.notesImages ?? []);
   const [activeTab, setActiveTab] = useState<"general" | "requirements" | "documents" | "notes" | "image">("general");
@@ -134,13 +135,27 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
   };
 
   const handleCoverLetterFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        setForm(f => ({ ...f, coverLetterName: file.name, coverLetterUrl: e.target!.result as string }));
-      }
-    };
-    reader.readAsDataURL(file);
+    if (file.type.includes("text") || file.name.endsWith(".txt")) {
+      const textReader = new FileReader();
+      textReader.onload = (e) => {
+        const text = (e.target?.result as string) || "";
+        setForm(f => ({
+          ...f,
+          coverLetterName: file.name,
+          coverLetterText: text,
+          coverLetterUrl: f.coverLetterUrl || text,
+        }));
+      };
+      textReader.readAsText(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setForm(f => ({ ...f, coverLetterName: file.name, coverLetterUrl: e.target!.result as string }));
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleMainImageFile = async (file: File) => {
@@ -241,6 +256,9 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
         cvUrl: form.cvUrl || undefined,
         portfolioName: form.portfolioName || undefined,
         portfolioUrl: form.portfolioUrl || undefined,
+        coverLetterName: form.coverLetterName || undefined,
+        coverLetterUrl: form.coverLetterUrl || undefined,
+        coverLetterText: form.coverLetterText || undefined,
       });
     } catch (err: any) {
       setError(err.message ?? "Gagal menyimpan");
@@ -538,7 +556,7 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
                     className={styles.uploadFileBtn}
                     onClick={() => coverLetterFileInputRef.current?.click()}
                   >
-                    <Upload size={14} /> Upload File PDF/DOC
+                    <Upload size={14} /> Upload File (PDF/DOC/TXT)
                   </button>
                 </div>
                 <div className={styles.inputWithIcon} style={{ marginTop: "0.4rem" }}>
@@ -548,14 +566,31 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
                     style={{ paddingLeft: "2.2rem" }}
                     value={form.coverLetterUrl}
                     onChange={set("coverLetterUrl")}
-                    placeholder="Atau Paste Text / Link Cover Letter (Google Docs, Drive, dll)"
+                    placeholder="Atau Paste Link Cover Letter (Google Docs, Drive, Cloud, dll)"
                   />
                 </div>
-                {form.coverLetterUrl && (
+                
+                {/* Textarea for writing or copy-pasting Cover Letter text */}
+                <div style={{ marginTop: "0.5rem" }}>
+                  <label className={styles.label} style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
+                    Atau Tulis / Paste Isi Teks Surat Lamaran (Cover Letter):
+                  </label>
+                  <textarea
+                    className={styles.textarea}
+                    rows={6}
+                    value={form.coverLetterText}
+                    onChange={set("coverLetterText")}
+                    placeholder="Kepada Yth. HRD / Hiring Manager...&#10;&#10;Dengan hormat,&#10;Saya bermaksud untuk mengajukan lamaran pekerjaan..."
+                  />
+                </div>
+
+                {(form.coverLetterUrl || form.coverLetterText) && (
                   <div className={styles.docBadge}>
                     <FileText size={14} />
-                    <span>Link/File Cover Letter Terlampir</span>
-                    <button type="button" className={styles.removeNoteImgBtn} onClick={() => setForm(f => ({ ...f, coverLetterUrl: "", coverLetterName: "" }))}>
+                    <span>
+                      {form.coverLetterText ? "Isi Teks Cover Letter Terisi" : "Link/File Cover Letter Terlampir"}
+                    </span>
+                    <button type="button" className={styles.removeNoteImgBtn} onClick={() => setForm(f => ({ ...f, coverLetterUrl: "", coverLetterName: "", coverLetterText: "" }))}>
                       <Trash2 size={12} />
                     </button>
                   </div>

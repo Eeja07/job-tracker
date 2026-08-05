@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { Application } from "@/lib/api";
 import { applicationsApi } from "@/lib/api";
 import { STATUS_CONFIG, WORK_MODE_LABELS, SOURCE_LABELS, formatCurrency, formatDate, getDaysAgo } from "@/lib/utils";
-import { X, Edit2, Trash2, ExternalLink, FileText, Image as ImageIcon, Briefcase, Calendar, MapPin, DollarSign, CheckSquare, Download, Eye, RefreshCw, CheckCircle, AlertTriangle, HelpCircle } from "lucide-react";
+import { X, Edit2, Trash2, ExternalLink, FileText, Image as ImageIcon, Briefcase, Calendar, MapPin, DollarSign, CheckSquare, Download, Eye, RefreshCw, CheckCircle, AlertTriangle, HelpCircle, Copy, Check } from "lucide-react";
 import styles from "./ApplicationDetailModal.module.css";
 
 interface Props {
@@ -16,6 +16,7 @@ interface Props {
 export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose }: Props) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [previewDoc, setPreviewDoc] = useState<{ name: string; url: string } | null>(null);
+  const [copiedCoverLetter, setCopiedCoverLetter] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(false);
   const [listingStatus, setListingStatus] = useState<"ACTIVE" | "CLOSED" | "UNKNOWN" | "ERROR" | null>(null);
   const [listingDetail, setListingDetail] = useState<string | undefined>();
@@ -271,32 +272,58 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
                   </div>
                 )}
 
-                {(app.coverLetterName || app.coverLetterUrl || (app as any).coverLetter) && (
-                  <div
-                    className={styles.docCard}
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      const url = app.coverLetterUrl || (app as any).coverLetter;
-                      const name = app.coverLetterName || "Cover_Letter.pdf";
-                      if (url) {
-                        if (url.startsWith("data:") || url.startsWith("http")) {
-                          setPreviewDoc({ name, url });
-                        } else {
-                          alert(`Cover Letter:\n\n${url}`);
-                        }
-                      }
-                    }}
-                  >
-                    <div className={styles.docInfo}>
-                      <FileText size={16} className={styles.docIcon} />
-                      <div>
-                        <div className={styles.docName}>{app.coverLetterName || "Cover Letter (Surat Lamaran)"}</div>
-                        <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Klik untuk Buka Cover Letter</span>
-                      </div>
+                {(app.coverLetterName || app.coverLetterUrl || (app as any).coverLetterText || (app as any).coverLetter) && (() => {
+                  const coverText = (app as any).coverLetterText || (!app.coverLetterUrl?.startsWith("data:") && !app.coverLetterUrl?.startsWith("http") ? app.coverLetterUrl : "") || ((app as any).coverLetter && !(app as any).coverLetter.startsWith("http") && !(app as any).coverLetter.startsWith("data:") ? (app as any).coverLetter : "");
+                  const isFileOrLink = app.coverLetterUrl && (app.coverLetterUrl.startsWith("data:") || app.coverLetterUrl.startsWith("http"));
+
+                  return (
+                    <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                      {isFileOrLink && (
+                        <div
+                          className={styles.docCard}
+                          style={{ cursor: "pointer" }}
+                          onClick={() => {
+                            const name = app.coverLetterName || "Cover_Letter.pdf";
+                            setPreviewDoc({ name, url: app.coverLetterUrl! });
+                          }}
+                        >
+                          <div className={styles.docInfo}>
+                            <FileText size={16} className={styles.docIcon} />
+                            <div>
+                              <div className={styles.docName}>{app.coverLetterName || "Cover Letter (File/Link)"}</div>
+                              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Klik untuk Buka/Preview</span>
+                            </div>
+                          </div>
+                          <ExternalLink size={15} style={{ opacity: 0.6 }} />
+                        </div>
+                      )}
+
+                      {coverText && (
+                        <div className={styles.contentBox} style={{ position: "relative", marginTop: "0.25rem" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem", borderBottom: "1px solid var(--border)", paddingBottom: "0.4rem" }}>
+                            <span style={{ fontWeight: 600, fontSize: "0.82rem", color: "var(--text-muted)" }}>Teks Cover Letter / Surat Lamaran:</span>
+                            <button
+                              type="button"
+                              className={styles.actionBtnSubtle}
+                              style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", padding: "0.25rem 0.55rem", fontSize: "0.75rem", borderRadius: "var(--radius-sm)", background: "var(--bg-subtle)", border: "1px solid var(--border)", cursor: "pointer", color: "var(--text)" }}
+                              onClick={() => {
+                                navigator.clipboard.writeText(coverText);
+                                setCopiedCoverLetter(true);
+                                setTimeout(() => setCopiedCoverLetter(false), 2000);
+                              }}
+                            >
+                              {copiedCoverLetter ? <Check size={12} style={{ color: "#22c55e" }} /> : <Copy size={12} />}
+                              {copiedCoverLetter ? "Tersalin!" : "Salin Teks"}
+                            </button>
+                          </div>
+                          <div style={{ whiteSpace: "pre-wrap", fontFamily: "inherit", fontSize: "0.88rem", lineHeight: "1.5" }}>
+                            {coverText}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <ExternalLink size={15} style={{ opacity: 0.6 }} />
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
           )}
