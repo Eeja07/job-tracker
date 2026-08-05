@@ -32,6 +32,8 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-https://job.eeja.fun/api/v1/gmail/callback}
       FRONTEND_URL: ${FRONTEND_URL:-https://job.eeja.fun}
+    volumes:
+      - api_storage:/app/apps/api/storage/uploads
     depends_on:
       job-tracker-redis:
         condition: service_healthy
@@ -59,3 +61,4 @@ networks:
 
 volumes:
   redis_data:
+  api_storage:
