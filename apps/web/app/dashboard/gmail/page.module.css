@@ -62,23 +62,23 @@
 }
 
 .iconConnected {
-  background: var(--status-offer-bg);
-  color: var(--status-offer-color);
-  border-color: var(--status-offer-border);
+  background: var(--bg-subtle);
+  color: var(--text);
+  border-color: var(--border);
 }
 
 .iconDisconnected {
-  background: var(--status-saved-bg);
-  color: var(--status-saved-color);
-  border-color: var(--status-saved-border);
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  border-color: var(--border);
 }
 
 .connectedBadgeIcon {
-  color: var(--status-offer-color);
+  color: var(--text);
 }
 
 .disconnectedBadgeIcon {
-  color: var(--status-saved-color);
+  color: var(--text-muted);
 }
 
 .cardTitle {
@@ -124,16 +124,18 @@
   gap: 6px;
   padding: 0.5rem 0.9rem;
   background: transparent;
-  color: var(--status-rejected-color);
-  border: 1px solid var(--status-rejected-border);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm, 4px);
   font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .disconnectBtn:hover {
-  background: var(--status-rejected-bg);
+  background: var(--bg-subtle);
+  color: var(--text);
 }
 
 .syncBtn {

@@ -78,7 +78,7 @@ export default function GmailSyncPage() {
     <div className={styles.container}>
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>Gmail Real-time Sync & Monitor</h1>
+          <h1 className={styles.title}>Gmail Message & Monitor</h1>
           <p className={styles.subtitle}>
             Hubungkan Gmail Anda untuk mendeteksi email balasan loker, undangan interview, dan konfirmasi otomatis.
           </p>

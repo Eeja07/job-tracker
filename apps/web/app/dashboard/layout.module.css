@@ -7,12 +7,15 @@
 @media (max-width: 768px) {
   .shell {
     flex-direction: column;
+    height: 100dvh;
     height: 100vh;
     overflow: hidden;
   }
   .main {
     padding-top: 56px; /* Offset for fixed mobile topbar */
+    height: calc(100dvh - 56px);
     height: calc(100vh - 56px);
+    padding-bottom: max(5rem, env(safe-area-inset-bottom, 24px));
     width: 100%;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;

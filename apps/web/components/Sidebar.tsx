@@ -11,7 +11,7 @@ import styles from "./Sidebar.module.css";
 const nav = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
   { href: "/dashboard/applications", icon: FileText, label: "Applications" },
-  { href: "/dashboard/gmail", icon: Mail, label: "Gmail Sync" },
+  { href: "/dashboard/gmail", icon: Mail, label: "Gmail Message" },
   { href: "/dashboard/cv-reviewer", icon: Sparkles, label: "CV & AI Reviewer" },
   { href: "/dashboard/api-keys", icon: KeyRound, label: "API Keys Vault" },
 ];
