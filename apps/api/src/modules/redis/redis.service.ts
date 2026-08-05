@@ -33,7 +33,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   constructor(private readonly configService: ConfigService) {}
 
-  onModuleInit() {
+  async onModuleInit(): Promise<void> {
     const host = this.configService.getOrThrow<string>('REDIS_HOST');
     const port = this.configService.getOrThrow<number>('REDIS_PORT');
     const password = this.configService.get<string>('REDIS_PASSWORD') || undefined;
@@ -57,14 +57,33 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     };
 
     this.client = new Redis(redisOptions);
-
-    this.client.on('connect', () => {
-      this.logger.log(`Connected to Redis at ${host}:${port} (DB ${db})`);
-    });
+    this.subClient = new Redis({ ...redisOptions, lazyConnect: false });
 
     this.client.on('error', (err) => {
       this.logger.warn(`Redis connection error: ${err.message}`);
     });
+
+    this.subClient.on('error', (err) => {
+      this.logger.warn(`Redis subClient error: ${err.message}`);
+    });
+
+    // Await both clients fully ready before returning.
+    // NestJS will not call onModuleInit on other modules until this Promise
+    // resolves, so subscribe() calls from sibling modules are guaranteed to
+    // find a ready subClient.
+    await Promise.all([
+      new Promise<void>((resolve, reject) => {
+        this.client.once('ready', () => {
+          this.logger.log(`Connected to Redis at ${host}:${port} (DB ${db})`);
+          resolve();
+        });
+        this.client.once('error', reject);
+      }),
+      new Promise<void>((resolve, reject) => {
+        this.subClient!.once('ready', resolve);
+        this.subClient!.once('error', reject);
+      }),
+    ]);
   }
 
   async onModuleDestroy() {
@@ -219,11 +238,21 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
    */
   async subscribe(channel: string, handler: (message: string) => void): Promise<void> {
     try {
+      // Wait for subClient to be initialized if it is not ready yet.
+      // EventSubscriberService.onModuleInit() can race with RedisService.onModuleInit()
+      // since NestJS does not guarantee initialization order across modules.
       if (!this.subClient) {
-        this.subClient = this.client.duplicate();
-        this.subClient.on('error', (err) => {
-          this.logger.warn(`Redis subClient error: ${err.message}`);
-        });
+        const maxWaitMs = 5000;
+        const intervalMs = 50;
+        let waited = 0;
+        while (!this.subClient && waited < maxWaitMs) {
+          await new Promise((resolve) => setTimeout(resolve, intervalMs));
+          waited += intervalMs;
+        }
+        if (!this.subClient) {
+          this.logger.warn(`Redis subClient not ready after ${maxWaitMs}ms, skipping subscribe for channel [${channel}]`);
+          return;
+        }
       }
 
       if (!this.isSubListenerRegistered) {

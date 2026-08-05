@@ -24,6 +24,11 @@ export const envSchema = z.object({
   SMTP_USERNAME: z.string().default(''),
   SMTP_PASSWORD: z.string().default(''),
   SMTP_FROM: z.string().default('"Job Tracker" <noreply@jobtracker.io>'),
+
+  // Google OAuth
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_REDIRECT_URI: z.string().optional(),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

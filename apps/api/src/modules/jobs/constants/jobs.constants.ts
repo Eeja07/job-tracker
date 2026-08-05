@@ -5,6 +5,7 @@ export const QUEUE_NAMES = {
   SYSTEM: 'system',
   DEAD_LETTER: 'dead-letter',
   AUDIT: 'audit',
+  JOB_CHECK: 'job-check',
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
@@ -36,4 +37,9 @@ export enum DeadLetterJobName {
 
 export enum AuditJobName {
   RECORD_AUDIT_LOG = 'RECORD_AUDIT_LOG',
+}
+
+export enum JobCheckJobName {
+  CHECK_SINGLE_LISTING = 'CHECK_SINGLE_LISTING',
+  CHECK_ALL_LISTINGS = 'CHECK_ALL_LISTINGS',
 }

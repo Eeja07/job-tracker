@@ -1,0 +1,337 @@
+.page {
+  padding: 2rem 2.5rem;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 1.25rem; gap: 1rem;
+}
+
+.title {
+  font-size: 1.6rem; font-weight: 600; color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: 0.9rem; color: var(--text-muted); margin-top: 0.2rem;
+}
+
+.errorNoticeBox {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-sm);
+  color: #f59e0b; font-size: 0.85rem; font-weight: 500;
+  margin-bottom: 1.25rem; line-height: 1.45;
+}
+
+.primaryBtn {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.6rem 1.1rem;
+  background: var(--btn-bg); color: var(--btn-text);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem; font-weight: 600;
+  transition: opacity 0.15s; border: none; cursor: pointer;
+  white-space: nowrap;
+}
+
+.primaryBtn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.primaryBtn:disabled {
+  opacity: 0.5; cursor: not-allowed;
+}
+
+.secondaryBtn {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.6rem 0.9rem;
+  background: var(--bg-subtle); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-size: 0.88rem; font-weight: 500; cursor: pointer;
+  transition: all 0.15s; white-space: nowrap;
+}
+
+.secondaryBtn:hover {
+  border-color: var(--border-focus); background: var(--bg-card-hover);
+}
+
+.aiSettingsBox {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  display: flex; flex-direction: column; gap: 0.75rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.aiSettingsHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 0.9rem; color: var(--text);
+}
+
+.aiSettingsGrid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;
+}
+
+.grid2 {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+  align-items: start;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  display: flex; flex-direction: column; gap: 0.85rem;
+}
+
+.cardHeader {
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.cardTitleWrap {
+  display: flex; align-items: center; gap: 0.5rem; color: var(--text);
+}
+
+.cardTitle {
+  font-size: 1.05rem; font-weight: 600;
+}
+
+.resetBtn {
+  background: none; border: none; color: var(--text-muted);
+  font-size: 0.8rem; cursor: pointer; text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.resetBtn:hover {
+  color: var(--text);
+}
+
+.uploadBox {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1.1rem; text-align: center;
+  background: var(--bg-subtle);
+  cursor: pointer; transition: all 0.15s;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.35rem;
+}
+
+.uploadBox:hover {
+  border-color: var(--border-focus); background: var(--bg-card-hover);
+}
+
+.uploadIcon {
+  color: var(--text-muted);
+}
+
+.uploadText {
+  font-size: 0.85rem; color: var(--text);
+}
+
+.uploadSubtext {
+  font-size: 0.75rem; color: var(--text-subtle);
+}
+
+.parsingRow {
+  display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted);
+}
+
+.fileBadge {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.4rem 0.75rem;
+  background: var(--status-applied-bg); border: 1px solid var(--status-applied-border);
+  border-radius: var(--radius-sm); color: var(--status-applied-color);
+  font-size: 0.82rem;
+}
+
+.clearFileBtn {
+  background: none; border: none; color: currentColor; cursor: pointer;
+  display: flex; align-items: center; opacity: 0.7; transition: opacity 0.12s;
+}
+
+.clearFileBtn:hover {
+  opacity: 1;
+}
+
+.cardHint {
+  font-size: 0.83rem; color: var(--text-muted); line-height: 1.4;
+}
+
+.cvTextarea, .reqTextarea {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 0.9rem;
+  color: var(--text); font-size: 0.88rem;
+  font-family: monospace; line-height: 1.5;
+  outline: none; transition: border-color 0.15s; width: 100%;
+  resize: vertical;
+}
+
+.cvTextarea:focus, .reqTextarea:focus {
+  border-color: var(--border-focus);
+}
+
+.selectAppRow {
+  display: flex; flex-direction: column; gap: 0.35rem;
+}
+
+.label {
+  font-size: 0.82rem; font-weight: 500; color: var(--text-muted);
+}
+
+.selectInput {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.75rem;
+  color: var(--text); font-size: 0.88rem; outline: none;
+}
+
+.selectInput option {
+  background: var(--bg-card); color: var(--text);
+}
+
+.actionBtn {
+  display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  padding: 0.65rem 1rem;
+  background: var(--btn-bg); color: var(--btn-text);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem; font-weight: 600;
+  border: none; cursor: pointer; transition: opacity 0.15s;
+}
+
+.actionBtn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.copyPromptBtn {
+  display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  padding: 0.65rem 1rem;
+  background: var(--bg-subtle); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-size: 0.88rem; font-weight: 500; cursor: pointer; transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.copyPromptBtn:hover {
+  border-color: var(--border-focus); background: var(--bg-card-hover);
+}
+
+.resultCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  display: flex; flex-direction: column; gap: 1.1rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.scoreRow {
+  display: flex; align-items: center; gap: 1.25rem;
+  padding-bottom: 1rem; border-bottom: 1px solid var(--border-subtle);
+}
+
+.scoreCircle {
+  width: 84px; height: 84px; border-radius: 50%;
+  border: 3px solid var(--border-focus);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  flex-shrink: 0; background: var(--bg-subtle);
+  padding: 0.25rem;
+  box-sizing: border-box;
+}
+
+.scoreVal {
+  font-size: 1.15rem; font-weight: 700; color: var(--text); line-height: 1;
+}
+
+.scoreLabel {
+  font-size: 0.56rem; color: var(--text-subtle); text-transform: uppercase; margin-top: 3px; text-align: center; line-height: 1.1; letter-spacing: 0.2px;
+}
+
+.scoreMeta {
+  display: flex; flex-direction: column; gap: 0.3rem;
+}
+
+.scoreTitle {
+  font-size: 1rem; font-weight: 600; color: var(--text);
+}
+
+.aiTag {
+  display: inline-flex; align-items: center; gap: 0.25rem;
+  padding: 0.2rem 0.6rem; background: var(--bg-subtle);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text); font-size: 0.75rem; font-weight: 500;
+}
+
+.scoreSummary {
+  font-size: 0.85rem; color: var(--text-muted); line-height: 1.45;
+}
+
+.kwSection {
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+
+.kwTitle {
+  font-size: 0.9rem; font-weight: 600; color: var(--text);
+  display: flex; align-items: center; gap: 0.45rem;
+}
+
+.badgeWrap {
+  display: flex; flex-wrap: wrap; gap: 0.4rem;
+}
+
+.matchedBadge {
+  display: flex; align-items: center; gap: 0.25rem;
+  padding: 0.25rem 0.65rem;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text); font-size: 0.8rem; font-weight: 500;
+}
+
+.missingBadge {
+  display: flex; align-items: center; gap: 0.25rem;
+  padding: 0.25rem 0.65rem;
+  background: var(--bg-subtle);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted); font-size: 0.8rem; font-weight: 500;
+}
+
+.boxText {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+.tipsList {
+  margin: 0; padding-left: 1.2rem;
+  display: flex; flex-direction: column; gap: 0.45rem;
+  font-size: 0.88rem; color: var(--text); line-height: 1.5;
+}
+
+.spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 960px) {
+  .grid2 { grid-template-columns: 1fr; }
+}

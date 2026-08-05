@@ -1,0 +1,209 @@
+.page {
+  padding: 2rem 2.5rem;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 2rem; gap: 1rem;
+}
+
+.title {
+  font-size: 1.6rem; font-weight: 600; color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: 0.9rem; color: var(--text-muted); margin-top: 0.2rem;
+}
+
+.primaryBtn {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  background: var(--btn-bg); color: var(--btn-text);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem; font-weight: 500;
+  transition: opacity 0.15s; text-decoration: none;
+}
+
+.primaryBtn:hover {
+  opacity: 0.9;
+}
+
+.metricsGrid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.metricCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+
+.metricLabel {
+  font-size: 0.85rem; color: var(--text-muted); font-weight: 500;
+}
+
+.metricValue {
+  font-size: 1.8rem; font-weight: 600; color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.layoutGrid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;
+}
+
+.sectionCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+
+.cardHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.cardTitle {
+  font-size: 1rem; font-weight: 600; color: var(--text);
+}
+
+.textLink {
+  display: flex; align-items: center; gap: 0.25rem;
+  font-size: 0.85rem; color: var(--text-muted);
+  transition: color 0.15s;
+}
+
+.textLink:hover {
+  color: var(--text);
+}
+
+.statusRows {
+  display: flex; flex-direction: column; gap: 0.85rem;
+}
+
+.statusRow {
+  display: flex; align-items: center; gap: 1rem;
+}
+
+.statusLabelWrap {
+  width: 120px; flex-shrink: 0;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem; font-weight: 500;
+  border: 1px solid transparent;
+}
+
+.progressTrack {
+  flex: 1; height: 6px;
+  background: var(--bg-subtle);
+  border-radius: 3px; overflow: hidden;
+}
+
+.progressBar {
+  height: 100%; border-radius: 3px;
+}
+
+.statusCount {
+  font-size: 0.88rem; color: var(--text); font-weight: 600;
+  width: 32px; text-align: right; font-variant-numeric: tabular-nums;
+}
+
+.recentList {
+  display: flex; flex-direction: column;
+}
+
+.recentRow {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.recentRow:hover {
+  opacity: 0.85;
+}
+
+.recentLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  overflow: hidden;
+  padding-right: 0.5rem;
+}
+
+.thumbImg {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  flex-shrink: 0;
+}
+
+.thumbPlaceholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-subtle);
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.recentMeta {
+  display: flex; flex-direction: column; gap: 0.15rem;
+  overflow: hidden;
+}
+
+.recentTitle {
+  font-size: 0.9rem; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.recentCompany {
+  font-size: 0.8rem; color: var(--text-muted);
+}
+
+.recentRight {
+  display: flex; align-items: center; gap: 1rem; flex-shrink: 0;
+}
+
+.recentTime {
+  font-size: 0.8rem; color: var(--text-subtle);
+}
+
+.emptyState {
+  padding: 2.5rem 0; text-align: center; color: var(--text-muted); font-size: 0.9rem;
+  display: flex; flex-direction: column; gap: 0.5rem; align-items: center;
+}
+
+.subtleLink {
+  color: var(--text); font-size: 0.85rem; text-decoration: underline; text-underline-offset: 2px;
+}
+
+.loadingPlaceholder {
+  padding: 2.5rem 0; text-align: center; color: var(--text-subtle); font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .metricsGrid { grid-template-columns: repeat(2, 1fr); }
+  .layoutGrid { grid-template-columns: 1fr; }
+}

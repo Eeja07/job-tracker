@@ -1,4 +1,5 @@
 import { PrismaClient, ApplicationStatus, WorkMode, ApplicationSource, AttachmentType, StorageProvider, Currency } from '@prisma/client';
+import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
 
@@ -13,11 +14,13 @@ async function main() {
   await prisma.company.deleteMany();
   await prisma.user.deleteMany();
 
+  const defaultPasswordHash = await argon2.hash('password123');
+
   // 1. Create Seed Users
   const demoUser = await prisma.user.create({
     data: {
       email: 'demo@jobtracker.dev',
-      passwordHash: '$2b$12$eImiTXuWVxfM37uY4JANjO5E/uL1bE.4y.2o/1i8iO31N9v3mC91.', // dummy argon2/bcrypt hash
+      passwordHash: defaultPasswordHash,
       fullName: 'Mahija Dev',
       avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mahija',
       isEmailVerified: true,

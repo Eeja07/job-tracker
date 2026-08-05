@@ -94,6 +94,9 @@ model User {
   refreshSessions RefreshSession[]
   auditLogs       AuditLog[]
   userRoles       UserRole[]
+  gmailToken      GmailToken?
+  notifications   Notification[]
+  emailMessages   EmailMessage[]
 
   @@map("users")
 }
@@ -132,6 +135,15 @@ model Application {
   deadline            DateTime?          @db.Timestamptz(6)
   appliedAt           DateTime           @default(now()) @map("applied_at") @db.Timestamptz(6)
   lastStatusChangedAt DateTime           @default(now()) @map("last_status_changed_at") @db.Timestamptz(6)
+  requirements        String?            @db.Text
+  notesContent        String?            @map("notes_content") @db.Text
+  notesImages         String[]           @default([]) @map("notes_images")
+  imageUrl            String?            @map("image_url") @db.Text
+  cvName              String?            @map("cv_name") @db.VarChar(255)
+  cvUrl               String?            @map("cv_url") @db.Text
+  cvText              String?            @map("cv_text") @db.Text
+  portfolioName       String?            @map("portfolio_name") @db.VarChar(255)
+  portfolioUrl        String?            @map("portfolio_url") @db.Text
   createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt           DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -331,4 +343,77 @@ model FeatureFlag {
   updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@map("feature_flags")
+}
+
+// ==========================================
+// GMAIL INTEGRATION
+// ==========================================
+
+model GmailToken {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String    @unique @map("user_id") @db.Uuid
+  accessToken  String    @map("access_token") @db.Text
+  refreshToken String    @map("refresh_token") @db.Text
+  tokenType    String    @default("Bearer") @map("token_type") @db.VarChar(50)
+  scope        String    @db.Text
+  expiryDate   DateTime? @map("expiry_date") @db.Timestamptz(6)
+  gmailEmail   String    @map("gmail_email") @db.VarChar(255)
+  historyId    String?   @map("history_id") @db.VarChar(50)
+  isActive     Boolean   @default(true) @map("is_active")
+  lastSyncAt   DateTime? @map("last_sync_at") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("gmail_tokens")
+}
+
+model EmailMessage {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  gmailMessageId String   @map("gmail_message_id") @db.VarChar(255)
+  gmailThreadId  String   @map("gmail_thread_id") @db.VarChar(255)
+  subject        String   @db.Text
+  fromEmail      String   @map("from_email") @db.VarChar(500)
+  fromName       String?  @map("from_name") @db.VarChar(255)
+  toEmail        String   @map("to_email") @db.Text
+  snippet        String   @db.Text
+  bodyText       String?  @map("body_text") @db.Text
+  receivedAt     DateTime @map("received_at") @db.Timestamptz(6)
+  isRead         Boolean  @default(false) @map("is_read")
+  isJobRelated   Boolean  @default(false) @map("is_job_related")
+  detectedType   String?  @map("detected_type") @db.VarChar(50)
+  applicationId  String?  @map("application_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gmailMessageId])
+  @@index([userId])
+  @@index([userId, isJobRelated])
+  @@index([receivedAt])
+  @@map("email_messages")
+}
+
+// ==========================================
+// IN-APP NOTIFICATIONS
+// ==========================================
+
+model Notification {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  type      String   @db.VarChar(100)
+  title     String   @db.VarChar(500)
+  body      String   @db.Text
+  isRead    Boolean  @default(false) @map("is_read")
+  metadata  Json?    @default("{}")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
 }

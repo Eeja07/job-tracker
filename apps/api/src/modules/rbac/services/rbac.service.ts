@@ -49,9 +49,10 @@ export class RbacService {
   // ─── Role Management ──────────────────────────────────────────────────────
 
   async assignRole(userId: string, roleName: string, tx?: Prisma.TransactionClient): Promise<void> {
-    const role = await this.roleRepository.findByName(roleName, tx);
+    let role = await this.roleRepository.findByName(roleName, tx);
     if (!role) {
-      throw new NotFoundException(`Role '${roleName}' not found`);
+      this.logger.warn(`Role '${roleName}' not found. Auto-creating default role...`);
+      role = await this.roleRepository.create({ name: roleName, description: `${roleName} default role` }, tx);
     }
 
     // Double Invalidation Pattern (pre & post DB write to eliminate race condition window)

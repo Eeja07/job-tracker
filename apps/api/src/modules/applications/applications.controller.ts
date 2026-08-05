@@ -26,6 +26,8 @@ import {
 
 import { ApiVersion } from '../../core/versioning/decorators/api-version.decorator';
 import { DeprecatedEndpoint } from '../../core/versioning/decorators/deprecated-endpoint.decorator';
+import { scrapeJobUrl } from './job-scraper.util';
+import { JobStatusCheckerService } from './job-status-checker.service';
 
 @ApiTags('Applications')
 @ApiVersion('1')
@@ -34,7 +36,34 @@ import { DeprecatedEndpoint } from '../../core/versioning/decorators/deprecated-
 @UseGuards(JwtAuthGuard)
 @Controller({ path: 'applications', version: '1' })
 export class ApplicationsController {
-  constructor(private readonly applicationService: ApplicationService) {}
+  constructor(
+    private readonly applicationService: ApplicationService,
+    private readonly jobStatusChecker: JobStatusCheckerService,
+  ) {}
+
+  @Post('scrape-url')
+  @ApiOperation({ summary: 'Scrape job details from a job portal URL' })
+  @ApiResponse({ status: 200, description: 'Scraped job details' })
+  async scrapeUrl(@Body('url') url: string) {
+    return scrapeJobUrl(url);
+  }
+
+  @Post('check-listing-status')
+  @ApiOperation({ summary: 'Check if a job listing URL is still active or closed' })
+  @ApiResponse({ status: 200, description: 'Listing status result' })
+  async checkListingStatus(@Body('applicationId') applicationId: string) {
+    if (!applicationId) {
+      return { error: 'applicationId is required' };
+    }
+    return this.jobStatusChecker.checkSingleListing(applicationId);
+  }
+
+  @Post('check-all-listings')
+  @ApiOperation({ summary: 'Trigger a check of all active job listings for the authenticated user' })
+  @ApiResponse({ status: 200, description: 'All listing check results' })
+  async checkAllListings() {
+    return this.jobStatusChecker.checkAllActiveListings();
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create a job application' })
@@ -44,8 +73,13 @@ export class ApplicationsController {
     @NestRequest() req: any,
     @Body() dto: CreateApplicationDto,
   ): Promise<ApplicationResponseDto> {
-    const authReq = req as AuthenticatedRequest;
-    return this.applicationService.create(authReq.user.sub, dto);
+    try {
+      const authReq = req as AuthenticatedRequest;
+      return await this.applicationService.create(authReq.user.sub, dto);
+    } catch (err: any) {
+      console.error("ERROR IN APPLICATIONS CONTROLLER CREATE:", err);
+      throw err;
+    }
   }
 
   @Get()

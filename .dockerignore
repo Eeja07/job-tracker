@@ -1,0 +1,45 @@
+# ===========================================
+# Root .dockerignore
+# Build context: project root (docker build -f apps/api/Dockerfile .)
+# COPY . . copies from root, so this file controls what goes into the image.
+# ===========================================
+
+# Environment files — NEVER bake secrets into image
+.env
+.env.*
+!.env.example
+apps/**/.env
+apps/**/.env.*
+
+# Dependencies (rebuilt in image)
+node_modules
+**/node_modules
+
+# Build artifacts
+dist
+**/dist
+coverage
+**/coverage
+
+# Git
+.git
+.gitignore
+.github
+
+# Dev tooling
+*.log
+.DS_Store
+.npmrc
+.prettierrc
+turbo.json
+
+# Docs
+README.md
+docs/
+
+# Helm / K8s (not needed in runtime image)
+charts/
+rendered.yaml
+
+# Docker files themselves
+docker/

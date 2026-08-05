@@ -25,6 +25,15 @@ export interface CreateApplicationData {
   location?: string;
   deadline?: Date;
   appliedAt?: Date;
+  requirements?: string;
+  notesContent?: string;
+  notesImages?: string[];
+  imageUrl?: string;
+  cvName?: string;
+  cvUrl?: string;
+  cvText?: string;
+  portfolioName?: string;
+  portfolioUrl?: string;
 }
 
 export interface UpdateApplicationData {
@@ -42,6 +51,15 @@ export interface UpdateApplicationData {
   deadline?: Date;
   appliedAt?: Date;
   lastStatusChangedAt?: Date;
+  requirements?: string;
+  notesContent?: string;
+  notesImages?: string[];
+  imageUrl?: string;
+  cvName?: string;
+  cvUrl?: string;
+  cvText?: string;
+  portfolioName?: string;
+  portfolioUrl?: string;
 }
 
 export interface ApplicationFilterParams {

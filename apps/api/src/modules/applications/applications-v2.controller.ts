@@ -19,7 +19,6 @@ import { ApplicationService } from './application.service';
 import {
   CreateApplicationDto,
   UpdateApplicationDto,
-  UpdateApplicationStatusDto,
   ApplicationQueryDto,
   ApplicationResponseDto,
 } from './dto/application.dto';
@@ -71,7 +70,7 @@ export class ApplicationsV2Controller {
   @ApiOperation({ summary: 'Get application details by ID (v2 API)' })
   async findOne(@NestRequest() req: any, @Param('id') id: string): Promise<any> {
     const authReq = req as AuthenticatedRequest;
-    const item = await this.applicationService.findOne(authReq.user.sub, id);
+    const item = await this.applicationService.findOne(id, authReq.user.sub);
     return { version: 'v2', data: item };
   }
 
@@ -83,7 +82,7 @@ export class ApplicationsV2Controller {
     @Body() dto: UpdateApplicationDto,
   ): Promise<any> {
     const authReq = req as AuthenticatedRequest;
-    const updated = await this.applicationService.update(authReq.user.sub, id, dto);
+    const updated = await this.applicationService.update(id, authReq.user.sub, dto);
     return { version: 'v2', data: updated };
   }
 
@@ -92,6 +91,6 @@ export class ApplicationsV2Controller {
   @ApiOperation({ summary: 'Delete application (v2 API)' })
   async remove(@NestRequest() req: any, @Param('id') id: string): Promise<void> {
     const authReq = req as AuthenticatedRequest;
-    await this.applicationService.remove(authReq.user.sub, id);
+    await this.applicationService.remove(id, authReq.user.sub);
   }
 }

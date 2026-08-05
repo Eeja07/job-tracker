@@ -10,6 +10,7 @@ import {
   IsUUID,
   Min,
   IsDateString,
+  IsArray,
 } from 'class-validator';
 import { ApplicationStatus, WorkMode, ApplicationSource, Currency } from '@prisma/client';
 import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
@@ -33,17 +34,17 @@ export class CreateApplicationDto {
   @ApiPropertyOptional({ description: 'Application status', enum: ApplicationStatus, default: ApplicationStatus.SAVED })
   @IsOptional()
   @IsEnum(ApplicationStatus)
-  status?: ApplicationStatus = ApplicationStatus.SAVED;
+  status?: ApplicationStatus;
 
   @ApiPropertyOptional({ description: 'Work mode arrangement', enum: WorkMode, default: WorkMode.REMOTE })
   @IsOptional()
   @IsEnum(WorkMode)
-  workMode?: WorkMode = WorkMode.REMOTE;
+  workMode?: WorkMode;
 
   @ApiPropertyOptional({ description: 'Application source channel', enum: ApplicationSource, default: ApplicationSource.LINKEDIN })
   @IsOptional()
   @IsEnum(ApplicationSource)
-  source?: ApplicationSource = ApplicationSource.LINKEDIN;
+  source?: ApplicationSource;
 
   @ApiPropertyOptional({ description: 'Minimum annual/monthly salary', example: 20000000 })
   @IsOptional()
@@ -60,7 +61,7 @@ export class CreateApplicationDto {
   @ApiPropertyOptional({ description: 'Salary currency code', enum: Currency, default: Currency.IDR })
   @IsOptional()
   @IsEnum(Currency)
-  currency?: Currency = Currency.IDR;
+  currency?: Currency;
 
   @ApiPropertyOptional({ description: 'Job listing URL', example: 'https://linkedin.com/jobs/1234' })
   @IsOptional()
@@ -81,6 +82,67 @@ export class CreateApplicationDto {
   @IsOptional()
   @IsDateString()
   appliedAt?: string;
+
+  @ApiPropertyOptional({ description: 'Company Name if companyId is unknown', example: 'Google' })
+  @IsOptional()
+  @IsString()
+  companyName?: string;
+
+  @ApiPropertyOptional({ description: 'Job requirements description' })
+  @IsOptional()
+  @IsString()
+  requirements?: string;
+
+  @ApiPropertyOptional({ description: 'Notes or comments' })
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
+  @ApiPropertyOptional({ description: 'CV Text content' })
+  @IsOptional()
+  @IsString()
+  cvText?: string;
+
+  @ApiPropertyOptional({ description: 'Portfolio link or URL' })
+  @IsOptional()
+  @IsString()
+  portfolioUrl?: string;
+
+  @ApiPropertyOptional({ description: 'Cover letter content' })
+  @IsOptional()
+  @IsString()
+  coverLetter?: string;
+
+  @ApiPropertyOptional({ description: 'Notes content' })
+  @IsOptional()
+  @IsString()
+  notesContent?: string;
+
+  @ApiPropertyOptional({ description: 'Notes images list' })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  notesImages?: string[];
+
+  @ApiPropertyOptional({ description: 'Main image URL or base64' })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @ApiPropertyOptional({ description: 'CV filename' })
+  @IsOptional()
+  @IsString()
+  cvName?: string;
+
+  @ApiPropertyOptional({ description: 'CV file URL or base64' })
+  @IsOptional()
+  @IsString()
+  cvUrl?: string;
+
+  @ApiPropertyOptional({ description: 'Portfolio filename' })
+  @IsOptional()
+  @IsString()
+  portfolioName?: string;
 }
 
 export class UpdateApplicationDto extends PartialType(CreateApplicationDto) {}

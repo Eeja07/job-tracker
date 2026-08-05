@@ -78,6 +78,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       statusCode,
       error: errorName,
       message,
+      details: exception instanceof Error ? exception.message : String(exception),
       timestamp: logDetails.timestamp,
       path: request.url,
     });

@@ -1,50 +1,142 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-}
-
-* {
+*, *::before, *::after {
   box-sizing: border-box;
-  padding: 0;
   margin: 0;
+  padding: 0;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+:root, [data-theme="dark"] {
+  --bg: #09090b;
+  --bg-subtle: #121215;
+  --bg-card: #18181b;
+  --bg-card-hover: #202024;
+  --bg-input: #121215;
+  
+  --border: #27272a;
+  --border-subtle: #1e1e24;
+  --border-focus: #52525b;
+  
+  --text: #fafafa;
+  --text-muted: #a1a1aa;
+  --text-subtle: #71717a;
+  
+  --btn-bg: #fafafa;
+  --btn-text: #09090b;
+
+  --radius: 6px;
+  --radius-sm: 4px;
+
+  /* Status Badge Tokens — Dark Mode */
+  --status-saved-color: #94a3b8;
+  --status-saved-bg: rgba(148, 163, 184, 0.14);
+  --status-saved-border: rgba(148, 163, 184, 0.35);
+
+  --status-applied-color: #38bdf8;
+  --status-applied-bg: rgba(56, 189, 248, 0.14);
+  --status-applied-border: rgba(56, 189, 248, 0.35);
+
+  --status-screening-color: #c084fc;
+  --status-screening-bg: rgba(192, 132, 252, 0.14);
+  --status-screening-border: rgba(192, 132, 252, 0.35);
+
+  --status-interviewing-color: #fbbf24;
+  --status-interviewing-bg: rgba(251, 191, 36, 0.14);
+  --status-interviewing-border: rgba(251, 191, 36, 0.35);
+
+  --status-offer-color: #4ade80;
+  --status-offer-bg: rgba(74, 222, 128, 0.14);
+  --status-offer-border: rgba(74, 222, 128, 0.35);
+
+  --status-rejected-color: #f87171;
+  --status-rejected-bg: rgba(248, 113, 113, 0.14);
+  --status-rejected-border: rgba(248, 113, 113, 0.35);
+
+  --status-withdrawn-color: #71717a;
+  --status-withdrawn-bg: rgba(113, 113, 122, 0.14);
+  --status-withdrawn-border: rgba(113, 113, 122, 0.35);
 }
 
-.imgDark {
-  display: none;
+[data-theme="light"] {
+  --bg: #f8fafc;
+  --bg-subtle: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
+  --bg-input: #ffffff;
+  
+  --border: #e2e8f0;
+  --border-subtle: #f1f5f9;
+  --border-focus: #94a3b8;
+  
+  --text: #0f172a;
+  --text-muted: #475569;
+  --text-subtle: #64748b;
+
+  --btn-bg: #0f172a;
+  --btn-text: #ffffff;
+
+  /* Status Badge Tokens — Light Mode (High Contrast) */
+  --status-saved-color: #475569;
+  --status-saved-bg: #f1f5f9;
+  --status-saved-border: #cbd5e1;
+
+  --status-applied-color: #0284c7;
+  --status-applied-bg: #e0f2fe;
+  --status-applied-border: #bae6fd;
+
+  --status-screening-color: #7c3aed;
+  --status-screening-bg: #f3e8ff;
+  --status-screening-border: #ddd6fe;
+
+  --status-interviewing-color: #b45309;
+  --status-interviewing-bg: #fef3c7;
+  --status-interviewing-border: #fde68a;
+
+  --status-offer-color: #15803d;
+  --status-offer-bg: #dcfce7;
+  --status-offer-border: #bbf7d0;
+
+  --status-rejected-color: #b91c1c;
+  --status-rejected-bg: #fee2e2;
+  --status-rejected-border: #fecaca;
+
+  --status-withdrawn-color: #64748b;
+  --status-withdrawn-bg: #f8fafc;
+  --status-withdrawn-border: #e2e8f0;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+html {
+  font-size: 15px;
+}
 
-  .imgLight {
-    display: none;
-  }
-  .imgDark {
-    display: unset;
-  }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+input, select, textarea { font-family: inherit; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.skeleton {
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }

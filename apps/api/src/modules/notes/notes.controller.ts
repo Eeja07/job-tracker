@@ -8,11 +8,14 @@ import {
   Param,
   Query,
   UseGuards,
+  Request as NestRequest,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AuthenticatedRequest } from '../auth/auth.controller';
+import { NoteService } from './note.service';
 import { CreateNoteDto, UpdateNoteDto, NoteResponseDto } from './dto/note.dto';
 
 @ApiTags('Notes')
@@ -20,28 +23,40 @@ import { CreateNoteDto, UpdateNoteDto, NoteResponseDto } from './dto/note.dto';
 @UseGuards(JwtAuthGuard)
 @Controller('notes')
 export class NotesController {
+  constructor(private readonly noteService: NoteService) {}
+
   @Post()
   @ApiOperation({ summary: 'Create note for application' })
   @ApiResponse({ status: 201, description: 'Note created', type: NoteResponseDto })
-  async create(@Body() _dto: CreateNoteDto): Promise<NoteResponseDto> {
-    throw new Error('Contract placeholder - not implemented');
+  async create(
+    @NestRequest() req: any,
+    @Body() dto: CreateNoteDto,
+  ): Promise<NoteResponseDto> {
+    const authReq = req as AuthenticatedRequest;
+    return this.noteService.create(authReq.user.sub, dto);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get notes for an application' })
   @ApiResponse({ status: 200, description: 'Notes list', type: [NoteResponseDto] })
   async findByApplication(
-    @Query('applicationId') _applicationId: string,
+    @NestRequest() req: any,
+    @Query('applicationId') applicationId: string,
   ): Promise<NoteResponseDto[]> {
-    throw new Error('Contract placeholder - not implemented');
+    const authReq = req as AuthenticatedRequest;
+    return this.noteService.findByApplication(applicationId, authReq.user.sub);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get note details by ID' })
   @ApiResponse({ status: 200, description: 'Note details', type: NoteResponseDto })
   @ApiResponse({ status: 404, description: 'Note not found' })
-  async findOne(@Param('id') _id: string): Promise<NoteResponseDto> {
-    throw new Error('Contract placeholder - not implemented');
+  async findOne(
+    @NestRequest() req: any,
+    @Param('id') id: string,
+  ): Promise<NoteResponseDto> {
+    const authReq = req as AuthenticatedRequest;
+    return this.noteService.findOne(id, authReq.user.sub);
   }
 
   @Patch(':id')
@@ -49,10 +64,12 @@ export class NotesController {
   @ApiResponse({ status: 200, description: 'Note updated', type: NoteResponseDto })
   @ApiResponse({ status: 404, description: 'Note not found' })
   async update(
-    @Param('id') _id: string,
-    @Body() _dto: UpdateNoteDto,
+    @NestRequest() req: any,
+    @Param('id') id: string,
+    @Body() dto: UpdateNoteDto,
   ): Promise<NoteResponseDto> {
-    throw new Error('Contract placeholder - not implemented');
+    const authReq = req as AuthenticatedRequest;
+    return this.noteService.update(id, authReq.user.sub, dto);
   }
 
   @Delete(':id')
@@ -60,7 +77,11 @@ export class NotesController {
   @ApiOperation({ summary: 'Delete note' })
   @ApiResponse({ status: 204, description: 'Note deleted' })
   @ApiResponse({ status: 404, description: 'Note not found' })
-  async remove(@Param('id') _id: string): Promise<void> {
-    throw new Error('Contract placeholder - not implemented');
+  async remove(
+    @NestRequest() req: any,
+    @Param('id') id: string,
+  ): Promise<void> {
+    const authReq = req as AuthenticatedRequest;
+    await this.noteService.remove(id, authReq.user.sub);
   }
 }

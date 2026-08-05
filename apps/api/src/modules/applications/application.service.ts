@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException, Optional } from '@nestjs/common';
-import { Application, ApplicationStatus } from '@prisma/client';
+import { Application, ApplicationStatus, WorkMode, ApplicationSource, Currency } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ApplicationRepository } from '../../repositories/application/application.repository';
 import { StatusHistoryRepository } from '../../repositories/status-history/status-history.repository';
@@ -10,6 +10,8 @@ import {
   UpdateApplicationStatusDto,
   ApplicationQueryDto,
 } from './dto/application.dto';
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const ALLOWED_TRANSITIONS: Record<ApplicationStatus, ApplicationStatus[]> = {
   [ApplicationStatus.SAVED]: [ApplicationStatus.APPLIED, ApplicationStatus.WITHDRAWN],
@@ -51,14 +53,54 @@ export class ApplicationService {
   }
 
   async create(userId: string, dto: CreateApplicationDto): Promise<Application> {
-    const deadline = dto.deadline ? new Date(dto.deadline) : undefined;
-    const appliedAt = dto.appliedAt ? new Date(dto.appliedAt) : undefined;
+    let companyId = dto.companyId;
+
+    if (companyId && !UUID_REGEX.test(companyId)) {
+      companyId = undefined;
+    }
+
+    if (!companyId && dto.companyName?.trim()) {
+      const trimmedName = dto.companyName.trim();
+      const existingCompany = await this.prisma.company.findUnique({
+        where: { name: trimmedName },
+      });
+      if (existingCompany) {
+        companyId = existingCompany.id;
+      } else {
+        const newCompany = await this.prisma.company.create({
+          data: { name: trimmedName },
+        });
+        companyId = newCompany.id;
+      }
+    }
+
+    const deadline = dto.deadline && !isNaN(Date.parse(dto.deadline)) ? new Date(dto.deadline) : undefined;
+    const appliedAt = dto.appliedAt && !isNaN(Date.parse(dto.appliedAt)) ? new Date(dto.appliedAt) : undefined;
 
     const result = await this.applicationRepository.create({
-      ...dto,
       userId,
+      companyId: companyId || undefined,
+      jobTitle: dto.jobTitle,
+      applicationCode: dto.applicationCode || undefined,
+      status: dto.status || ApplicationStatus.SAVED,
+      workMode: dto.workMode || WorkMode.REMOTE,
+      source: dto.source || ApplicationSource.LINKEDIN,
+      salaryMin: dto.salaryMin !== undefined ? Number(dto.salaryMin) : undefined,
+      salaryMax: dto.salaryMax !== undefined ? Number(dto.salaryMax) : undefined,
+      currency: dto.currency || Currency.IDR,
+      sourceUrl: dto.sourceUrl || undefined,
+      location: dto.location || undefined,
       deadline,
       appliedAt,
+      requirements: dto.requirements || undefined,
+      notesContent: dto.notesContent || dto.notes || undefined,
+      notesImages: dto.notesImages || [],
+      imageUrl: dto.imageUrl || undefined,
+      cvName: dto.cvName || undefined,
+      cvUrl: dto.cvUrl || undefined,
+      cvText: dto.cvText || undefined,
+      portfolioName: dto.portfolioName || undefined,
+      portfolioUrl: dto.portfolioUrl || undefined,
     });
 
     await this.invalidateDashboardCache(userId);
@@ -66,8 +108,8 @@ export class ApplicationService {
   }
 
   async findAll(userId: string, query: ApplicationQueryDto): Promise<Application[]> {
-    const deadlineBefore = query.deadlineBefore ? new Date(query.deadlineBefore) : undefined;
-    const deadlineAfter = query.deadlineAfter ? new Date(query.deadlineAfter) : undefined;
+    const deadlineBefore = query.deadlineBefore && !isNaN(Date.parse(query.deadlineBefore)) ? new Date(query.deadlineBefore) : undefined;
+    const deadlineAfter = query.deadlineAfter && !isNaN(Date.parse(query.deadlineAfter)) ? new Date(query.deadlineAfter) : undefined;
 
     return this.applicationRepository.findWithFilters(userId, {
       ...query,
@@ -91,14 +133,55 @@ export class ApplicationService {
   ): Promise<Application> {
     await this.findOne(id, userId);
 
-    const deadline = dto.deadline ? new Date(dto.deadline) : undefined;
-    const appliedAt = dto.appliedAt ? new Date(dto.appliedAt) : undefined;
+    let companyId = dto.companyId;
+    if (companyId && !UUID_REGEX.test(companyId)) {
+      companyId = undefined;
+    }
 
-    const result = await this.applicationRepository.update(id, {
-      ...dto,
-      deadline,
-      appliedAt,
-    });
+    if (!companyId && dto.companyName?.trim()) {
+      const trimmedName = dto.companyName.trim();
+      const existingCompany = await this.prisma.company.findUnique({
+        where: { name: trimmedName },
+      });
+      if (existingCompany) {
+        companyId = existingCompany.id;
+      } else {
+        const newCompany = await this.prisma.company.create({
+          data: { name: trimmedName },
+        });
+        companyId = newCompany.id;
+      }
+    }
+
+    const deadline = dto.deadline && !isNaN(Date.parse(dto.deadline)) ? new Date(dto.deadline) : undefined;
+    const appliedAt = dto.appliedAt && !isNaN(Date.parse(dto.appliedAt)) ? new Date(dto.appliedAt) : undefined;
+
+    const updateData: any = {};
+    if (companyId) updateData.companyId = companyId;
+    if (dto.jobTitle !== undefined && dto.jobTitle !== null) updateData.jobTitle = dto.jobTitle;
+    if (dto.applicationCode !== undefined && dto.applicationCode !== null) updateData.applicationCode = dto.applicationCode;
+    if (dto.status) updateData.status = dto.status;
+    if (dto.workMode) updateData.workMode = dto.workMode;
+    if (dto.source) updateData.source = dto.source;
+    if (dto.salaryMin !== undefined && dto.salaryMin !== null) updateData.salaryMin = Number(dto.salaryMin);
+    if (dto.salaryMax !== undefined && dto.salaryMax !== null) updateData.salaryMax = Number(dto.salaryMax);
+    if (dto.currency) updateData.currency = dto.currency;
+    if (dto.sourceUrl !== undefined && dto.sourceUrl !== null) updateData.sourceUrl = dto.sourceUrl;
+    if (dto.location !== undefined && dto.location !== null) updateData.location = dto.location;
+    if (deadline) updateData.deadline = deadline;
+    if (appliedAt) updateData.appliedAt = appliedAt;
+
+    if (dto.requirements !== undefined) updateData.requirements = dto.requirements;
+    if (dto.notesContent !== undefined || dto.notes !== undefined) updateData.notesContent = dto.notesContent || dto.notes;
+    if (dto.notesImages !== undefined) updateData.notesImages = dto.notesImages;
+    if (dto.imageUrl !== undefined) updateData.imageUrl = dto.imageUrl;
+    if (dto.cvName !== undefined) updateData.cvName = dto.cvName;
+    if (dto.cvUrl !== undefined) updateData.cvUrl = dto.cvUrl;
+    if (dto.cvText !== undefined) updateData.cvText = dto.cvText;
+    if (dto.portfolioName !== undefined) updateData.portfolioName = dto.portfolioName;
+    if (dto.portfolioUrl !== undefined) updateData.portfolioUrl = dto.portfolioUrl;
+
+    const result = await this.applicationRepository.update(id, updateData);
 
     await this.invalidateDashboardCache(userId);
     return result;
