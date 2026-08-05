@@ -19,6 +19,8 @@ export interface TestAppSetup {
 export async function createTestApp(): Promise<TestAppSetup> {
   process.env.JWT_ACCESS_SECRET = 'test-access-secret-key-1234567890';
   process.env.JWT_REFRESH_SECRET = 'test-refresh-secret-key-0987654321';
+  process.env.REDIS_HOST = process.env.REDIS_HOST || 'localhost';
+  process.env.REDIS_PORT = process.env.REDIS_PORT || '6379';
   process.env.PORT = '3001';
   process.env.CORS_ORIGIN = '*';
   process.env.NODE_ENV = 'test';
