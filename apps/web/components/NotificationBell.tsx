@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-import { Bell, Mail, CheckCheck, RefreshCw, AlertCircle } from "lucide-react";
+import { Bell, Mail, CheckCheck, RefreshCw, AlertCircle, Check } from "lucide-react";
 import { notificationApi, gmailApi, type NotificationItem, type GmailStatus } from "@/lib/api";
 import styles from "./NotificationBell.module.css";
 
@@ -8,7 +8,6 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [gmailStatus, setGmailStatus] = useState<GmailStatus | null>(null);
-  const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -62,6 +61,18 @@ export default function NotificationBell() {
     }
   };
 
+  const handleMarkItemRead = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    try {
+      await notificationApi.markRead(id);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
@@ -85,7 +96,7 @@ export default function NotificationBell() {
               <span className={styles.title}>Notifikasi Loker & Gmail</span>
               {unreadCount > 0 && (
                 <button className={styles.markReadBtn} onClick={handleMarkAllRead} title="Tandai semua dibaca">
-                  <CheckCheck size={13} /> Dibaca
+                  <CheckCheck size={13} /> Semuanya Dibaca
                 </button>
               )}
             </div>
@@ -125,10 +136,30 @@ export default function NotificationBell() {
               <div className={styles.emptyState}>Belum ada notifikasi email loker.</div>
             ) : (
               notifications.map((n) => (
-                <div key={n.id} className={`${styles.notifItem} ${!n.isRead ? styles.unread : ""}`}>
+                <div
+                  key={n.id}
+                  className={`${styles.notifItem} ${!n.isRead ? styles.unread : ""}`}
+                  onClick={() => !n.isRead && handleMarkItemRead(n.id)}
+                >
                   <div className={styles.notifHeader}>
-                    <span className={styles.notifTitle}>{n.title}</span>
-                    <span className={styles.notifTime}>{new Date(n.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                    <div className={styles.titleGroup}>
+                      {!n.isRead && <span className={styles.unreadDot} />}
+                      <span className={styles.notifTitle}>{n.title}</span>
+                    </div>
+                    <div className={styles.timeGroup}>
+                      <span className={styles.notifTime}>
+                        {new Date(n.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                      {!n.isRead && (
+                        <button
+                          className={styles.itemReadBtn}
+                          onClick={(e) => handleMarkItemRead(n.id, e)}
+                          title="Tandai sudah dibaca"
+                        >
+                          <Check size={12} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <p className={styles.notifBody}>{n.body}</p>
                 </div>

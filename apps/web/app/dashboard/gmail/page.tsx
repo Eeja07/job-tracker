@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Mail, RefreshCw, CheckCircle, AlertTriangle, Trash2 } from "lucide-react";
+import { Mail, RefreshCw, CheckCircle, AlertTriangle, Trash2, ExternalLink, X, Calendar, User, ArrowRight } from "lucide-react";
 import { gmailApi, type GmailStatus, type EmailMessage } from "@/lib/api";
 import styles from "./page.module.css";
 
@@ -10,6 +10,7 @@ export default function GmailSyncPage() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [jobOnly, setJobOnly] = useState(true);
+  const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -63,6 +64,13 @@ export default function GmailSyncPage() {
     } finally {
       setSyncing(false);
     }
+  };
+
+  const getGmailWebUrl = (msg: EmailMessage) => {
+    if (msg.gmailMessageId) {
+      return `https://mail.google.com/mail/u/0/#search/rfc822msgid:${encodeURIComponent(msg.gmailMessageId)}`;
+    }
+    return `https://mail.google.com/mail/u/0/#search/${encodeURIComponent(msg.subject)}`;
   };
 
   return (
@@ -157,7 +165,12 @@ export default function GmailSyncPage() {
         ) : (
           <div className={styles.emailList}>
             {emails.map((m) => (
-              <div key={m.id} className={styles.emailCard}>
+              <div
+                key={m.id}
+                className={styles.emailCard}
+                onClick={() => setSelectedEmail(m)}
+                title="Klik untuk membaca email lengkap atau buka di Gmail"
+              >
                 <div className={styles.emailTop}>
                   <div className={styles.senderGroup}>
                     <span className={styles.senderName}>{m.fromName || m.fromEmail}</span>
@@ -182,11 +195,78 @@ export default function GmailSyncPage() {
                   <h3 className={styles.emailSubject}>{m.subject}</h3>
                 </div>
                 <p className={styles.snippet}>{m.snippet}</p>
+
+                <div className={styles.cardFooterHint}>
+                  <span>Klik untuk baca isi pesan</span>
+                  <ArrowRight size={12} />
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Email Detail Modal Overview */}
+      {selectedEmail && (
+        <div
+          className={styles.modalOverlay}
+          onClick={(e) => e.target === e.currentTarget && setSelectedEmail(null)}
+        >
+          <div className={styles.modalCard}>
+            <div className={styles.modalHeader}>
+              <div className={styles.modalTitleBox}>
+                {selectedEmail.detectedType && (
+                  <span className={`${styles.typeTag} ${styles[`type_${selectedEmail.detectedType}`] || ""}`}>
+                    {selectedEmail.detectedType}
+                  </span>
+                )}
+                <h2 className={styles.modalSubject}>{selectedEmail.subject}</h2>
+              </div>
+              <button className={styles.closeBtn} onClick={() => setSelectedEmail(null)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className={styles.modalMeta}>
+              <div className={styles.metaRow}>
+                <User size={14} className={styles.metaIcon} />
+                <span><strong>Dari:</strong> {selectedEmail.fromName ? `${selectedEmail.fromName} <${selectedEmail.fromEmail}>` : selectedEmail.fromEmail}</span>
+              </div>
+              {selectedEmail.toEmail && (
+                <div className={styles.metaRow}>
+                  <Mail size={14} className={styles.metaIcon} />
+                  <span><strong>Kepada:</strong> {selectedEmail.toEmail}</span>
+                </div>
+              )}
+              <div className={styles.metaRow}>
+                <Calendar size={14} className={styles.metaIcon} />
+                <span><strong>Waktu:</strong> {new Date(selectedEmail.receivedAt).toLocaleString("id-ID", { dateStyle: "full", timeStyle: "medium" })}</span>
+              </div>
+            </div>
+
+            <div className={styles.modalBody}>
+              <div className={styles.bodyContent}>
+                {selectedEmail.bodyText || selectedEmail.snippet}
+              </div>
+            </div>
+
+            <div className={styles.modalFooter}>
+              <a
+                href={getGmailWebUrl(selectedEmail)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.openGmailBtn}
+              >
+                <ExternalLink size={14} />
+                <span>Buka di Gmail (mail.google.com)</span>
+              </a>
+              <button className={styles.closeModalBtn} onClick={() => setSelectedEmail(null)}>
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

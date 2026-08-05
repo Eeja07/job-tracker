@@ -184,10 +184,13 @@ export interface GmailStatus {
 export interface EmailMessage {
   id: string;
   gmailMessageId: string;
+  gmailThreadId?: string;
   subject: string;
   fromEmail: string;
   fromName?: string;
+  toEmail?: string;
   snippet: string;
+  bodyText?: string;
   receivedAt: string;
   isJobRelated: boolean;
   detectedType?: string;
