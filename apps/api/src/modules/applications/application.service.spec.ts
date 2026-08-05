@@ -24,7 +24,7 @@ describe('ApplicationService', () => {
   let statusHistoryRepository: jest.Mocked<StatusHistoryRepository>;
   let prismaService: jest.Mocked<PrismaService>;
 
-  const mockApp: Application = {
+  const mockApp: any = {
     id: 'app-uuid-1',
     userId: 'user-uuid-1',
     companyId: 'company-uuid-1',

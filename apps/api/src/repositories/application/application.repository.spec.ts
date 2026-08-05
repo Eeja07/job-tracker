@@ -18,7 +18,7 @@ describe('ApplicationRepository', () => {
   let repository: ApplicationRepository;
   let prismaService: jest.Mocked<PrismaService>;
 
-  const mockApplication: Application = {
+  const mockApplication: any = {
     id: 'app-uuid-1',
     userId: 'user-uuid-1',
     companyId: 'company-uuid-1',
