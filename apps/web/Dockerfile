@@ -39,4 +39,4 @@ USER nextjs
 
 EXPOSE 3001
 
-CMD ["npx", "next", "start", "-p", "3001"]
+CMD ["./../../node_modules/.bin/next", "start", "-p", "3001"]

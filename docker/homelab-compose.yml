@@ -1,4 +1,19 @@
 services:
+  job-tracker-redis:
+    image: redis:7-alpine
+    container_name: job-tracker-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - homelab
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   job-tracker-api:
     build:
       context: /opt/apps/job-tracker
@@ -8,11 +23,14 @@ services:
     environment:
       NODE_ENV: production
       PORT: "3000"
-      DATABASE_URL: ${DATABASE_URL:-postgresql://eeja:secretpassword@postgres:5432/job-tracker?schema=public}
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      REDIS_PORT: ${REDIS_PORT:-6379}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${DATABASE_URL}?schema=public}
+      REDIS_HOST: job-tracker-redis
+      REDIS_PORT: "6379"
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-}
+    depends_on:
+      job-tracker-redis:
+        condition: service_healthy
     networks:
       - homelab
 
@@ -34,3 +52,6 @@ services:
 networks:
   homelab:
     external: true
+
+volumes:
+  redis_data:
