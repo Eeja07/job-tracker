@@ -10,10 +10,7 @@ import { WsEventBridgeSubscriber } from './services/ws-event-bridge.subscriber';
 import { WebsocketMetricsService } from './services/websocket-metrics.service';
 
 @Module({
-  imports: [
-    JwtModule.register({}),
-    RepositoriesModule,
-  ],
+  imports: [JwtModule.register({}), RepositoriesModule],
   providers: [
     AppGateway,
     PresenceService,
@@ -23,6 +20,11 @@ import { WebsocketMetricsService } from './services/websocket-metrics.service';
     WsEventBridgeSubscriber,
     WebsocketMetricsService,
   ],
-  exports: [RealtimePublisher, PresenceService, ConnectionManager, WebsocketMetricsService],
+  exports: [
+    RealtimePublisher,
+    PresenceService,
+    ConnectionManager,
+    WebsocketMetricsService,
+  ],
 })
 export class WebsocketModule {}

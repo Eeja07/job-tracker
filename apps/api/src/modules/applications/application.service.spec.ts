@@ -101,12 +101,19 @@ describe('ApplicationService', () => {
 
   describe('findAll', () => {
     it('should query applications with filters', async () => {
-      const query: ApplicationQueryDto = { status: ApplicationStatus.APPLIED, page: 1, limit: 10 };
+      const query: ApplicationQueryDto = {
+        status: ApplicationStatus.APPLIED,
+        page: 1,
+        limit: 10,
+      };
       applicationRepository.findWithFilters.mockResolvedValue([mockApp]);
 
       const result = await service.findAll('user-uuid-1', query);
 
-      expect(applicationRepository.findWithFilters).toHaveBeenCalledWith('user-uuid-1', expect.any(Object));
+      expect(applicationRepository.findWithFilters).toHaveBeenCalledWith(
+        'user-uuid-1',
+        expect.any(Object),
+      );
       expect(result).toEqual([mockApp]);
     });
   });
@@ -124,9 +131,9 @@ describe('ApplicationService', () => {
     it('should throw NotFoundException if user does not own application', async () => {
       applicationRepository.findById.mockResolvedValue(mockApp);
 
-      await expect(service.findOne('app-uuid-1', 'other-user-uuid')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.findOne('app-uuid-1', 'other-user-uuid'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -140,24 +147,37 @@ describe('ApplicationService', () => {
 
       const result = await service.update('app-uuid-1', 'user-uuid-1', dto);
 
-      expect(applicationRepository.update).toHaveBeenCalledWith('app-uuid-1', expect.objectContaining(dto));
+      expect(applicationRepository.update).toHaveBeenCalledWith(
+        'app-uuid-1',
+        expect.objectContaining(dto),
+      );
       expect(result).toEqual(updated);
     });
   });
 
   describe('updateStatus', () => {
     it('should update status and record history inside a transaction for valid transition', async () => {
-      const dto: UpdateApplicationStatusDto = { status: ApplicationStatus.INTERVIEWING };
+      const dto: UpdateApplicationStatusDto = {
+        status: ApplicationStatus.INTERVIEWING,
+      };
       const updated = { ...mockApp, status: ApplicationStatus.INTERVIEWING };
 
       applicationRepository.findById.mockResolvedValue(mockApp);
       applicationRepository.updateStatus.mockResolvedValue(updated);
       statusHistoryRepository.append.mockResolvedValue({} as never);
 
-      const result = await service.updateStatus('app-uuid-1', 'user-uuid-1', dto);
+      const result = await service.updateStatus(
+        'app-uuid-1',
+        'user-uuid-1',
+        dto,
+      );
 
       expect(prismaService.$transaction).toHaveBeenCalled();
-      expect(applicationRepository.updateStatus).toHaveBeenCalledWith('app-uuid-1', ApplicationStatus.INTERVIEWING, expect.anything());
+      expect(applicationRepository.updateStatus).toHaveBeenCalledWith(
+        'app-uuid-1',
+        ApplicationStatus.INTERVIEWING,
+        expect.anything(),
+      );
       expect(statusHistoryRepository.append).toHaveBeenCalledWith(
         {
           applicationId: 'app-uuid-1',
@@ -172,11 +192,15 @@ describe('ApplicationService', () => {
 
     it('should throw BadRequestException on invalid status transition', async () => {
       const rejectedApp = { ...mockApp, status: ApplicationStatus.REJECTED };
-      const dto: UpdateApplicationStatusDto = { status: ApplicationStatus.OFFER };
+      const dto: UpdateApplicationStatusDto = {
+        status: ApplicationStatus.OFFER,
+      };
 
       applicationRepository.findById.mockResolvedValue(rejectedApp);
 
-      await expect(service.updateStatus('app-uuid-1', 'user-uuid-1', dto)).rejects.toThrow();
+      await expect(
+        service.updateStatus('app-uuid-1', 'user-uuid-1', dto),
+      ).rejects.toThrow();
     });
   });
 

@@ -1,7 +1,10 @@
 import { IQuery, IQueryHandler } from '../interfaces/query.interface';
 import { Injectable } from '@nestjs/common';
 import { ReadModelService } from '../services/read-model.service';
-import { RecentJobsReadModel, StatisticsReadModel } from '../interfaces/read-models.interface';
+import {
+  RecentJobsReadModel,
+  StatisticsReadModel,
+} from '../interfaces/read-models.interface';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 export interface StatisticsQuery extends IQuery {
@@ -15,7 +18,10 @@ export interface GetRecentJobsQuery extends IQuery {
 }
 
 @Injectable()
-export class StatisticsHandler implements IQueryHandler<StatisticsQuery, StatisticsReadModel> {
+export class StatisticsHandler implements IQueryHandler<
+  StatisticsQuery,
+  StatisticsReadModel
+> {
   readonly queryName = 'Statistics';
 
   constructor(
@@ -25,15 +31,19 @@ export class StatisticsHandler implements IQueryHandler<StatisticsQuery, Statist
 
   async execute(query: StatisticsQuery): Promise<StatisticsReadModel> {
     const cacheKey = 'statistics:global';
-    const cached = await this.readModelService.get<StatisticsReadModel>(cacheKey, 'Statistics');
+    const cached = await this.readModelService.get<StatisticsReadModel>(
+      cacheKey,
+      'Statistics',
+    );
     if (cached) return cached;
 
-    const [totalUsers, totalApplications, totalCompanies, totalAttachments] = await Promise.all([
-      this.prisma.user.count(),
-      this.prisma.application.count(),
-      this.prisma.company.count(),
-      this.prisma.attachment.count(),
-    ]);
+    const [totalUsers, totalApplications, totalCompanies, totalAttachments] =
+      await Promise.all([
+        this.prisma.user.count(),
+        this.prisma.application.count(),
+        this.prisma.company.count(),
+        this.prisma.attachment.count(),
+      ]);
 
     const result: StatisticsReadModel = {
       totalUsers,
@@ -50,7 +60,10 @@ export class StatisticsHandler implements IQueryHandler<StatisticsQuery, Statist
 }
 
 @Injectable()
-export class GetRecentJobsHandler implements IQueryHandler<GetRecentJobsQuery, RecentJobsReadModel> {
+export class GetRecentJobsHandler implements IQueryHandler<
+  GetRecentJobsQuery,
+  RecentJobsReadModel
+> {
   readonly queryName = 'GetRecentJobs';
 
   constructor(
@@ -62,7 +75,10 @@ export class GetRecentJobsHandler implements IQueryHandler<GetRecentJobsQuery, R
     const limit = query.limit || 5;
     const cacheKey = `recent_jobs:${query.userId}:l${limit}`;
 
-    const cached = await this.readModelService.get<RecentJobsReadModel>(cacheKey, 'GetRecentJobs');
+    const cached = await this.readModelService.get<RecentJobsReadModel>(
+      cacheKey,
+      'GetRecentJobs',
+    );
     if (cached) return cached;
 
     const apps = await this.prisma.application.findMany({

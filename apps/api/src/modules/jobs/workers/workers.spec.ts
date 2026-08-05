@@ -6,7 +6,12 @@ import { SystemWorker } from './system.worker';
 import { DeadLetterWorker } from './dead-letter.worker';
 import { QueueService } from '../services/queue.service';
 import { EmailService } from '../../email/services/email.service';
-import { QUEUE_NAMES, EmailJobName, AttachmentJobName, SystemJobName } from '../constants/jobs.constants';
+import {
+  QUEUE_NAMES,
+  EmailJobName,
+  AttachmentJobName,
+  SystemJobName,
+} from '../constants/jobs.constants';
 
 describe('BullMQ Workers & DLQ Retry Logic', () => {
   let emailWorker: EmailWorker;
@@ -64,9 +69,15 @@ describe('BullMQ Workers & DLQ Retry Logic', () => {
 
       const res = await emailWorker.process(mockJob);
       expect(res).toEqual({ messageId: 'msg-spec-123' });
-      expect(emailService.renderTemplate).toHaveBeenCalledWith('welcome', expect.any(Object));
+      expect(emailService.renderTemplate).toHaveBeenCalledWith(
+        'welcome',
+        expect.any(Object),
+      );
       expect(emailService.sendDirect).toHaveBeenCalledWith(
-        expect.objectContaining({ to: 'test@domain.com', subject: 'Welcome to Job Tracker!' }),
+        expect.objectContaining({
+          to: 'test@domain.com',
+          subject: 'Welcome to Job Tracker!',
+        }),
         'welcome',
       );
     });

@@ -3,7 +3,10 @@ import { AuthenticatedSocket } from '../interfaces/authenticated-socket.interfac
 import { MAX_ROOM_SUBSCRIPTIONS } from '../constants/ws-rooms.constants';
 import { Server } from 'socket.io';
 
-function makeSocket(userId: string, roles: string[] = []): jest.Mocked<AuthenticatedSocket> {
+function makeSocket(
+  userId: string,
+  roles: string[] = [],
+): jest.Mocked<AuthenticatedSocket> {
   return {
     id: `socket-${Math.random().toString(36).slice(2)}`,
     user: { sub: userId, email: `${userId}@test.com`, roles },
@@ -56,7 +59,11 @@ describe('RoomService', () => {
     for (let i = 0; i < MAX_ROOM_SUBSCRIPTIONS; i++) {
       socket.joinedRooms.add(`application:app-${i}`);
     }
-    const result = await service.joinRoom(mockServer, socket, 'application:app-new');
+    const result = await service.joinRoom(
+      mockServer,
+      socket,
+      'application:app-new',
+    );
     expect(result.success).toBe(false);
     expect(result.error).toContain('Maximum room subscriptions');
   });

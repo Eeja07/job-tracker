@@ -28,7 +28,11 @@ describe('VersionDeprecationInterceptor', () => {
     const setHeaderMock = jest.fn();
     const mockContext: any = {
       switchToHttp: () => ({
-        getRequest: () => ({ apiVersion: '1', url: '/api/v1/applications', method: 'GET' }),
+        getRequest: () => ({
+          apiVersion: '1',
+          url: '/api/v1/applications',
+          method: 'GET',
+        }),
         getResponse: () => ({ setHeader: setHeaderMock }),
       }),
       getHandler: () => ({}),
@@ -37,12 +41,20 @@ describe('VersionDeprecationInterceptor', () => {
 
     const next: CallHandler = { handle: () => of('data') };
 
-    interceptor.intercept(mockContext as ExecutionContext, next).subscribe(() => {
-      expect(setHeaderMock).toHaveBeenCalledWith('Deprecation', 'true');
-      expect(setHeaderMock).toHaveBeenCalledWith('Sunset', 'Sun, 01 Dec 2025 00:00:00 GMT');
-      expect(setHeaderMock).toHaveBeenCalledWith('Link', '</docs/v1>; rel="deprecation"');
-      expect(mockMetrics.deprecatedEndpointHitsTotal.inc).toHaveBeenCalled();
-      done();
-    });
+    interceptor
+      .intercept(mockContext as ExecutionContext, next)
+      .subscribe(() => {
+        expect(setHeaderMock).toHaveBeenCalledWith('Deprecation', 'true');
+        expect(setHeaderMock).toHaveBeenCalledWith(
+          'Sunset',
+          'Sun, 01 Dec 2025 00:00:00 GMT',
+        );
+        expect(setHeaderMock).toHaveBeenCalledWith(
+          'Link',
+          '</docs/v1>; rel="deprecation"',
+        );
+        expect(mockMetrics.deprecatedEndpointHitsTotal.inc).toHaveBeenCalled();
+        done();
+      });
   });
 });

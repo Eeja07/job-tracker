@@ -14,7 +14,10 @@ export class ApiErrorDetails {
   @ApiProperty({ example: 'RESOURCE_NOT_FOUND' })
   code!: string;
 
-  @ApiProperty({ example: 'The requested application ID app_123 was not found.', nullable: true })
+  @ApiProperty({
+    example: 'The requested application ID app_123 was not found.',
+    nullable: true,
+  })
   details?: unknown;
 }
 

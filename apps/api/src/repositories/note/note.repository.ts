@@ -25,7 +25,10 @@ export class NoteRepository extends BaseRepository<Prisma.NoteDelegate> {
     return tx ? tx.note : this.prisma.note;
   }
 
-  async findById(id: string, tx?: Prisma.TransactionClient): Promise<Note | null> {
+  async findById(
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Note | null> {
     return this.getDelegate(tx).findUnique({
       where: { id },
     });
@@ -37,20 +40,24 @@ export class NoteRepository extends BaseRepository<Prisma.NoteDelegate> {
   ): Promise<Note[]> {
     return this.getDelegate(tx).findMany({
       where: { applicationId },
-      orderBy: [
-        { pinned: 'desc' },
-        { createdAt: 'desc' },
-      ],
+      orderBy: [{ pinned: 'desc' }, { createdAt: 'desc' }],
     });
   }
 
-  async create(data: CreateNoteData, tx?: Prisma.TransactionClient): Promise<Note> {
+  async create(
+    data: CreateNoteData,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Note> {
     return this.getDelegate(tx).create({
       data,
     });
   }
 
-  async update(id: string, data: UpdateNoteData, tx?: Prisma.TransactionClient): Promise<Note> {
+  async update(
+    id: string,
+    data: UpdateNoteData,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Note> {
     return this.getDelegate(tx).update({
       where: { id },
       data,

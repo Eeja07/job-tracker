@@ -29,27 +29,43 @@ describe('RbacController', () => {
   });
 
   it('should list all roles', async () => {
-    rbacService.getAllRoles.mockResolvedValue([{ id: '1', name: 'ADMIN' }] as any);
+    rbacService.getAllRoles.mockResolvedValue([
+      { id: '1', name: 'ADMIN' },
+    ] as any);
     const roles = await controller.getAllRoles();
     expect(roles).toEqual([{ id: '1', name: 'ADMIN' }]);
   });
 
   it('should list all permissions', async () => {
-    rbacService.getAllPermissions.mockResolvedValue([{ id: '1', name: 'company.create' }] as any);
+    rbacService.getAllPermissions.mockResolvedValue([
+      { id: '1', name: 'company.create' },
+    ] as any);
     const perms = await controller.getAllPermissions();
     expect(perms).toEqual([{ id: '1', name: 'company.create' }]);
   });
 
   it('should assign a role to a user', async () => {
     rbacService.assignRole.mockResolvedValue(undefined);
-    const res = await controller.assignRole('11111111-1111-1111-1111-111111111111', { roleName: 'ADMIN' });
-    expect(res).toEqual({ message: "Role 'ADMIN' assigned to user 11111111-1111-1111-1111-111111111111" });
-    expect(rbacService.assignRole).toHaveBeenCalledWith('11111111-1111-1111-1111-111111111111', 'ADMIN');
+    const res = await controller.assignRole(
+      '11111111-1111-1111-1111-111111111111',
+      { roleName: 'ADMIN' },
+    );
+    expect(res).toEqual({
+      message:
+        "Role 'ADMIN' assigned to user 11111111-1111-1111-1111-111111111111",
+    });
+    expect(rbacService.assignRole).toHaveBeenCalledWith(
+      '11111111-1111-1111-1111-111111111111',
+      'ADMIN',
+    );
   });
 
   it('should remove a role from a user', async () => {
     rbacService.removeRole.mockResolvedValue(undefined);
     await controller.removeRole('11111111-1111-1111-1111-111111111111', 'USER');
-    expect(rbacService.removeRole).toHaveBeenCalledWith('11111111-1111-1111-1111-111111111111', 'USER');
+    expect(rbacService.removeRole).toHaveBeenCalledWith(
+      '11111111-1111-1111-1111-111111111111',
+      'USER',
+    );
   });
 });

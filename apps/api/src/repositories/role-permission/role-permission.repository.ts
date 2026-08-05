@@ -9,15 +9,24 @@ export class RolePermissionRepository extends BaseRepository<Prisma.RolePermissi
     super(prisma);
   }
 
-  protected getDelegate(tx?: Prisma.TransactionClient): Prisma.RolePermissionDelegate {
+  protected getDelegate(
+    tx?: Prisma.TransactionClient,
+  ): Prisma.RolePermissionDelegate {
     return tx ? tx.rolePermission : this.prisma.rolePermission;
   }
 
-  async findByRole(roleId: string, tx?: Prisma.TransactionClient): Promise<RolePermission[]> {
+  async findByRole(
+    roleId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<RolePermission[]> {
     return this.getDelegate(tx).findMany({ where: { roleId } });
   }
 
-  async assign(roleId: string, permissionId: string, tx?: Prisma.TransactionClient): Promise<RolePermission> {
+  async assign(
+    roleId: string,
+    permissionId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<RolePermission> {
     return this.getDelegate(tx).upsert({
       where: { roleId_permissionId: { roleId, permissionId } },
       update: {},
@@ -25,7 +34,11 @@ export class RolePermissionRepository extends BaseRepository<Prisma.RolePermissi
     });
   }
 
-  async remove(roleId: string, permissionId: string, tx?: Prisma.TransactionClient): Promise<void> {
+  async remove(
+    roleId: string,
+    permissionId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
     await this.getDelegate(tx).deleteMany({ where: { roleId, permissionId } });
   }
 

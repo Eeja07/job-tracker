@@ -1,8 +1,22 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomBytes, randomUUID } from 'crypto';
-import { SENSITIVE_ATTRIBUTE_KEYS, SPAN_NAMES, TRACING_ENABLED_KEY, TRACING_EXPORTER_KEY, TRACING_SAMPLE_RATE_KEY } from '../constants/tracing.constants';
-import { TraceContextService, TraceContextStore } from './trace-context.service';
+import {
+  SENSITIVE_ATTRIBUTE_KEYS,
+  SPAN_NAMES,
+  TRACING_ENABLED_KEY,
+  TRACING_EXPORTER_KEY,
+  TRACING_SAMPLE_RATE_KEY,
+} from '../constants/tracing.constants';
+import {
+  TraceContextService,
+  TraceContextStore,
+} from './trace-context.service';
 import { TracingMetricsService } from './tracing-metrics.service';
 
 export interface Span {
@@ -15,7 +29,11 @@ export interface Span {
   durationMs?: number;
   status: 'OK' | 'ERROR';
   attributes: Record<string, any>;
-  events: Array<{ name: string; timestamp: number; attributes?: Record<string, any> }>;
+  events: Array<{
+    name: string;
+    timestamp: number;
+    attributes?: Record<string, any>;
+  }>;
   error?: Error;
 }
 
@@ -38,21 +56,40 @@ export class TracingService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit(): void {
-    const envEnabled = this.configService.get<string>(TRACING_ENABLED_KEY, 'true');
+    const envEnabled = this.configService.get<string>(
+      TRACING_ENABLED_KEY,
+      'true',
+    );
     this.enabled = envEnabled !== 'false' && envEnabled !== '0';
 
-    this.exporterType = this.configService.get<string>(TRACING_EXPORTER_KEY, 'console').toLowerCase();
+    this.exporterType = this.configService
+      .get<string>(TRACING_EXPORTER_KEY, 'console')
+      .toLowerCase();
 
-    const sampleRateRaw = this.configService.get<string>(TRACING_SAMPLE_RATE_KEY, '0.1');
-    if (sampleRateRaw === '1' || sampleRateRaw === '1.0' || sampleRateRaw === 'always_on') {
+    const sampleRateRaw = this.configService.get<string>(
+      TRACING_SAMPLE_RATE_KEY,
+      '0.1',
+    );
+    if (
+      sampleRateRaw === '1' ||
+      sampleRateRaw === '1.0' ||
+      sampleRateRaw === 'always_on'
+    ) {
       this.samplerMode = 'AlwaysOn';
       this.sampleRate = 1.0;
-    } else if (sampleRateRaw === '0' || sampleRateRaw === '0.0' || sampleRateRaw === 'always_off') {
+    } else if (
+      sampleRateRaw === '0' ||
+      sampleRateRaw === '0.0' ||
+      sampleRateRaw === 'always_off'
+    ) {
       this.samplerMode = 'AlwaysOff';
       this.sampleRate = 0.0;
     } else {
       this.samplerMode = 'TraceIdRatio';
-      this.sampleRate = Math.max(0, Math.min(1, parseFloat(sampleRateRaw) || 0.1));
+      this.sampleRate = Math.max(
+        0,
+        Math.min(1, parseFloat(sampleRateRaw) || 0.1),
+      );
     }
 
     this.logger.log(
@@ -88,13 +125,15 @@ export class TracingService implements OnModuleInit, OnModuleDestroy {
       // Deterministic trace ID ratio sampling or random fallback
       if (traceId && traceId.length >= 8) {
         const hash = parseInt(traceId.substring(0, 8), 16);
-        sampled = (hash / 0xffffffff) < this.sampleRate;
+        sampled = hash / 0xffffffff < this.sampleRate;
       } else {
         sampled = Math.random() < this.sampleRate;
       }
     }
 
-    this.metrics.traceSamplingTotal.inc({ decision: sampled ? 'sampled' : 'dropped' });
+    this.metrics.traceSamplingTotal.inc({
+      decision: sampled ? 'sampled' : 'dropped',
+    });
     return sampled;
   }
 
@@ -124,7 +163,10 @@ export class TracingService implements OnModuleInit, OnModuleDestroy {
     const traceId = parentContext?.traceId || this.generateTraceId();
     const parentSpanId = parentContext?.spanId;
     const spanId = this.generateSpanId();
-    const sampled = parentContext?.sampled !== undefined ? parentContext.sampled : this.shouldSample(traceId);
+    const sampled =
+      parentContext?.sampled !== undefined
+        ? parentContext.sampled
+        : this.shouldSample(traceId);
 
     const attributes = this.sanitizeAttributes({
       ...parentContext?.attributes,
@@ -163,7 +205,8 @@ export class TracingService implements OnModuleInit, OnModuleDestroy {
     this.metrics.activeSpans.dec();
 
     const currentStore = this.contextService.getStore();
-    const shouldExport = currentStore?.sampled !== undefined ? currentStore.sampled : true;
+    const shouldExport =
+      currentStore?.sampled !== undefined ? currentStore.sampled : true;
 
     if (shouldExport) {
       this.exportSpan(span);
@@ -211,7 +254,13 @@ export class TracingService implements OnModuleInit, OnModuleDestroy {
     const sanitized: Record<string, any> = {};
     for (const [key, val] of Object.entries(attrs)) {
       const lowerKey = key.toLowerCase();
-      if (SENSITIVE_ATTRIBUTE_KEYS.has(lowerKey) || lowerKey.includes('password') || lowerKey.includes('token') || lowerKey.includes('secret') || lowerKey.includes('auth')) {
+      if (
+        SENSITIVE_ATTRIBUTE_KEYS.has(lowerKey) ||
+        lowerKey.includes('password') ||
+        lowerKey.includes('token') ||
+        lowerKey.includes('secret') ||
+        lowerKey.includes('auth')
+      ) {
         sanitized[key] = '[REDACTED]';
       } else {
         sanitized[key] = val;
@@ -247,7 +296,10 @@ export class TracingService implements OnModuleInit, OnModuleDestroy {
         this.metrics.traceExportTotal.inc({ exporter: 'jaeger' });
       }
     } catch (err: any) {
-      this.metrics.traceExportFailures.inc({ exporter: this.exporterType, reason: err.message || 'export_error' });
+      this.metrics.traceExportFailures.inc({
+        exporter: this.exporterType,
+        reason: err.message || 'export_error',
+      });
       this.logger.warn(`Failed to export span ${span.name}: ${err.message}`);
     }
   }

@@ -99,7 +99,9 @@ describe('AuthService', () => {
 
       const result = await service.register(dto);
 
-      expect(userRepository.findByEmail).toHaveBeenCalledWith('test@example.com');
+      expect(userRepository.findByEmail).toHaveBeenCalledWith(
+        'test@example.com',
+      );
       expect(userRepository.create).toHaveBeenCalled();
       expect(refreshSessionRepository.create).toHaveBeenCalled();
       expect(result.accessToken).toBe('access-token');
@@ -127,23 +129,33 @@ describe('AuthService', () => {
       };
 
       const mockRbacService = {
-        assignRole: jest.fn().mockRejectedValue(new Error('Role assignment failed')),
+        assignRole: jest
+          .fn()
+          .mockRejectedValue(new Error('Role assignment failed')),
       };
 
       (service as any).rbacService = mockRbacService;
       userRepository.findByEmail.mockResolvedValue(null);
       userRepository.create.mockResolvedValue(mockUser);
 
-      await expect(service.register(dto)).rejects.toThrow('Role assignment failed');
+      await expect(service.register(dto)).rejects.toThrow(
+        'Role assignment failed',
+      );
     });
   });
 
   describe('login', () => {
     it('should authenticate user and return tokens', async () => {
-      const dto: LoginDto = { email: 'test@example.com', password: 'password123' };
+      const dto: LoginDto = {
+        email: 'test@example.com',
+        password: 'password123',
+      };
       const hash = await argon2.hash('password123');
 
-      userRepository.findByEmail.mockResolvedValue({ ...mockUser, passwordHash: hash });
+      userRepository.findByEmail.mockResolvedValue({
+        ...mockUser,
+        passwordHash: hash,
+      });
       userRepository.update.mockResolvedValue(mockUser);
       jwtService.signAsync
         .mockResolvedValueOnce('access-token')
@@ -164,7 +176,10 @@ describe('AuthService', () => {
       const tokenHash = await argon2.hash('valid-refresh-token');
 
       jwtService.verifyAsync.mockResolvedValue({ sub: 'user-uuid-1' });
-      refreshSessionRepository.findByUserId.mockResolvedValue({ ...mockSession, tokenHash });
+      refreshSessionRepository.findByUserId.mockResolvedValue({
+        ...mockSession,
+        tokenHash,
+      });
       userRepository.findById.mockResolvedValue(mockUser);
       jwtService.signAsync
         .mockResolvedValueOnce('new-access-token')
@@ -181,7 +196,10 @@ describe('AuthService', () => {
       const tokenHash = await argon2.hash('valid-refresh-token');
 
       jwtService.verifyAsync.mockResolvedValue({ sub: 'user-uuid-1' });
-      refreshSessionRepository.findByUserId.mockResolvedValue({ ...mockSession, tokenHash });
+      refreshSessionRepository.findByUserId.mockResolvedValue({
+        ...mockSession,
+        tokenHash,
+      });
       userRepository.findById.mockResolvedValue(mockUser);
       jwtService.signAsync
         .mockResolvedValue('rotated-access-token')
@@ -203,7 +221,9 @@ describe('AuthService', () => {
       // Lock user-uuid-timeout artificially in inMemoryLocks
       (service as any).inMemoryLocks.set('user-uuid-timeout', true);
 
-      await expect(service.refreshTokens(dto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.refreshTokens(dto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if session is missing', async () => {
@@ -211,7 +231,9 @@ describe('AuthService', () => {
       jwtService.verifyAsync.mockResolvedValue({ sub: 'user-uuid-1' });
       refreshSessionRepository.findByUserId.mockResolvedValue(null);
 
-      await expect(service.refreshTokens(dto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.refreshTokens(dto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
@@ -221,7 +243,9 @@ describe('AuthService', () => {
 
       const result = await service.logout('user-uuid-1');
 
-      expect(refreshSessionRepository.deleteByUserId).toHaveBeenCalledWith('user-uuid-1');
+      expect(refreshSessionRepository.deleteByUserId).toHaveBeenCalledWith(
+        'user-uuid-1',
+      );
       expect(result).toEqual({ success: true });
     });
   });

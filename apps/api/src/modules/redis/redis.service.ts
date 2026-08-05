@@ -1,4 +1,9 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis, { RedisOptions } from 'ioredis';
 import { randomUUID } from 'crypto';
@@ -28,7 +33,10 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   private misses = 0;
 
   // Single listener event dispatcher map for Redis Pub/Sub subscribers
-  private readonly channelHandlers = new Map<string, Set<(message: string) => void>>();
+  private readonly channelHandlers = new Map<
+    string,
+    Set<(message: string) => void>
+  >();
   private isSubListenerRegistered = false;
 
   constructor(private readonly configService: ConfigService) {}
@@ -36,7 +44,8 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async onModuleInit(): Promise<void> {
     const host = this.configService.getOrThrow<string>('REDIS_HOST');
     const port = this.configService.getOrThrow<number>('REDIS_PORT');
-    const password = this.configService.get<string>('REDIS_PASSWORD') || undefined;
+    const password =
+      this.configService.get<string>('REDIS_PASSWORD') || undefined;
     const db = this.configService.get<number>('REDIS_DB') || 0;
     const useTls = this.configService.get<boolean>('REDIS_TLS') || false;
 
@@ -161,7 +170,13 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     try {
       let cursor = '0';
       do {
-        const res = await this.client.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+        const res = await this.client.scan(
+          cursor,
+          'MATCH',
+          pattern,
+          'COUNT',
+          100,
+        );
         if (!res || !Array.isArray(res)) {
           break;
         }
@@ -172,7 +187,9 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
         }
       } while (cursor !== '0');
     } catch (err: any) {
-      this.logger.warn(`Redis delByPattern error for pattern [${pattern}]: ${err.message}`);
+      this.logger.warn(
+        `Redis delByPattern error for pattern [${pattern}]: ${err.message}`,
+      );
     }
   }
 
@@ -209,7 +226,9 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     try {
       return await this.client.incr(key);
     } catch (err: any) {
-      this.logger.warn(`Redis increment error for key [${key}]: ${err.message}`);
+      this.logger.warn(
+        `Redis increment error for key [${key}]: ${err.message}`,
+      );
       return 0;
     }
   }
@@ -218,7 +237,9 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     try {
       return await this.client.decr(key);
     } catch (err: any) {
-      this.logger.warn(`Redis decrement error for key [${key}]: ${err.message}`);
+      this.logger.warn(
+        `Redis decrement error for key [${key}]: ${err.message}`,
+      );
       return 0;
     }
   }
@@ -227,7 +248,9 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     try {
       return await this.client.publish(channel, message);
     } catch (err: any) {
-      this.logger.warn(`Redis publish error for channel [${channel}]: ${err.message}`);
+      this.logger.warn(
+        `Redis publish error for channel [${channel}]: ${err.message}`,
+      );
       return 0;
     }
   }
@@ -236,7 +259,10 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
    * Subscribe to a Redis channel using a single global event listener and internal Map dispatcher
    * to eliminate EventEmitter listener leaks.
    */
-  async subscribe(channel: string, handler: (message: string) => void): Promise<void> {
+  async subscribe(
+    channel: string,
+    handler: (message: string) => void,
+  ): Promise<void> {
     try {
       // Wait for subClient to be initialized if it is not ready yet.
       // EventSubscriberService.onModuleInit() can race with RedisService.onModuleInit()
@@ -250,7 +276,9 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
           waited += intervalMs;
         }
         if (!this.subClient) {
-          this.logger.warn(`Redis subClient not ready after ${maxWaitMs}ms, skipping subscribe for channel [${channel}]`);
+          this.logger.warn(
+            `Redis subClient not ready after ${maxWaitMs}ms, skipping subscribe for channel [${channel}]`,
+          );
           return;
         }
       }
@@ -263,7 +291,9 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
               try {
                 h(msg);
               } catch (err: any) {
-                this.logger.error(`Error in subscriber handler for channel [${chan}]: ${err.message}`);
+                this.logger.error(
+                  `Error in subscriber handler for channel [${chan}]: ${err.message}`,
+                );
               }
             }
           }
@@ -284,14 +314,19 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
         await this.subClient.subscribe(channel);
       }
     } catch (err: any) {
-      this.logger.warn(`Redis subscribe error for channel [${channel}]: ${err.message}`);
+      this.logger.warn(
+        `Redis subscribe error for channel [${channel}]: ${err.message}`,
+      );
     }
   }
 
   /**
    * Unsubscribe a handler or clear all handlers for a channel.
    */
-  async unsubscribe(channel: string, handler?: (message: string) => void): Promise<void> {
+  async unsubscribe(
+    channel: string,
+    handler?: (message: string) => void,
+  ): Promise<void> {
     try {
       if (!this.subClient || !this.channelHandlers.has(channel)) {
         return;
@@ -307,7 +342,9 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
         await this.subClient.unsubscribe(channel);
       }
     } catch (err: any) {
-      this.logger.warn(`Redis unsubscribe error for channel [${channel}]: ${err.message}`);
+      this.logger.warn(
+        `Redis unsubscribe error for channel [${channel}]: ${err.message}`,
+      );
     }
   }
 
@@ -315,13 +352,19 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
    * Distributed Lock Acquisition with unique random lock token and SET NX EX.
    * Returns the lock token string if acquired, or null if lock acquisition failed.
    */
-  async acquireLock(key: string, ttlSeconds: number, token?: string): Promise<string | null> {
+  async acquireLock(
+    key: string,
+    ttlSeconds: number,
+    token?: string,
+  ): Promise<string | null> {
     const lockToken = token || randomUUID();
     try {
       const res = await this.client.set(key, lockToken, 'EX', ttlSeconds, 'NX');
       return res === 'OK' ? lockToken : null;
     } catch (err: any) {
-      this.logger.warn(`Redis acquireLock error for key [${key}]: ${err.message}`);
+      this.logger.warn(
+        `Redis acquireLock error for key [${key}]: ${err.message}`,
+      );
       return null;
     }
   }
@@ -332,13 +375,20 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async releaseLock(key: string, lockToken?: string): Promise<boolean> {
     try {
       if (lockToken) {
-        const res = await this.client.eval(RELEASE_LOCK_LUA_SCRIPT, 1, key, lockToken);
+        const res = await this.client.eval(
+          RELEASE_LOCK_LUA_SCRIPT,
+          1,
+          key,
+          lockToken,
+        );
         return res === 1 || res === '1';
       }
       const res = await this.client.del(key);
       return res > 0;
     } catch (err: any) {
-      this.logger.warn(`Redis releaseLock error for key [${key}]: ${err.message}`);
+      this.logger.warn(
+        `Redis releaseLock error for key [${key}]: ${err.message}`,
+      );
       return false;
     }
   }
@@ -346,7 +396,8 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   // Metrics / Observability
   async getMetrics(): Promise<RedisMetrics> {
     const totalReqs = this.hits + this.misses;
-    const hitRatio = totalReqs > 0 ? Number((this.hits / totalReqs).toFixed(4)) : 0;
+    const hitRatio =
+      totalReqs > 0 ? Number((this.hits / totalReqs).toFixed(4)) : 0;
     let memoryUsageBytes = 0;
 
     if (this.isReady()) {
@@ -357,7 +408,9 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
           memoryUsageBytes = parseInt(match[1], 10);
         }
       } catch (err: any) {
-        this.logger.warn(`Failed to retrieve Redis memory metrics: ${err.message}`);
+        this.logger.warn(
+          `Failed to retrieve Redis memory metrics: ${err.message}`,
+        );
       }
     }
 
@@ -370,4 +423,3 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     };
   }
 }
-

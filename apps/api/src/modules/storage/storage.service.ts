@@ -9,7 +9,10 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { createHash } from 'crypto';
 import { Readable } from 'stream';
-import type { StorageProvider, ReadStreamResult } from './interfaces/storage-provider.interface';
+import type {
+  StorageProvider,
+  ReadStreamResult,
+} from './interfaces/storage-provider.interface';
 import type { VirusScanner } from './interfaces/virus-scanner.interface';
 import { FileSignatureValidator } from './validators/file-signature.validator';
 import { StorageProvider as StorageProviderEnum } from '@prisma/client';
@@ -54,7 +57,9 @@ export class StorageService {
   ) {}
 
   get activeProviderEnum(): StorageProviderEnum {
-    const rawProvider = this.configService.get<string>('STORAGE_PROVIDER', 'LOCAL').toUpperCase();
+    const rawProvider = this.configService
+      .get<string>('STORAGE_PROVIDER', 'LOCAL')
+      .toUpperCase();
     switch (rawProvider) {
       case 'MINIO':
         return StorageProviderEnum.MINIO;
@@ -71,14 +76,22 @@ export class StorageService {
   async uploadFile(
     file:
       | Express.Multer.File
-      | { buffer?: Buffer; stream?: Readable; originalname?: string; filename?: string; mimetype: string; size?: number },
+      | {
+          buffer?: Buffer;
+          stream?: Readable;
+          originalname?: string;
+          filename?: string;
+          mimetype: string;
+          size?: number;
+        },
     key?: string,
   ): Promise<UploadResult> {
     if (!file || (!file.buffer && !(file as any).stream)) {
       throw new BadRequestException('Invalid file upload payload');
     }
 
-    const filename = (file as any).originalname || (file as any).filename || 'file';
+    const filename =
+      (file as any).originalname || (file as any).filename || 'file';
     const mimeType = file.mimetype;
     let fileSize = file.size || 0;
     let checksum = '';
@@ -87,16 +100,26 @@ export class StorageService {
       fileSize = file.buffer.length;
 
       // 1. File security: MIME, Extension, and Magic Bytes signature validation
-      FileSignatureValidator.validate(file.buffer, filename, mimeType, DEFAULT_ALLOWED_MIMES);
+      FileSignatureValidator.validate(
+        file.buffer,
+        filename,
+        mimeType,
+        DEFAULT_ALLOWED_MIMES,
+      );
 
       // 2. Virus scan pipeline
       const startTime = Date.now();
       const scanResult = await this.virusScanner.scan(file.buffer);
       const duration = (Date.now() - startTime) / 1000;
-      this.metricsService?.virusScanDurationSeconds.observe({ scanner: this.virusScanner.constructor.name }, duration);
+      this.metricsService?.virusScanDurationSeconds.observe(
+        { scanner: this.virusScanner.constructor.name },
+        duration,
+      );
 
       if (!scanResult.isClean) {
-        this.logger.warn(`Security alert: Virus detected in upload '${filename}' (${scanResult.virusName})`);
+        this.logger.warn(
+          `Security alert: Virus detected in upload '${filename}' (${scanResult.virusName})`,
+        );
         this.metricsService?.storageUploadFailedTotal.inc({
           provider: this.activeProviderEnum,
           reason: 'virus_detected',
@@ -109,15 +132,25 @@ export class StorageService {
       // 3. Generate SHA-256 Checksum
       checksum = createHash('sha256').update(file.buffer).digest('hex');
     } else if ((file as any).stream) {
-      checksum = createHash('sha256').update(filename + Date.now()).digest('hex');
+      checksum = createHash('sha256')
+        .update(filename + Date.now())
+        .digest('hex');
     }
 
     // 4. Upload physical file via selected provider
     try {
-      const storagePath = await this.provider.upload(file as Express.Multer.File, key);
+      const storagePath = await this.provider.upload(
+        file as Express.Multer.File,
+        key,
+      );
 
-      this.metricsService?.storageUploadTotal.inc({ provider: this.activeProviderEnum });
-      this.metricsService?.storageBytesUploadedTotal.inc({ provider: this.activeProviderEnum }, fileSize);
+      this.metricsService?.storageUploadTotal.inc({
+        provider: this.activeProviderEnum,
+      });
+      this.metricsService?.storageBytesUploadedTotal.inc(
+        { provider: this.activeProviderEnum },
+        fileSize,
+      );
 
       return {
         storagePath,
@@ -138,15 +171,29 @@ export class StorageService {
 
   async downloadFile(key: string): Promise<Buffer> {
     const buffer = await this.provider.download(key);
-    this.metricsService?.storageDownloadTotal.inc({ provider: this.activeProviderEnum });
-    this.metricsService?.storageBytesDownloadedTotal.inc({ provider: this.activeProviderEnum }, buffer.length);
+    this.metricsService?.storageDownloadTotal.inc({
+      provider: this.activeProviderEnum,
+    });
+    this.metricsService?.storageBytesDownloadedTotal.inc(
+      { provider: this.activeProviderEnum },
+      buffer.length,
+    );
     return buffer;
   }
 
-  async getReadStream(key: string, start?: number, end?: number): Promise<ReadStreamResult> {
+  async getReadStream(
+    key: string,
+    start?: number,
+    end?: number,
+  ): Promise<ReadStreamResult> {
     const result = await this.provider.getReadStream(key, start, end);
-    this.metricsService?.storageDownloadTotal.inc({ provider: this.activeProviderEnum });
-    this.metricsService?.storageBytesDownloadedTotal.inc({ provider: this.activeProviderEnum }, result.contentLength);
+    this.metricsService?.storageDownloadTotal.inc({
+      provider: this.activeProviderEnum,
+    });
+    this.metricsService?.storageBytesDownloadedTotal.inc(
+      { provider: this.activeProviderEnum },
+      result.contentLength,
+    );
     return result;
   }
 
@@ -163,7 +210,11 @@ export class StorageService {
     return this.provider.exists(key);
   }
 
-  async getSignedUrl(key: string, mode: 'GET' | 'PUT' = 'GET', expiresInSeconds = 900): Promise<string> {
+  async getSignedUrl(
+    key: string,
+    mode: 'GET' | 'PUT' = 'GET',
+    expiresInSeconds = 900,
+  ): Promise<string> {
     const cacheKey = `storage:signed_url:${key}:${mode}`;
     if (this.redisService) {
       const cached = await this.redisService.get(cacheKey);

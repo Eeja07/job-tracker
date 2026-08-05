@@ -56,7 +56,9 @@ async function bootstrap(): Promise<void> {
   // Swagger Documentation - Version 1
   const configV1 = new DocumentBuilder()
     .setTitle('Job Tracker API - v1 (Deprecated)')
-    .setDescription('Legacy API endpoints (Version 1.0) - Sunset Date: 01 Dec 2025')
+    .setDescription(
+      'Legacy API endpoints (Version 1.0) - Sunset Date: 01 Dec 2025',
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .build();
@@ -76,7 +78,9 @@ async function bootstrap(): Promise<void> {
 
   await app.listen(port);
   const appLogger = app.get(Logger);
-  appLogger.log(`Server running on port ${port} [API Versions: /api/v1, /api/v2]`);
+  appLogger.log(
+    `Server running on port ${port} [API Versions: /api/v1, /api/v2]`,
+  );
   appLogger.log(`Swagger docs available at /docs/v1 and /docs/v2`);
 }
 

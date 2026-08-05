@@ -47,7 +47,8 @@ export class EmailWorker extends WorkerHost {
         const payload = job.data;
         const html = this.emailService.renderTemplate('password-reset', {
           fullName: payload.fullName || 'User',
-          resetLink: payload.resetLink || 'https://app.jobtracker.io/reset-password',
+          resetLink:
+            payload.resetLink || 'https://app.jobtracker.io/reset-password',
         });
         return this.emailService.sendDirect(
           {
@@ -82,7 +83,12 @@ export class EmailWorker extends WorkerHost {
 
       case 'SEND_TEMPLATE_EMAIL': {
         const payload = job.data;
-        const html = payload.html || this.emailService.renderTemplate(payload.templateName, payload.context || {});
+        const html =
+          payload.html ||
+          this.emailService.renderTemplate(
+            payload.templateName,
+            payload.context || {},
+          );
         return this.emailService.sendDirect(
           {
             to: payload.to,
@@ -100,8 +106,13 @@ export class EmailWorker extends WorkerHost {
       }
 
       default:
-        this.logger.warn(`Unknown email job name [${job.name}], processing as generic email`);
-        return this.emailService.sendDirect(job.data as SendEmailOptions, job.name);
+        this.logger.warn(
+          `Unknown email job name [${job.name}], processing as generic email`,
+        );
+        return this.emailService.sendDirect(
+          job.data as SendEmailOptions,
+          job.name,
+        );
     }
   }
 

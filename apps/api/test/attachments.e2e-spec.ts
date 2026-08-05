@@ -47,7 +47,9 @@ describe('Attachments Module (e2e)', () => {
   let uploadedAttachmentId: string;
 
   it('POST /api/v1/attachments/upload should upload valid PDF file', async () => {
-    const pdfBuffer = Buffer.from('%PDF-1.4 sample PDF binary payload stream data');
+    const pdfBuffer = Buffer.from(
+      '%PDF-1.4 sample PDF binary payload stream data',
+    );
 
     const res = await request(app.getHttpServer())
       .post('/api/v1/attachments/upload')
@@ -71,7 +73,9 @@ describe('Attachments Module (e2e)', () => {
   });
 
   it('POST /api/v1/attachments/upload should reject malware (EICAR signature) with 422', async () => {
-    const eicarBuffer = Buffer.from('%PDF-1.4 X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*');
+    const eicarBuffer = Buffer.from(
+      '%PDF-1.4 X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*',
+    );
 
     await request(app.getHttpServer())
       .post('/api/v1/attachments/upload')
@@ -104,7 +108,9 @@ describe('Attachments Module (e2e)', () => {
 
     expect(res.header['content-type']).toContain('application/pdf');
     expect(res.header['content-disposition']).toContain('attachment');
-    expect(res.body.toString()).toContain('%PDF-1.4 sample PDF binary payload stream data');
+    expect(res.body.toString()).toContain(
+      '%PDF-1.4 sample PDF binary payload stream data',
+    );
   });
 
   it('GET /api/v1/attachments/:id/download with Range header should stream partial content with 206', async () => {
@@ -132,7 +138,9 @@ describe('Attachments Module (e2e)', () => {
 
   it('GET /api/v1/attachments/signed-access should reject invalid signature with 401', async () => {
     await request(app.getHttpServer())
-      .get('/api/v1/attachments/signed-access?key=test.pdf&mode=GET&expires=9999999999&signature=invalid')
+      .get(
+        '/api/v1/attachments/signed-access?key=test.pdf&mode=GET&expires=9999999999&signature=invalid',
+      )
       .expect(401);
   });
 

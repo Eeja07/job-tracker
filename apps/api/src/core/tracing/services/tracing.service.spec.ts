@@ -46,7 +46,9 @@ describe('TracingService', () => {
   });
 
   it('should start and end a span with duration', () => {
-    const span = service.startSpan('test.span', undefined, { 'app.name': 'job-tracker' });
+    const span = service.startSpan('test.span', undefined, {
+      'app.name': 'job-tracker',
+    });
     expect(span.name).toBe('test.span');
     expect(span.attributes['app.name']).toBe('job-tracker');
     expect(span.startTime).toBeLessThanOrEqual(Date.now());

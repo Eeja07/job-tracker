@@ -67,7 +67,12 @@ describe('EventPublisherService', () => {
       type: EventType.USER_REGISTERED,
       aggregateId: 'user-111',
       aggregateType: 'User',
-      payload: { userId: 'user-111', email: 'test@example.com', fullName: 'Test', role: 'USER' },
+      payload: {
+        userId: 'user-111',
+        email: 'test@example.com',
+        fullName: 'Test',
+        role: 'USER',
+      },
     });
 
     expect(event.eventId).toBeDefined();

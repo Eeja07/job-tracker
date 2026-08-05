@@ -1,4 +1,10 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+  Logger,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { AuditLogService } from '../services/audit-log.service';
@@ -29,11 +35,18 @@ export class AuditLogInterceptor implements NestInterceptor {
         try {
           const endpoint = req.originalUrl || req.url || '';
           const userId = req.user?.id || req.user?.userId || null;
-          const requestId = (req.headers && req.headers['x-request-id']) || req.id || null;
-          const ipAddress = (req.headers && (req.headers['x-forwarded-for'] as string)) || req.ip || null;
+          const requestId =
+            (req.headers && req.headers['x-request-id']) || req.id || null;
+          const ipAddress =
+            (req.headers && (req.headers['x-forwarded-for'] as string)) ||
+            req.ip ||
+            null;
           const userAgent = (req.headers && req.headers['user-agent']) || null;
 
-          const { resource, action } = this.resolveResourceAndAction(endpoint, method);
+          const { resource, action } = this.resolveResourceAndAction(
+            endpoint,
+            method,
+          );
           const resourceId = this.resolveResourceId(req, resData);
 
           const sanitizedBody = this.sanitizePayload(req.body);
@@ -57,13 +70,18 @@ export class AuditLogInterceptor implements NestInterceptor {
             metadata,
           });
         } catch (err: any) {
-          this.logger.error(`Error recording automatic audit log: ${err.message}`);
+          this.logger.error(
+            `Error recording automatic audit log: ${err.message}`,
+          );
         }
       }),
     );
   }
 
-  private resolveResourceAndAction(endpoint: string, method: string): { resource: string; action: string } {
+  private resolveResourceAndAction(
+    endpoint: string,
+    method: string,
+  ): { resource: string; action: string } {
     const cleanEndpoint = endpoint.toLowerCase();
 
     if (cleanEndpoint.includes('/auth/login')) {
@@ -79,7 +97,10 @@ export class AuditLogInterceptor implements NestInterceptor {
       return { resource: 'AUTH', action: 'LOGOUT' };
     }
 
-    if (cleanEndpoint.includes('/applications') && cleanEndpoint.includes('/status')) {
+    if (
+      cleanEndpoint.includes('/applications') &&
+      cleanEndpoint.includes('/status')
+    ) {
       return { resource: 'APPLICATION', action: 'APPLICATION_STATUS_CHANGE' };
     }
 
@@ -122,8 +143,12 @@ export class AuditLogInterceptor implements NestInterceptor {
     }
 
     const segments = cleanEndpoint.split('/').filter(Boolean);
-    const resourceSegment = segments.find((s) => !s.startsWith('v') && s !== 'api') || 'UNKNOWN';
-    return { resource: resourceSegment.toUpperCase(), action: `${method}_${resourceSegment.toUpperCase()}` };
+    const resourceSegment =
+      segments.find((s) => !s.startsWith('v') && s !== 'api') || 'UNKNOWN';
+    return {
+      resource: resourceSegment.toUpperCase(),
+      action: `${method}_${resourceSegment.toUpperCase()}`,
+    };
   }
 
   private resolveResourceId(req: any, resData: any): string | null {
@@ -141,13 +166,23 @@ export class AuditLogInterceptor implements NestInterceptor {
   private sanitizePayload(body: any): any {
     if (!body || typeof body !== 'object') return body;
 
-    const sensitiveFields = ['password', 'passwordHash', 'token', 'refreshToken', 'secret', 'creditCard'];
+    const sensitiveFields = [
+      'password',
+      'passwordHash',
+      'token',
+      'refreshToken',
+      'secret',
+      'creditCard',
+    ];
     const sanitized = Array.isArray(body) ? [...body] : { ...body };
 
     for (const key of Object.keys(sanitized)) {
       if (sensitiveFields.includes(key)) {
         sanitized[key] = '[REDACTED]';
-      } else if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
+      } else if (
+        typeof sanitized[key] === 'object' &&
+        sanitized[key] !== null
+      ) {
         sanitized[key] = this.sanitizePayload(sanitized[key]);
       }
     }

@@ -10,7 +10,11 @@ describe('MetricsController', () => {
   beforeEach(async () => {
     const mockService = {
       contentType: 'text/plain; version=0.0.4',
-      getMetrics: jest.fn().mockResolvedValue('# HELP active_requests Active requests\nactive_requests 0\n'),
+      getMetrics: jest
+        .fn()
+        .mockResolvedValue(
+          '# HELP active_requests Active requests\nactive_requests 0\n',
+        ),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -31,8 +35,13 @@ describe('MetricsController', () => {
 
       await controller.getMetrics(mockRes);
 
-      expect(mockRes.setHeader).toHaveBeenCalledWith('Content-Type', service.contentType);
-      expect(mockRes.send).toHaveBeenCalledWith(expect.stringContaining('active_requests'));
+      expect(mockRes.setHeader).toHaveBeenCalledWith(
+        'Content-Type',
+        service.contentType,
+      );
+      expect(mockRes.send).toHaveBeenCalledWith(
+        expect.stringContaining('active_requests'),
+      );
     });
   });
 });

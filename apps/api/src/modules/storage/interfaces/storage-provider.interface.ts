@@ -32,7 +32,11 @@ export interface StorageProvider {
   /**
    * Obtains a readable stream for a file, supporting optional byte-range streaming.
    */
-  getReadStream(key: string, start?: number, end?: number): Promise<ReadStreamResult>;
+  getReadStream(
+    key: string,
+    start?: number,
+    end?: number,
+  ): Promise<ReadStreamResult>;
 
   /**
    * Deletes a file from storage by key.
@@ -47,5 +51,9 @@ export interface StorageProvider {
   /**
    * Generates a signed/accessible URL for GET or PUT operations.
    */
-  signedUrl(key: string, mode?: 'GET' | 'PUT', expiresInSeconds?: number): Promise<string>;
+  signedUrl(
+    key: string,
+    mode?: 'GET' | 'PUT',
+    expiresInSeconds?: number,
+  ): Promise<string>;
 }

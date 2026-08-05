@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { VirusScanner, VirusScanResult } from '../interfaces/virus-scanner.interface';
+import {
+  VirusScanner,
+  VirusScanResult,
+} from '../interfaces/virus-scanner.interface';
 
 @Injectable()
 export class NoOpVirusScanner implements VirusScanner {
@@ -9,7 +12,9 @@ export class NoOpVirusScanner implements VirusScanner {
     // EICAR test string detection even in NoOp for security testing validation
     const content = buffer.toString('utf-8', 0, Math.min(buffer.length, 128));
     if (content.includes('EICAR-STANDARD-ANTIVIRUS-TEST-FILE')) {
-      this.logger.warn('EICAR antivirus test signature detected by NoOpScanner!');
+      this.logger.warn(
+        'EICAR antivirus test signature detected by NoOpScanner!',
+      );
       return { isClean: false, virusName: 'EICAR-Test-Signature' };
     }
 

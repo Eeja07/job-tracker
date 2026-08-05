@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException, Optional } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  Optional,
+} from '@nestjs/common';
 import { FeatureFlag } from '@prisma/client';
 import { FeatureFlagRepository } from '../../../repositories/feature-flag/feature-flag.repository';
 import { RedisService } from '../../redis/redis.service';
@@ -59,7 +64,9 @@ export class FeatureFlagService {
           } as FeatureFlag;
         }
       } catch (err) {
-        this.logger.warn(`Failed to read feature flag from Redis cache: ${err}`);
+        this.logger.warn(
+          `Failed to read feature flag from Redis cache: ${err}`,
+        );
       }
     }
 
@@ -68,7 +75,11 @@ export class FeatureFlagService {
 
     if (flag && this.redisService) {
       try {
-        await this.redisService.set(cacheKey, JSON.stringify(flag), CACHE_TTL_SECONDS);
+        await this.redisService.set(
+          cacheKey,
+          JSON.stringify(flag),
+          CACHE_TTL_SECONDS,
+        );
       } catch (err) {
         this.logger.warn(`Failed to write feature flag to Redis cache: ${err}`);
       }
@@ -119,9 +130,15 @@ export class FeatureFlagService {
       for (const flag of flags) {
         const cacheKey = this.getCacheKey(flag.key);
         try {
-          await this.redisService.set(cacheKey, JSON.stringify(flag), CACHE_TTL_SECONDS);
+          await this.redisService.set(
+            cacheKey,
+            JSON.stringify(flag),
+            CACHE_TTL_SECONDS,
+          );
         } catch (err) {
-          this.logger.warn(`Failed to refresh feature flag ${flag.key} in cache: ${err}`);
+          this.logger.warn(
+            `Failed to refresh feature flag ${flag.key} in cache: ${err}`,
+          );
         }
       }
     }
@@ -144,13 +161,18 @@ export class FeatureFlagService {
   /**
    * Sets rollout percentage for a flag and invalidates cache.
    */
-  async setRollout(key: string, rolloutPercentage: number): Promise<FeatureFlag> {
+  async setRollout(
+    key: string,
+    rolloutPercentage: number,
+  ): Promise<FeatureFlag> {
     const existing = await this.featureFlagRepository.findByKey(key);
     if (!existing) {
       throw new NotFoundException(`Feature flag with key '${key}' not found.`);
     }
 
-    const updated = await this.featureFlagRepository.update(key, { rolloutPercentage });
+    const updated = await this.featureFlagRepository.update(key, {
+      rolloutPercentage,
+    });
     await this.invalidateCache(key, updated);
     return updated;
   }
@@ -199,7 +221,9 @@ export class FeatureFlagService {
       try {
         await this.redisService.del(this.getCacheKey(key));
       } catch (err) {
-        this.logger.warn(`Failed to delete cache for feature flag ${key}: ${err}`);
+        this.logger.warn(
+          `Failed to delete cache for feature flag ${key}: ${err}`,
+        );
       }
     }
   }
@@ -207,13 +231,20 @@ export class FeatureFlagService {
   /**
    * Helper to invalidate and optionally update Redis cache for a flag key
    */
-  private async invalidateCache(key: string, flag?: FeatureFlag): Promise<void> {
+  private async invalidateCache(
+    key: string,
+    flag?: FeatureFlag,
+  ): Promise<void> {
     if (this.redisService) {
       const cacheKey = this.getCacheKey(key);
       try {
         await this.redisService.del(cacheKey);
         if (flag) {
-          await this.redisService.set(cacheKey, JSON.stringify(flag), CACHE_TTL_SECONDS);
+          await this.redisService.set(
+            cacheKey,
+            JSON.stringify(flag),
+            CACHE_TTL_SECONDS,
+          );
         }
       } catch (err) {
         this.logger.warn(`Failed to invalidate cache for flag ${key}: ${err}`);

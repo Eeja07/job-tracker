@@ -24,13 +24,19 @@ describe('CommandBus', () => {
     const result = await commandBus.execute({ commandName: 'TestCommand' });
     expect(result).toEqual({ success: true });
     expect(handler.execute).toHaveBeenCalled();
-    expect(mockMetrics.commandExecutionTotal.inc).toHaveBeenCalledWith({ command: 'TestCommand', status: 'success' });
+    expect(mockMetrics.commandExecutionTotal.inc).toHaveBeenCalledWith({
+      command: 'TestCommand',
+      status: 'success',
+    });
   });
 
   it('should throw an error when executing unregistered command', async () => {
-    await expect(commandBus.execute({ commandName: 'UnknownCommand' })).rejects.toThrow(
-      'Command handler not found for: UnknownCommand',
-    );
-    expect(mockMetrics.commandExecutionTotal.inc).toHaveBeenCalledWith({ command: 'UnknownCommand', status: 'not_found' });
+    await expect(
+      commandBus.execute({ commandName: 'UnknownCommand' }),
+    ).rejects.toThrow('Command handler not found for: UnknownCommand');
+    expect(mockMetrics.commandExecutionTotal.inc).toHaveBeenCalledWith({
+      command: 'UnknownCommand',
+      status: 'not_found',
+    });
   });
 });

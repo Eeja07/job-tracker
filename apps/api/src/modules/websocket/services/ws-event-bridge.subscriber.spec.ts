@@ -5,7 +5,11 @@ import { EventType } from '../../event-bus/enums/event-type.enum';
 import { BaseEvent } from '../../event-bus/interfaces/base-event.interface';
 import { WsServerEvent } from '../constants/ws-events.constants';
 
-function makeEvent(type: EventType, payload: Record<string, any>, extra: Partial<BaseEvent> = {}): BaseEvent {
+function makeEvent(
+  type: EventType,
+  payload: Record<string, any>,
+  extra: Partial<BaseEvent> = {},
+): BaseEvent {
   return {
     eventId: 'evt-1',
     timestamp: new Date().toISOString(),
@@ -64,7 +68,11 @@ describe('WsEventBridgeSubscriber', () => {
   });
 
   it('should emit to admin room on AUDIT_CREATED', async () => {
-    const event = makeEvent(EventType.AUDIT_CREATED, { auditId: 'audit-1', action: 'CREATE', resource: 'Application' });
+    const event = makeEvent(EventType.AUDIT_CREATED, {
+      auditId: 'audit-1',
+      action: 'CREATE',
+      resource: 'Application',
+    });
     await subscriber.handle(event);
     expect(publisher.emitToRoom).toHaveBeenCalledWith(
       'admin',
@@ -74,7 +82,11 @@ describe('WsEventBridgeSubscriber', () => {
   });
 
   it('should emit to user room on ROLE_ASSIGNED', async () => {
-    const event = makeEvent(EventType.ROLE_ASSIGNED, { userId: 'user-1', roleId: 'role-1', roleName: 'ADMIN' });
+    const event = makeEvent(EventType.ROLE_ASSIGNED, {
+      userId: 'user-1',
+      roleId: 'role-1',
+      roleName: 'ADMIN',
+    });
     await subscriber.handle(event);
     expect(publisher.emitToRoom).toHaveBeenCalledWith(
       'user:user-1',
@@ -84,7 +96,10 @@ describe('WsEventBridgeSubscriber', () => {
   });
 
   it('should emit to company room on COMPANY_CREATED', async () => {
-    const event = makeEvent(EventType.COMPANY_CREATED, { companyId: 'comp-1', name: 'Acme' });
+    const event = makeEvent(EventType.COMPANY_CREATED, {
+      companyId: 'comp-1',
+      name: 'Acme',
+    });
     await subscriber.handle(event);
     expect(publisher.emitToRoom).toHaveBeenCalledWith(
       'company:comp-1',
@@ -94,7 +109,11 @@ describe('WsEventBridgeSubscriber', () => {
   });
 
   it('should emit to admin room on FEATURE_FLAG_UPDATED', async () => {
-    const event = makeEvent(EventType.FEATURE_FLAG_UPDATED, { flagKey: 'NEW_FEATURE', enabled: true, rolloutPercentage: 100 });
+    const event = makeEvent(EventType.FEATURE_FLAG_UPDATED, {
+      flagKey: 'NEW_FEATURE',
+      enabled: true,
+      rolloutPercentage: 100,
+    });
     await subscriber.handle(event);
     expect(publisher.emitToRoom).toHaveBeenCalledWith(
       'admin',
@@ -104,7 +123,12 @@ describe('WsEventBridgeSubscriber', () => {
   });
 
   it('should emit to admin room on JOB_FAILED', async () => {
-    const event = makeEvent(EventType.JOB_FAILED, { jobId: 'job-1', queueName: 'email', error: 'SMTP error', attempts: 3 });
+    const event = makeEvent(EventType.JOB_FAILED, {
+      jobId: 'job-1',
+      queueName: 'email',
+      error: 'SMTP error',
+      attempts: 3,
+    });
     await subscriber.handle(event);
     expect(publisher.emitToRoom).toHaveBeenCalledWith(
       'admin',

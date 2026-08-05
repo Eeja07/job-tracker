@@ -60,7 +60,9 @@ describe('PresenceService', () => {
   });
 
   it('should remove connection and clear presence when last tab disconnects', async () => {
-    const mockRedisClient = (redisService.getClient as jest.Mock).mockReturnValue({
+    const mockRedisClient = (
+      redisService.getClient as jest.Mock
+    ).mockReturnValue({
       sadd: jest.fn(),
       srem: jest.fn().mockResolvedValue(1),
       scard: jest.fn().mockResolvedValue(0), // 0 remaining

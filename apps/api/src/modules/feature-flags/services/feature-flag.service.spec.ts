@@ -72,7 +72,9 @@ describe('FeatureFlagService', () => {
 
       const result = await service.get('test_flag');
       expect(redisService.get).toHaveBeenCalledWith('feature-flags:test_flag');
-      expect(metricsService.featureFlagCacheHitsTotal.inc).toHaveBeenCalledWith({ flag: 'test_flag' });
+      expect(metricsService.featureFlagCacheHitsTotal.inc).toHaveBeenCalledWith(
+        { flag: 'test_flag' },
+      );
       expect(result?.key).toBe('test_flag');
       expect(repository.findByKey).not.toHaveBeenCalled();
     });
@@ -82,9 +84,15 @@ describe('FeatureFlagService', () => {
       mockRepository.findByKey.mockResolvedValue(mockFlag);
 
       const result = await service.get('test_flag');
-      expect(metricsService.featureFlagCacheMissesTotal.inc).toHaveBeenCalledWith({ flag: 'test_flag' });
+      expect(
+        metricsService.featureFlagCacheMissesTotal.inc,
+      ).toHaveBeenCalledWith({ flag: 'test_flag' });
       expect(repository.findByKey).toHaveBeenCalledWith('test_flag');
-      expect(redisService.set).toHaveBeenCalledWith('feature-flags:test_flag', JSON.stringify(mockFlag), 60);
+      expect(redisService.set).toHaveBeenCalledWith(
+        'feature-flags:test_flag',
+        JSON.stringify(mockFlag),
+        60,
+      );
       expect(result).toEqual(mockFlag);
     });
   });
@@ -92,11 +100,16 @@ describe('FeatureFlagService', () => {
   describe('isEnabled', () => {
     it('should return false if flag is disabled or missing', async () => {
       mockRedisService.get.mockResolvedValue(null);
-      mockRepository.findByKey.mockResolvedValue({ ...mockFlag, enabled: false });
+      mockRepository.findByKey.mockResolvedValue({
+        ...mockFlag,
+        enabled: false,
+      });
 
       const enabled = await service.isEnabled('test_flag');
       expect(enabled).toBe(false);
-      expect(metricsService.featureFlagMissesTotal.inc).toHaveBeenCalledWith({ flag: 'test_flag' });
+      expect(metricsService.featureFlagMissesTotal.inc).toHaveBeenCalledWith({
+        flag: 'test_flag',
+      });
     });
 
     it('should return true if flag is enabled and 100% rollout', async () => {
@@ -104,15 +117,23 @@ describe('FeatureFlagService', () => {
 
       const enabled = await service.isEnabled('test_flag');
       expect(enabled).toBe(true);
-      expect(metricsService.featureFlagHitsTotal.inc).toHaveBeenCalledWith({ flag: 'test_flag' });
+      expect(metricsService.featureFlagHitsTotal.inc).toHaveBeenCalledWith({
+        flag: 'test_flag',
+      });
     });
 
     it('should calculate deterministic percentage rollout by userId', async () => {
       const partialFlag = { ...mockFlag, rolloutPercentage: 50 };
       mockRedisService.get.mockResolvedValue(JSON.stringify(partialFlag));
 
-      const isEnabledUser1 = await service.isEnabled('test_flag', 'user-uuid-1');
-      const isEnabledUser2 = await service.isEnabled('test_flag', 'user-uuid-2');
+      const isEnabledUser1 = await service.isEnabled(
+        'test_flag',
+        'user-uuid-1',
+      );
+      const isEnabledUser2 = await service.isEnabled(
+        'test_flag',
+        'user-uuid-2',
+      );
 
       expect(typeof isEnabledUser1).toBe('boolean');
       expect(typeof isEnabledUser2).toBe('boolean');
@@ -124,7 +145,9 @@ describe('FeatureFlagService', () => {
 
       const enabled = await service.isEnabled('test_flag', 'user-uuid-1');
       expect(enabled).toBe(false);
-      expect(metricsService.featureFlagMissesTotal.inc).toHaveBeenCalledWith({ flag: 'test_flag' });
+      expect(metricsService.featureFlagMissesTotal.inc).toHaveBeenCalledWith({
+        flag: 'test_flag',
+      });
     });
   });
 
@@ -134,7 +157,9 @@ describe('FeatureFlagService', () => {
       mockRepository.update.mockResolvedValue({ ...mockFlag, enabled: false });
 
       const result = await service.setEnabled('test_flag', false);
-      expect(repository.update).toHaveBeenCalledWith('test_flag', { enabled: false });
+      expect(repository.update).toHaveBeenCalledWith('test_flag', {
+        enabled: false,
+      });
       expect(redisService.del).toHaveBeenCalledWith('feature-flags:test_flag');
       expect(result.enabled).toBe(false);
     });
@@ -142,17 +167,24 @@ describe('FeatureFlagService', () => {
     it('should throw NotFoundException if flag does not exist', async () => {
       mockRepository.findByKey.mockResolvedValue(null);
 
-      await expect(service.setEnabled('nonexistent', true)).rejects.toThrow(NotFoundException);
+      await expect(service.setEnabled('nonexistent', true)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('setRollout', () => {
     it('should update rolloutPercentage and invalidate cache', async () => {
       mockRepository.findByKey.mockResolvedValue(mockFlag);
-      mockRepository.update.mockResolvedValue({ ...mockFlag, rolloutPercentage: 25 });
+      mockRepository.update.mockResolvedValue({
+        ...mockFlag,
+        rolloutPercentage: 25,
+      });
 
       const result = await service.setRollout('test_flag', 25);
-      expect(repository.update).toHaveBeenCalledWith('test_flag', { rolloutPercentage: 25 });
+      expect(repository.update).toHaveBeenCalledWith('test_flag', {
+        rolloutPercentage: 25,
+      });
       expect(redisService.del).toHaveBeenCalledWith('feature-flags:test_flag');
       expect(result.rolloutPercentage).toBe(25);
     });
@@ -160,7 +192,9 @@ describe('FeatureFlagService', () => {
     it('should throw NotFoundException if flag does not exist', async () => {
       mockRepository.findByKey.mockResolvedValue(null);
 
-      await expect(service.setRollout('nonexistent', 50)).rejects.toThrow(NotFoundException);
+      await expect(service.setRollout('nonexistent', 50)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -170,7 +204,11 @@ describe('FeatureFlagService', () => {
 
       await service.refresh();
       expect(repository.findAll).toHaveBeenCalled();
-      expect(redisService.set).toHaveBeenCalledWith('feature-flags:test_flag', JSON.stringify(mockFlag), 60);
+      expect(redisService.set).toHaveBeenCalledWith(
+        'feature-flags:test_flag',
+        JSON.stringify(mockFlag),
+        60,
+      );
     });
   });
 
@@ -178,7 +216,11 @@ describe('FeatureFlagService', () => {
     it('should create feature flag', async () => {
       mockRepository.upsert.mockResolvedValue(mockFlag);
 
-      const result = await service.create({ key: 'test_flag', enabled: true, rolloutPercentage: 100 });
+      const result = await service.create({
+        key: 'test_flag',
+        enabled: true,
+        rolloutPercentage: 100,
+      });
       expect(repository.upsert).toHaveBeenCalled();
       expect(result).toEqual(mockFlag);
     });

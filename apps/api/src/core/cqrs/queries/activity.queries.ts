@@ -11,7 +11,10 @@ export interface ActivityTimelineQuery extends IQuery {
 }
 
 @Injectable()
-export class ActivityTimelineHandler implements IQueryHandler<ActivityTimelineQuery, ActivityTimelineReadModel> {
+export class ActivityTimelineHandler implements IQueryHandler<
+  ActivityTimelineQuery,
+  ActivityTimelineReadModel
+> {
   readonly queryName = 'ActivityTimeline';
 
   constructor(
@@ -19,11 +22,16 @@ export class ActivityTimelineHandler implements IQueryHandler<ActivityTimelineQu
     private readonly prisma: PrismaService,
   ) {}
 
-  async execute(query: ActivityTimelineQuery): Promise<ActivityTimelineReadModel> {
+  async execute(
+    query: ActivityTimelineQuery,
+  ): Promise<ActivityTimelineReadModel> {
     const limit = query.limit || 20;
     const cacheKey = `activity_timeline:${query.userId || 'global'}:l${limit}`;
 
-    const cached = await this.readModelService.get<ActivityTimelineReadModel>(cacheKey, 'ActivityTimeline');
+    const cached = await this.readModelService.get<ActivityTimelineReadModel>(
+      cacheKey,
+      'ActivityTimeline',
+    );
     if (cached) return cached;
 
     const auditLogs = await this.prisma.auditLog.findMany({

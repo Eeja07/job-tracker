@@ -100,12 +100,15 @@ describe('EventSubscriberService', () => {
     expect(mockSubscriber.handle).toHaveBeenCalledTimes(4);
     expect(metricsService.eventsRetryTotal.inc).toHaveBeenCalledTimes(3);
     expect(metricsService.eventsFailedTotal.inc).toHaveBeenCalled();
-    expect(metricsService.eventsDlqTotal.inc).toHaveBeenCalledWith({ type: EventType.APPLICATION_CREATED });
+    expect(metricsService.eventsDlqTotal.inc).toHaveBeenCalledWith({
+      type: EventType.APPLICATION_CREATED,
+    });
     expect(redisService.set).toHaveBeenCalledWith(
-      expect.stringContaining(`events:dlq:${EventType.APPLICATION_CREATED}:event-uuid-123`),
+      expect.stringContaining(
+        `events:dlq:${EventType.APPLICATION_CREATED}:event-uuid-123`,
+      ),
       expect.stringContaining('Persistent error'),
       604800,
     );
   });
 });
-

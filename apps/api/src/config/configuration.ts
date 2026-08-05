@@ -1,11 +1,15 @@
 import { EnvConfig } from './env.schema';
 
 export default (): EnvConfig => ({
-  NODE_ENV: (process.env.NODE_ENV as 'development' | 'production' | 'test') || 'development',
+  NODE_ENV:
+    (process.env.NODE_ENV as 'development' | 'production' | 'test') ||
+    'development',
   PORT: parseInt(process.env.PORT || '3000', 10),
   DATABASE_URL: process.env.DATABASE_URL,
-  JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET || 'dev-access-secret-key-12345',
-  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret-key-67890',
+  JWT_ACCESS_SECRET:
+    process.env.JWT_ACCESS_SECRET || 'dev-access-secret-key-12345',
+  JWT_REFRESH_SECRET:
+    process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret-key-67890',
   CORS_ORIGIN: process.env.CORS_ORIGIN || '*',
 
   REDIS_HOST: process.env.REDIS_HOST || 'localhost',

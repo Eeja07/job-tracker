@@ -150,7 +150,9 @@ describe('HealthController', () => {
     it('should throw ServiceUnavailableException when DB check fails', async () => {
       prismaService.$queryRaw.mockRejectedValue(new Error('DB error') as never);
 
-      await expect(controller.readiness()).rejects.toThrow(ServiceUnavailableException);
+      await expect(controller.readiness()).rejects.toThrow(
+        ServiceUnavailableException,
+      );
     });
   });
 

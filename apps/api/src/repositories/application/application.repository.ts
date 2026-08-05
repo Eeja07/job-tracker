@@ -81,7 +81,9 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
     super(prisma);
   }
 
-  protected getDelegate(tx?: Prisma.TransactionClient): Prisma.ApplicationDelegate {
+  protected getDelegate(
+    tx?: Prisma.TransactionClient,
+  ): Prisma.ApplicationDelegate {
     return tx ? tx.application : this.prisma.application;
   }
 
@@ -139,7 +141,10 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
     });
   }
 
-  async findById(id: string, tx?: Prisma.TransactionClient): Promise<Application | null> {
+  async findById(
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Application | null> {
     return this.getDelegate(tx).findUnique({
       where: { id },
       include: {
@@ -198,7 +203,10 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
     });
   }
 
-  async create(data: CreateApplicationData, tx?: Prisma.TransactionClient): Promise<Application> {
+  async create(
+    data: CreateApplicationData,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Application> {
     return this.getDelegate(tx).create({
       data,
     });
@@ -229,7 +237,10 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
     });
   }
 
-  async delete(id: string, tx?: Prisma.TransactionClient): Promise<Application> {
+  async delete(
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Application> {
     return this.getDelegate(tx).delete({
       where: { id },
     });

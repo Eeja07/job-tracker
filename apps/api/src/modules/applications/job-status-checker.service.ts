@@ -45,7 +45,9 @@ export class JobStatusCheckerService {
   /**
    * Check a single application's source URL for listing status.
    */
-  async checkSingleListing(applicationId: string): Promise<ListingCheckResult | null> {
+  async checkSingleListing(
+    applicationId: string,
+  ): Promise<ListingCheckResult | null> {
     const app = await this.prisma.application.findUnique({
       where: { id: applicationId },
       select: { id: true, jobTitle: true, sourceUrl: true },
@@ -60,18 +62,20 @@ export class JobStatusCheckerService {
     const statusNote = `[AUTO-CHECK ${checkedAt.toISOString().split('T')[0]}] Status Listing: ${result.status}${result.detail ? ` — ${result.detail}` : ''}`;
 
     // We store check result as a structured field on the application
-    await this.prisma.application.update({
-      where: { id: applicationId },
-      data: {
-        // Append status check result to notesContent
-        notesContent: {
-          // Use raw to prepend without reading existing value
-          // Prisma doesn't support string concat natively, so we fetch first
-        } as any,
-      },
-    }).catch(() => {
-      // Fallback: silent fail for update
-    });
+    await this.prisma.application
+      .update({
+        where: { id: applicationId },
+        data: {
+          // Append status check result to notesContent
+          notesContent: {
+            // Use raw to prepend without reading existing value
+            // Prisma doesn't support string concat natively, so we fetch first
+          } as any,
+        },
+      })
+      .catch(() => {
+        // Fallback: silent fail for update
+      });
 
     // Fetch current notesContent and prepend status
     const current = await this.prisma.application.findUnique({
@@ -101,7 +105,7 @@ export class JobStatusCheckerService {
   }
 
   /**
-   * Check all active applications that have a sourceUrl and haven't been 
+   * Check all active applications that have a sourceUrl and haven't been
    * in a terminal status (OFFER, REJECTED, WITHDRAWN).
    */
   async checkAllActiveListings(): Promise<ListingCheckResult[]> {
@@ -116,7 +120,9 @@ export class JobStatusCheckerService {
       take: 50, // cap to avoid abuse
     });
 
-    this.logger.log(`Running listing status check for ${activeApps.length} applications...`);
+    this.logger.log(
+      `Running listing status check for ${activeApps.length} applications...`,
+    );
 
     const results: ListingCheckResult[] = [];
 
@@ -136,10 +142,12 @@ export class JobStatusCheckerService {
       });
 
       // Small delay to avoid hammering portals
-      await new Promise(res => setTimeout(res, 800));
+      await new Promise((res) => setTimeout(res, 800));
     }
 
-    this.logger.log(`Listing check complete. Results: ${results.map(r => `${r.jobTitle}=${r.listingStatus}`).join(', ')}`);
+    this.logger.log(
+      `Listing check complete. Results: ${results.map((r) => `${r.jobTitle}=${r.listingStatus}`).join(', ')}`,
+    );
     return results;
   }
 
@@ -147,7 +155,9 @@ export class JobStatusCheckerService {
    * Core: Fetch URL and detect if job listing is still active.
    * Uses keyword detection on page content.
    */
-  private async fetchAndDetectStatus(url: string): Promise<{ status: JobListingStatus; detail?: string }> {
+  private async fetchAndDetectStatus(
+    url: string,
+  ): Promise<{ status: JobListingStatus; detail?: string }> {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 12000);
@@ -161,7 +171,8 @@ export class JobStatusCheckerService {
             'User-Agent':
               'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
             'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            Accept:
+              'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Sec-Fetch-Dest': 'document',
             'Sec-Fetch-Mode': 'navigate',
             'Sec-Fetch-Site': 'none',
@@ -180,7 +191,10 @@ export class JobStatusCheckerService {
 
       // 404 / 410 / 301 to homepage = likely closed
       if (httpStatus === 404 || httpStatus === 410) {
-        return { status: 'CLOSED', detail: `HTTP ${httpStatus} — Halaman tidak ditemukan` };
+        return {
+          status: 'CLOSED',
+          detail: `HTTP ${httpStatus} — Halaman tidak ditemukan`,
+        };
       }
 
       if (!html) {
@@ -201,7 +215,9 @@ export class JobStatusCheckerService {
       }
 
       // Check for JSON-LD jobPosting with validThrough (expiry date)
-      const jsonLdMatch = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/i);
+      const jsonLdMatch = html.match(
+        /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/i,
+      );
       if (jsonLdMatch) {
         try {
           const parsed = JSON.parse(jsonLdMatch[1]);
@@ -218,7 +234,9 @@ export class JobStatusCheckerService {
           if (posting?.hiringOrganization) {
             return { status: 'ACTIVE' };
           }
-        } catch { /* ignore parse errors */ }
+        } catch {
+          /* ignore parse errors */
+        }
       }
 
       return { status: 'ACTIVE' };

@@ -1,7 +1,11 @@
 import { IQuery, IQueryHandler } from '../interfaces/query.interface';
 import { Injectable } from '@nestjs/common';
 import { ReadModelService } from '../services/read-model.service';
-import { CompaniesReadModel, CompanyReadModelItem, SearchReadModel } from '../interfaces/read-models.interface';
+import {
+  CompaniesReadModel,
+  CompanyReadModelItem,
+  SearchReadModel,
+} from '../interfaces/read-models.interface';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 export interface GetCompanyQuery extends IQuery {
@@ -21,7 +25,10 @@ export interface SearchCompaniesQuery extends IQuery {
 }
 
 @Injectable()
-export class GetCompanyHandler implements IQueryHandler<GetCompanyQuery, CompanyReadModelItem | null> {
+export class GetCompanyHandler implements IQueryHandler<
+  GetCompanyQuery,
+  CompanyReadModelItem | null
+> {
   readonly queryName = 'GetCompany';
 
   constructor(
@@ -31,7 +38,10 @@ export class GetCompanyHandler implements IQueryHandler<GetCompanyQuery, Company
 
   async execute(query: GetCompanyQuery): Promise<CompanyReadModelItem | null> {
     const cacheKey = `companies:${query.companyId}`;
-    const cached = await this.readModelService.get<CompanyReadModelItem>(cacheKey, 'GetCompany');
+    const cached = await this.readModelService.get<CompanyReadModelItem>(
+      cacheKey,
+      'GetCompany',
+    );
     if (cached) return cached;
 
     const company = await this.prisma.company.findUnique({
@@ -55,7 +65,10 @@ export class GetCompanyHandler implements IQueryHandler<GetCompanyQuery, Company
 }
 
 @Injectable()
-export class ListCompaniesHandler implements IQueryHandler<ListCompaniesQuery, CompaniesReadModel> {
+export class ListCompaniesHandler implements IQueryHandler<
+  ListCompaniesQuery,
+  CompaniesReadModel
+> {
   readonly queryName = 'ListCompanies';
 
   constructor(
@@ -68,7 +81,10 @@ export class ListCompaniesHandler implements IQueryHandler<ListCompaniesQuery, C
     const limit = query.limit || 20;
     const cacheKey = `companies:page:${page}:limit:${limit}`;
 
-    const cached = await this.readModelService.get<CompaniesReadModel>(cacheKey, 'ListCompanies');
+    const cached = await this.readModelService.get<CompaniesReadModel>(
+      cacheKey,
+      'ListCompanies',
+    );
     if (cached) return cached;
 
     const [companies, total] = await Promise.all([
@@ -96,7 +112,10 @@ export class ListCompaniesHandler implements IQueryHandler<ListCompaniesQuery, C
 }
 
 @Injectable()
-export class SearchCompaniesHandler implements IQueryHandler<SearchCompaniesQuery, SearchReadModel> {
+export class SearchCompaniesHandler implements IQueryHandler<
+  SearchCompaniesQuery,
+  SearchReadModel
+> {
   readonly queryName = 'SearchCompanies';
 
   constructor(
@@ -106,7 +125,10 @@ export class SearchCompaniesHandler implements IQueryHandler<SearchCompaniesQuer
 
   async execute(query: SearchCompaniesQuery): Promise<SearchReadModel> {
     const cacheKey = `search:companies:${encodeURIComponent(query.searchTerm)}`;
-    const cached = await this.readModelService.get<SearchReadModel>(cacheKey, 'SearchCompanies');
+    const cached = await this.readModelService.get<SearchReadModel>(
+      cacheKey,
+      'SearchCompanies',
+    );
     if (cached) return cached;
 
     const companies = await this.prisma.company.findMany({

@@ -9,15 +9,23 @@ export class PermissionRepository extends BaseRepository<Prisma.PermissionDelega
     super(prisma);
   }
 
-  protected getDelegate(tx?: Prisma.TransactionClient): Prisma.PermissionDelegate {
+  protected getDelegate(
+    tx?: Prisma.TransactionClient,
+  ): Prisma.PermissionDelegate {
     return tx ? tx.permission : this.prisma.permission;
   }
 
-  async findByName(name: string, tx?: Prisma.TransactionClient): Promise<Permission | null> {
+  async findByName(
+    name: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Permission | null> {
     return this.getDelegate(tx).findUnique({ where: { name } });
   }
 
-  async findById(id: string, tx?: Prisma.TransactionClient): Promise<Permission | null> {
+  async findById(
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Permission | null> {
     return this.getDelegate(tx).findUnique({ where: { id } });
   }
 
@@ -25,7 +33,10 @@ export class PermissionRepository extends BaseRepository<Prisma.PermissionDelega
     return this.getDelegate(tx).findMany({ orderBy: { name: 'asc' } });
   }
 
-  async findByRole(roleId: string, tx?: Prisma.TransactionClient): Promise<Permission[]> {
+  async findByRole(
+    roleId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Permission[]> {
     const rolePerms = await this.prisma.rolePermission.findMany({
       where: { roleId },
       include: { permission: true },

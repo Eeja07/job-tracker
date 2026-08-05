@@ -1,7 +1,11 @@
 import { IQuery, IQueryHandler } from '../interfaces/query.interface';
 import { Injectable } from '@nestjs/common';
 import { ReadModelService } from '../services/read-model.service';
-import { ApplicationReadModelItem, ApplicationsReadModel, SearchReadModel } from '../interfaces/read-models.interface';
+import {
+  ApplicationReadModelItem,
+  ApplicationsReadModel,
+  SearchReadModel,
+} from '../interfaces/read-models.interface';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 export interface GetApplicationQuery extends IQuery {
@@ -24,7 +28,10 @@ export interface SearchApplicationsQuery extends IQuery {
 }
 
 @Injectable()
-export class GetApplicationHandler implements IQueryHandler<GetApplicationQuery, ApplicationReadModelItem | null> {
+export class GetApplicationHandler implements IQueryHandler<
+  GetApplicationQuery,
+  ApplicationReadModelItem | null
+> {
   readonly queryName = 'GetApplication';
 
   constructor(
@@ -32,9 +39,14 @@ export class GetApplicationHandler implements IQueryHandler<GetApplicationQuery,
     private readonly prisma: PrismaService,
   ) {}
 
-  async execute(query: GetApplicationQuery): Promise<ApplicationReadModelItem | null> {
+  async execute(
+    query: GetApplicationQuery,
+  ): Promise<ApplicationReadModelItem | null> {
     const cacheKey = `applications:${query.applicationId}`;
-    const cached = await this.readModelService.get<ApplicationReadModelItem>(cacheKey, 'GetApplication');
+    const cached = await this.readModelService.get<ApplicationReadModelItem>(
+      cacheKey,
+      'GetApplication',
+    );
     if (cached) return cached;
 
     const app = await this.prisma.application.findFirst({
@@ -62,7 +74,10 @@ export class GetApplicationHandler implements IQueryHandler<GetApplicationQuery,
 }
 
 @Injectable()
-export class ListApplicationsHandler implements IQueryHandler<ListApplicationsQuery, ApplicationsReadModel> {
+export class ListApplicationsHandler implements IQueryHandler<
+  ListApplicationsQuery,
+  ApplicationsReadModel
+> {
   readonly queryName = 'ListApplications';
 
   constructor(
@@ -75,7 +90,10 @@ export class ListApplicationsHandler implements IQueryHandler<ListApplicationsQu
     const limit = query.limit || 20;
     const cacheKey = `applications:user:${query.userId}:p${page}:l${limit}`;
 
-    const cached = await this.readModelService.get<ApplicationsReadModel>(cacheKey, 'ListApplications');
+    const cached = await this.readModelService.get<ApplicationsReadModel>(
+      cacheKey,
+      'ListApplications',
+    );
     if (cached) return cached;
 
     const [apps, total] = await Promise.all([
@@ -108,7 +126,10 @@ export class ListApplicationsHandler implements IQueryHandler<ListApplicationsQu
 }
 
 @Injectable()
-export class SearchApplicationsHandler implements IQueryHandler<SearchApplicationsQuery, SearchReadModel> {
+export class SearchApplicationsHandler implements IQueryHandler<
+  SearchApplicationsQuery,
+  SearchReadModel
+> {
   readonly queryName = 'SearchApplications';
 
   constructor(
@@ -118,7 +139,10 @@ export class SearchApplicationsHandler implements IQueryHandler<SearchApplicatio
 
   async execute(query: SearchApplicationsQuery): Promise<SearchReadModel> {
     const cacheKey = `search:applications:${query.userId}:${encodeURIComponent(query.searchTerm)}`;
-    const cached = await this.readModelService.get<SearchReadModel>(cacheKey, 'SearchApplications');
+    const cached = await this.readModelService.get<SearchReadModel>(
+      cacheKey,
+      'SearchApplications',
+    );
     if (cached) return cached;
 
     const apps = await this.prisma.application.findMany({

@@ -12,9 +12,13 @@ export class NoteService {
   ) {}
 
   async create(userId: string, dto: CreateNoteDto): Promise<Note> {
-    const application = await this.applicationRepository.findById(dto.applicationId);
+    const application = await this.applicationRepository.findById(
+      dto.applicationId,
+    );
     if (!application || application.userId !== userId) {
-      throw new NotFoundException(`Application with ID '${dto.applicationId}' was not found`);
+      throw new NotFoundException(
+        `Application with ID '${dto.applicationId}' was not found`,
+      );
     }
 
     return this.noteRepository.create({
@@ -25,10 +29,16 @@ export class NoteService {
     });
   }
 
-  async findByApplication(applicationId: string, userId: string): Promise<Note[]> {
-    const application = await this.applicationRepository.findById(applicationId);
+  async findByApplication(
+    applicationId: string,
+    userId: string,
+  ): Promise<Note[]> {
+    const application =
+      await this.applicationRepository.findById(applicationId);
     if (!application || application.userId !== userId) {
-      throw new NotFoundException(`Application with ID '${applicationId}' was not found`);
+      throw new NotFoundException(
+        `Application with ID '${applicationId}' was not found`,
+      );
     }
 
     return this.noteRepository.findByApplication(applicationId);

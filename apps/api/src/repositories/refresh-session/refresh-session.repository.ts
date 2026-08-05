@@ -15,7 +15,9 @@ export class RefreshSessionRepository extends BaseRepository<Prisma.RefreshSessi
     super(prisma);
   }
 
-  protected getDelegate(tx?: Prisma.TransactionClient): Prisma.RefreshSessionDelegate {
+  protected getDelegate(
+    tx?: Prisma.TransactionClient,
+  ): Prisma.RefreshSessionDelegate {
     return tx ? tx.refreshSession : this.prisma.refreshSession;
   }
 
@@ -36,7 +38,10 @@ export class RefreshSessionRepository extends BaseRepository<Prisma.RefreshSessi
     });
   }
 
-  async deleteByUserId(userId: string, tx?: Prisma.TransactionClient): Promise<Prisma.BatchPayload> {
+  async deleteByUserId(
+    userId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Prisma.BatchPayload> {
     return this.getDelegate(tx).deleteMany({
       where: { userId },
     });

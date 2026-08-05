@@ -23,10 +23,10 @@ export class PermissionsGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(
+      PERMISSIONS_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     if (!requiredPermissions || requiredPermissions.length === 0) {
       return true;
@@ -42,18 +42,33 @@ export class PermissionsGuard implements CanActivate {
     const userId = user.sub as string;
 
     if (!this.rbacService) {
-      this.logger.error('RbacService is not available in PermissionsGuard. Security fail-closed triggered.');
-      throw new InternalServerErrorException('Authorization provider unavailable');
+      this.logger.error(
+        'RbacService is not available in PermissionsGuard. Security fail-closed triggered.',
+      );
+      throw new InternalServerErrorException(
+        'Authorization provider unavailable',
+      );
     }
 
-    this.metricsService?.rbacPermissionChecksTotal.inc({ permission: requiredPermissions.join(',') });
+    this.metricsService?.rbacPermissionChecksTotal.inc({
+      permission: requiredPermissions.join(','),
+    });
 
-    const allowed = await this.rbacService.hasAnyPermission(userId, requiredPermissions);
+    const allowed = await this.rbacService.hasAnyPermission(
+      userId,
+      requiredPermissions,
+    );
 
     if (!allowed) {
-      this.logger.warn(`User ${userId} denied: requires permission [${requiredPermissions.join(', ')}]`);
-      this.metricsService?.rbacPermissionDeniedTotal.inc({ type: 'permission' });
-      throw new ForbiddenException(`Access denied: requires permission [${requiredPermissions.join(' | ')}]`);
+      this.logger.warn(
+        `User ${userId} denied: requires permission [${requiredPermissions.join(', ')}]`,
+      );
+      this.metricsService?.rbacPermissionDeniedTotal.inc({
+        type: 'permission',
+      });
+      throw new ForbiddenException(
+        `Access denied: requires permission [${requiredPermissions.join(' | ')}]`,
+      );
     }
 
     this.logger.debug(`User ${userId} granted via permission check`);

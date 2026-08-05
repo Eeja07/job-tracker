@@ -9,7 +9,11 @@ describe('VersionMiddleware', () => {
   });
 
   it('should default version to "1" if no header or media type provided', () => {
-    const req: any = { headers: {}, url: '/api/applications', originalUrl: '/api/applications' };
+    const req: any = {
+      headers: {},
+      url: '/api/applications',
+      originalUrl: '/api/applications',
+    };
     const res = {} as Response;
     const next = jest.fn();
 
@@ -20,7 +24,11 @@ describe('VersionMiddleware', () => {
   });
 
   it('should extract version from X-API-Version header and rewrite URL', () => {
-    const req: any = { headers: { 'x-api-version': '2' }, url: '/api/applications', originalUrl: '/api/applications' };
+    const req: any = {
+      headers: { 'x-api-version': '2' },
+      url: '/api/applications',
+      originalUrl: '/api/applications',
+    };
     const res = {} as Response;
     const next = jest.fn();
 

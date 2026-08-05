@@ -1,29 +1,53 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Min,
+} from 'class-validator';
 import { AttachmentType, StorageProvider } from '@prisma/client';
 
 export class CreateAttachmentDto {
-  @ApiProperty({ description: 'Target job application ID', example: 'app-uuid-1' })
+  @ApiProperty({
+    description: 'Target job application ID',
+    example: 'app-uuid-1',
+  })
   @IsUUID()
   @IsNotEmpty()
   applicationId!: string;
 
-  @ApiProperty({ description: 'Document type tag', enum: AttachmentType, example: AttachmentType.CV })
+  @ApiProperty({
+    description: 'Document type tag',
+    enum: AttachmentType,
+    example: AttachmentType.CV,
+  })
   @IsEnum(AttachmentType)
   @IsNotEmpty()
   type!: AttachmentType;
 
-  @ApiProperty({ description: 'Human-readable label/title', example: 'CV 2026 Updated' })
+  @ApiProperty({
+    description: 'Human-readable label/title',
+    example: 'CV 2026 Updated',
+  })
   @IsString()
   @IsNotEmpty()
   label!: string;
 
-  @ApiPropertyOptional({ description: 'Original filename', example: 'cv_2026.pdf' })
+  @ApiPropertyOptional({
+    description: 'Original filename',
+    example: 'cv_2026.pdf',
+  })
   @IsOptional()
   @IsString()
   filename?: string;
 
-  @ApiPropertyOptional({ description: 'MIME type string', example: 'application/pdf' })
+  @ApiPropertyOptional({
+    description: 'MIME type string',
+    example: 'application/pdf',
+  })
   @IsOptional()
   @IsString()
   mimeType?: string;
@@ -34,17 +58,27 @@ export class CreateAttachmentDto {
   @Min(0)
   fileSize?: number;
 
-  @ApiPropertyOptional({ description: 'Storage provider plugin', enum: StorageProvider, default: StorageProvider.LOCAL })
+  @ApiPropertyOptional({
+    description: 'Storage provider plugin',
+    enum: StorageProvider,
+    default: StorageProvider.LOCAL,
+  })
   @IsOptional()
   @IsEnum(StorageProvider)
   storageProvider?: StorageProvider = StorageProvider.LOCAL;
 
-  @ApiProperty({ description: 'Persistent relative or object storage path', example: '/uploads/cv_2026.pdf' })
+  @ApiProperty({
+    description: 'Persistent relative or object storage path',
+    example: '/uploads/cv_2026.pdf',
+  })
   @IsString()
   @IsNotEmpty()
   storagePath!: string;
 
-  @ApiPropertyOptional({ description: 'SHA-256 checksum integrity hash', example: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' })
+  @ApiPropertyOptional({
+    description: 'SHA-256 checksum integrity hash',
+    example: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+  })
   @IsOptional()
   @IsString()
   checksum?: string;
@@ -86,7 +120,9 @@ export class AttachmentResponseDto {
   @ApiProperty({ example: '/uploads/cv_2026.pdf' })
   storagePath!: string;
 
-  @ApiPropertyOptional({ example: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' })
+  @ApiPropertyOptional({
+    example: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+  })
   checksum?: string | null;
 
   @ApiPropertyOptional({ example: '1.0' })

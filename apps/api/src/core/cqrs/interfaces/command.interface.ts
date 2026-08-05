@@ -5,7 +5,10 @@ export interface ICommand {
   userId?: string;
 }
 
-export interface ICommandHandler<TCommand extends ICommand = any, TResult = any> {
+export interface ICommandHandler<
+  TCommand extends ICommand = any,
+  TResult = any,
+> {
   commandName: string;
   execute(command: TCommand): Promise<TResult>;
 }

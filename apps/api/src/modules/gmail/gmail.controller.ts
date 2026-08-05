@@ -1,8 +1,23 @@
 import {
-  Controller, Get, Post, Patch, Query, Param, Redirect, UseGuards,
-  Request as NestRequest, Body, HttpCode, HttpStatus,
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Query,
+  Param,
+  Redirect,
+  UseGuards,
+  Request as NestRequest,
+  Body,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AuthenticatedRequest } from '../auth/auth.controller';
 import { GmailService } from './gmail.service';
@@ -29,19 +44,32 @@ export class GmailController {
   @Get('callback')
   @ApiOperation({ summary: 'OAuth callback — handle Gmail authorization code' })
   @Redirect()
-  async handleCallback(@Query('code') code: string, @Query('state') userId: string) {
+  async handleCallback(
+    @Query('code') code: string,
+    @Query('state') userId: string,
+  ) {
     try {
       await this.gmailService.handleCallback(code, userId);
-      const webUrl = this.config.get<string>('FRONTEND_URL', 'http://localhost:3001');
+      const webUrl = this.config.get<string>(
+        'FRONTEND_URL',
+        'http://localhost:3001',
+      );
       return { url: `${webUrl}/dashboard?gmail=connected` };
     } catch (err: any) {
-      const webUrl = this.config.get<string>('FRONTEND_URL', 'http://localhost:3001');
-      return { url: `${webUrl}/dashboard?gmail=error&msg=${encodeURIComponent(err.message)}` };
+      const webUrl = this.config.get<string>(
+        'FRONTEND_URL',
+        'http://localhost:3001',
+      );
+      return {
+        url: `${webUrl}/dashboard?gmail=error&msg=${encodeURIComponent(err.message)}`,
+      };
     }
   }
 
   @Get('status')
-  @ApiOperation({ summary: 'Check Gmail connection status and unread notification count' })
+  @ApiOperation({
+    summary: 'Check Gmail connection status and unread notification count',
+  })
   async getStatus(@NestRequest() req: any) {
     const userId = (req as AuthenticatedRequest).user.sub;
     return this.gmailService.getConnectionStatus(userId);
@@ -73,14 +101,24 @@ export class GmailController {
     @Query('limit') limit?: string,
   ) {
     const userId = (req as AuthenticatedRequest).user.sub;
-    return this.gmailService.getEmailMessages(userId, jobOnly === 'true', limit ? Number(limit) : 30);
+    return this.gmailService.getEmailMessages(
+      userId,
+      jobOnly === 'true',
+      limit ? Number(limit) : 30,
+    );
   }
 
   @Get('notifications')
   @ApiOperation({ summary: 'Get in-app notifications' })
-  async getNotifications(@NestRequest() req: any, @Query('limit') limit?: string) {
+  async getNotifications(
+    @NestRequest() req: any,
+    @Query('limit') limit?: string,
+  ) {
     const userId = (req as AuthenticatedRequest).user.sub;
-    return this.gmailService.getNotifications(userId, limit ? Number(limit) : 50);
+    return this.gmailService.getNotifications(
+      userId,
+      limit ? Number(limit) : 50,
+    );
   }
 
   @Patch('notifications/:id/read')

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { Attachment } from '@prisma/client';
 import { AttachmentRepository } from '../../repositories/attachment/attachment.repository';
 import { ApplicationRepository } from '../../repositories/application/application.repository';
@@ -24,9 +28,13 @@ export class AttachmentService {
     }
 
     // Verify application existence and user ownership
-    const application = await this.applicationRepository.findById(dto.applicationId);
+    const application = await this.applicationRepository.findById(
+      dto.applicationId,
+    );
     if (!application || application.userId !== userId) {
-      throw new NotFoundException(`Application with ID '${dto.applicationId}' was not found`);
+      throw new NotFoundException(
+        `Application with ID '${dto.applicationId}' was not found`,
+      );
     }
 
     // Upload physical file via StorageService (runs virus scan + magic bytes validation)
@@ -48,10 +56,16 @@ export class AttachmentService {
     });
   }
 
-  async findByApplication(applicationId: string, userId: string): Promise<Attachment[]> {
-    const application = await this.applicationRepository.findById(applicationId);
+  async findByApplication(
+    applicationId: string,
+    userId: string,
+  ): Promise<Attachment[]> {
+    const application =
+      await this.applicationRepository.findById(applicationId);
     if (!application || application.userId !== userId) {
-      throw new NotFoundException(`Application with ID '${applicationId}' was not found`);
+      throw new NotFoundException(
+        `Application with ID '${applicationId}' was not found`,
+      );
     }
 
     return this.attachmentRepository.findByApplication(applicationId);
@@ -71,7 +85,9 @@ export class AttachmentService {
     userId: string,
   ): Promise<{ buffer: Buffer; attachment: Attachment }> {
     const attachment = await this.findOne(id, userId);
-    const buffer = await this.storageService.downloadFile(attachment.storagePath);
+    const buffer = await this.storageService.downloadFile(
+      attachment.storagePath,
+    );
     return { buffer, attachment };
   }
 
@@ -82,7 +98,11 @@ export class AttachmentService {
     end?: number,
   ): Promise<{ streamResult: ReadStreamResult; attachment: Attachment }> {
     const attachment = await this.findOne(id, userId);
-    const streamResult = await this.storageService.getReadStream(attachment.storagePath, start, end);
+    const streamResult = await this.storageService.getReadStream(
+      attachment.storagePath,
+      start,
+      end,
+    );
     return { streamResult, attachment };
   }
 
@@ -93,7 +113,11 @@ export class AttachmentService {
     expiresInSeconds = 900,
   ): Promise<string> {
     const attachment = await this.findOne(id, userId);
-    return this.storageService.getSignedUrl(attachment.storagePath, mode, expiresInSeconds);
+    return this.storageService.getSignedUrl(
+      attachment.storagePath,
+      mode,
+      expiresInSeconds,
+    );
   }
 
   async remove(id: string, userId: string): Promise<void> {

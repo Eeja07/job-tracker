@@ -63,7 +63,10 @@ describe('AttachmentService', () => {
       path: '',
     };
 
-    mockApplicationRepository.findById.mockResolvedValue({ id: 'app-1', userId: 'user-1' });
+    mockApplicationRepository.findById.mockResolvedValue({
+      id: 'app-1',
+      userId: 'user-1',
+    });
     mockStorageService.uploadFile.mockResolvedValue({
       storagePath: '2026/08/04/abc.pdf',
       checksum: 'hash123',
@@ -94,7 +97,10 @@ describe('AttachmentService', () => {
   });
 
   it('should throw NotFoundException if application does not belong to user during upload', async () => {
-    mockApplicationRepository.findById.mockResolvedValue({ id: 'app-1', userId: 'other-user' });
+    mockApplicationRepository.findById.mockResolvedValue({
+      id: 'app-1',
+      userId: 'other-user',
+    });
 
     const mockFile: Express.Multer.File = {
       fieldname: 'file',
@@ -110,7 +116,11 @@ describe('AttachmentService', () => {
     };
 
     await expect(
-      service.upload('user-1', { applicationId: 'app-1', type: AttachmentType.CV, label: 'CV' }, mockFile),
+      service.upload(
+        'user-1',
+        { applicationId: 'app-1', type: AttachmentType.CV, label: 'CV' },
+        mockFile,
+      ),
     ).rejects.toThrow(NotFoundException);
   });
 
@@ -123,7 +133,9 @@ describe('AttachmentService', () => {
 
     await service.remove('att-1', 'user-1');
 
-    expect(mockStorageService.deleteFile).toHaveBeenCalledWith('2026/08/04/abc.pdf');
+    expect(mockStorageService.deleteFile).toHaveBeenCalledWith(
+      '2026/08/04/abc.pdf',
+    );
     expect(mockAttachmentRepository.delete).toHaveBeenCalledWith('att-1');
   });
 });

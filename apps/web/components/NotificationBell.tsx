@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-import { Bell, Mail, CheckCheck, RefreshCw, AlertCircle, ExternalLink, X } from "lucide-react";
+import { Bell, Mail, CheckCheck, RefreshCw, AlertCircle } from "lucide-react";
 import { notificationApi, gmailApi, type NotificationItem, type GmailStatus } from "@/lib/api";
 import styles from "./NotificationBell.module.css";
 

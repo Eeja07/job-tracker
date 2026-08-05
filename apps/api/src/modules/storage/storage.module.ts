@@ -19,7 +19,9 @@ import { MetricsModule } from '../../core/metrics/metrics.module';
     {
       provide: STORAGE_PROVIDER_TOKEN,
       useFactory: (configService: ConfigService) => {
-        const provider = configService.get<string>('STORAGE_PROVIDER', 'LOCAL').toUpperCase();
+        const provider = configService
+          .get<string>('STORAGE_PROVIDER', 'LOCAL')
+          .toUpperCase();
         switch (provider) {
           case 'MINIO':
           case 'S3':
@@ -34,7 +36,9 @@ import { MetricsModule } from '../../core/metrics/metrics.module';
     {
       provide: VIRUS_SCANNER_TOKEN,
       useFactory: (configService: ConfigService) => {
-        const scanner = configService.get<string>('VIRUS_SCANNER_PROVIDER', 'NOOP').toUpperCase();
+        const scanner = configService
+          .get<string>('VIRUS_SCANNER_PROVIDER', 'NOOP')
+          .toUpperCase();
         switch (scanner) {
           case 'CLAMAV':
             return new ClamAVScanner(configService);

@@ -1,4 +1,11 @@
-import { Controller, Get, HttpCode, HttpStatus, Optional, ServiceUnavailableException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Optional,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RedisService } from '../../modules/redis/redis.service';
@@ -129,12 +136,15 @@ export class HealthController {
 
     const websocketCheck = this.connectionManager ? 'up' : 'down';
     const presenceCheck = redisCheck === 'up' ? 'up' : 'degraded';
-    const tracingCheck = this.tracingService?.isTracingEnabled() ? 'up' : 'down';
+    const tracingCheck = this.tracingService?.isTracingEnabled()
+      ? 'up'
+      : 'down';
     const otlpCheck = this.tracingService?.getOtlpStatus() || 'up';
     const jaegerCheck = this.tracingService?.getJaegerStatus() || 'up';
     const projectionCheck = this.projectionManager?.isHealthy() ? 'up' : 'down';
     const readModelCheck = this.readModelService?.isReady() ? 'up' : 'down';
-    const cqrsCheck = (projectionCheck === 'up' && readModelCheck === 'up') ? 'up' : 'down';
+    const cqrsCheck =
+      projectionCheck === 'up' && readModelCheck === 'up' ? 'up' : 'down';
 
     const isDegraded =
       redisCheck === 'down' ||
@@ -189,8 +199,14 @@ export class HealthController {
 
   @Get('ready')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Readiness probe check including database, redis, queue, and smtp connections' })
-  @ApiResponse({ status: 200, description: 'Service is ready to handle traffic' })
+  @ApiOperation({
+    summary:
+      'Readiness probe check including database, redis, queue, and smtp connections',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Service is ready to handle traffic',
+  })
   @ApiResponse({ status: 503, description: 'Service or database unavailable' })
   async readiness(): Promise<HealthCheckResponse> {
     let dbStatus = 'down';
@@ -279,7 +295,10 @@ export class HealthController {
   @Get('startup')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Startup probe check' })
-  @ApiResponse({ status: 200, description: 'Application has started up successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Application has started up successfully',
+  })
   startup(): HealthCheckResponse {
     return {
       status: 'ok',

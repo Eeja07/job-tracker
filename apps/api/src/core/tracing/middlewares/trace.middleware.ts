@@ -1,7 +1,10 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { randomUUID } from 'crypto';
-import { TraceContextService, TraceContextStore } from '../services/trace-context.service';
+import {
+  TraceContextService,
+  TraceContextStore,
+} from '../services/trace-context.service';
 import { TracingService } from '../services/tracing.service';
 import { SPAN_NAMES } from '../constants/tracing.constants';
 
@@ -34,12 +37,18 @@ export class TraceMiddleware implements NestMiddleware {
     }
 
     if (!traceId) {
-      traceId = (req.headers['x-trace-id'] as string) || this.tracingService.generateTraceId();
+      traceId =
+        (req.headers['x-trace-id'] as string) ||
+        this.tracingService.generateTraceId();
     }
 
     const spanId = this.tracingService.generateSpanId();
-    const requestId = (req as any).id || (req.headers['x-request-id'] as string) || randomUUID();
-    const correlationId = (req.headers['x-correlation-id'] as string) || requestId;
+    const requestId =
+      (req as any).id ||
+      (req.headers['x-request-id'] as string) ||
+      randomUUID();
+    const correlationId =
+      (req.headers['x-correlation-id'] as string) || requestId;
     const sampled = this.tracingService.shouldSample(traceId);
 
     // Set HTTP response headers for trace propagation
@@ -47,7 +56,10 @@ export class TraceMiddleware implements NestMiddleware {
     res.setHeader('X-Span-Id', spanId);
     res.setHeader('X-Request-Id', requestId);
     res.setHeader('X-Correlation-Id', correlationId);
-    res.setHeader('traceparent', `00-${traceId}-${spanId}-0${sampled ? '1' : '0'}`);
+    res.setHeader(
+      'traceparent',
+      `00-${traceId}-${spanId}-0${sampled ? '1' : '0'}`,
+    );
 
     req.traceId = traceId;
     req.spanId = spanId;

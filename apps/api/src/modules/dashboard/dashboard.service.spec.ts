@@ -91,7 +91,10 @@ describe('DashboardService', () => {
 
     it('should return 0 rates when user has zero applications', async () => {
       repository.getStatusBreakdown.mockResolvedValue([]);
-      repository.getMonthlyCounts.mockResolvedValue({ thisMonth: 0, lastMonth: 0 });
+      repository.getMonthlyCounts.mockResolvedValue({
+        thisMonth: 0,
+        lastMonth: 0,
+      });
       repository.getTopSources.mockResolvedValue([]);
       repository.getTopCompanies.mockResolvedValue([]);
       repository.getOfferApplicationDates.mockResolvedValue([]);

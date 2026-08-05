@@ -34,7 +34,9 @@ export class RedisThrottlerStorage implements ThrottlerStorage {
         timeToBlockExpire: 0,
       };
     } catch (err: any) {
-      this.logger.warn(`Redis rate limiting fallback due to error: ${err.message}`);
+      this.logger.warn(
+        `Redis rate limiting fallback due to error: ${err.message}`,
+      );
       return {
         totalHits: 1,
         timeToExpire: ttlSeconds,

@@ -18,12 +18,18 @@ export class QueryBus {
     this.logger.log(`Registered query handler: ${handler.queryName}`);
   }
 
-  async execute<TQuery extends IQuery = any, TResult = any>(query: TQuery): Promise<TResult> {
+  async execute<TQuery extends IQuery = any, TResult = any>(
+    query: TQuery,
+  ): Promise<TResult> {
     const queryName = query.queryName;
     const handler = this.handlers.get(queryName);
 
-    const traceId = query.traceId || this.traceContextService?.getTraceId() || 'unknown';
-    const correlationId = query.correlationId || this.traceContextService?.getCorrelationId() || 'unknown';
+    const traceId =
+      query.traceId || this.traceContextService?.getTraceId() || 'unknown';
+    const correlationId =
+      query.correlationId ||
+      this.traceContextService?.getCorrelationId() ||
+      'unknown';
 
     if (!handler) {
       this.logger.error(
@@ -34,7 +40,10 @@ export class QueryBus {
           correlationId,
         }),
       );
-      this.metricsService.queryExecutionTotal.inc({ query: queryName, status: 'not_found' });
+      this.metricsService.queryExecutionTotal.inc({
+        query: queryName,
+        status: 'not_found',
+      });
       throw new Error(`Query handler not found for: ${queryName}`);
     }
 
@@ -52,7 +61,10 @@ export class QueryBus {
 
     try {
       const result = await handler.execute(query);
-      this.metricsService.queryExecutionTotal.inc({ query: queryName, status: 'success' });
+      this.metricsService.queryExecutionTotal.inc({
+        query: queryName,
+        status: 'success',
+      });
       return result;
     } catch (err: any) {
       this.logger.error(
@@ -65,7 +77,10 @@ export class QueryBus {
           durationMs: Date.now() - startTime,
         }),
       );
-      this.metricsService.queryExecutionTotal.inc({ query: queryName, status: 'failure' });
+      this.metricsService.queryExecutionTotal.inc({
+        query: queryName,
+        status: 'failure',
+      });
       throw err;
     }
   }

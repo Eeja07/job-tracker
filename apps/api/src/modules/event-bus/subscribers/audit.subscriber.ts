@@ -18,7 +18,9 @@ export class AuditSubscriber implements IEventSubscriber {
 
   private readonly logger = new Logger(AuditSubscriber.name);
 
-  constructor(@Optional() private readonly auditLogRepository?: AuditLogRepository) {}
+  constructor(
+    @Optional() private readonly auditLogRepository?: AuditLogRepository,
+  ) {}
 
   async handle(event: BaseEvent): Promise<void> {
     this.logger.log(
@@ -45,7 +47,9 @@ export class AuditSubscriber implements IEventSubscriber {
           metadata: event.payload || {},
         });
       } catch (err: any) {
-        this.logger.warn(`Failed to log audit entry in AuditSubscriber: ${err.message}`);
+        this.logger.warn(
+          `Failed to log audit entry in AuditSubscriber: ${err.message}`,
+        );
       }
     }
   }

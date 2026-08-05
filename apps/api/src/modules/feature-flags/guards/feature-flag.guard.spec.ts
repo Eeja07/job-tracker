@@ -64,7 +64,10 @@ describe('FeatureFlagGuard', () => {
     const result = await guard.canActivate(context);
 
     expect(result).toBe(true);
-    expect(featureFlagService.isEnabled).toHaveBeenCalledWith('TEST_FEATURE', 'user-123');
+    expect(featureFlagService.isEnabled).toHaveBeenCalledWith(
+      'TEST_FEATURE',
+      'user-123',
+    );
   });
 
   it('should throw NotFoundException (404) if feature flag is disabled', async () => {
@@ -74,6 +77,9 @@ describe('FeatureFlagGuard', () => {
     const context = mockExecutionContext({ id: 'user-456' });
 
     await expect(guard.canActivate(context)).rejects.toThrow(NotFoundException);
-    expect(featureFlagService.isEnabled).toHaveBeenCalledWith('DISABLED_FEATURE', 'user-456');
+    expect(featureFlagService.isEnabled).toHaveBeenCalledWith(
+      'DISABLED_FEATURE',
+      'user-456',
+    );
   });
 });

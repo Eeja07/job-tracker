@@ -1,6 +1,16 @@
-import { Processor as BullProcessor, WorkerHost as BullWorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
+import {
+  Processor as BullProcessor,
+  WorkerHost as BullWorkerHost,
+  OnWorkerEvent,
+} from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { Injectable, Logger, Inject, forwardRef, Optional } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  Inject,
+  forwardRef,
+  Optional,
+} from '@nestjs/common';
 import { QUEUE_NAMES } from '../constants/jobs.constants';
 import { QueueService } from '../services/queue.service';
 import { AuditLogRepository } from '../../../repositories/audit-log/audit-log.repository';
@@ -28,7 +38,10 @@ export class AuditWorker extends BullWorkerHost {
     const createdLog = await this.auditLogRepository.create(job.data);
 
     if (this.metricsService) {
-      this.metricsService.auditLogsTotal.inc({ resource: job.data?.resource || 'unknown', action: job.data?.action || 'unknown' });
+      this.metricsService.auditLogsTotal.inc({
+        resource: job.data?.resource || 'unknown',
+        action: job.data?.action || 'unknown',
+      });
     }
 
     return createdLog;
@@ -42,7 +55,10 @@ export class AuditWorker extends BullWorkerHost {
     );
 
     if (this.metricsService) {
-      this.metricsService.auditLogsFailedTotal.inc({ resource: job.data?.resource || 'unknown', action: job.data?.action || 'unknown' });
+      this.metricsService.auditLogsFailedTotal.inc({
+        resource: job.data?.resource || 'unknown',
+        action: job.data?.action || 'unknown',
+      });
     }
 
     if (job.attemptsMade >= maxAttempts) {

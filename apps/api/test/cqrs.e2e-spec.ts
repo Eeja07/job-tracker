@@ -45,25 +45,54 @@ describe('CQRS Module (e2e)', () => {
 
   describe('Read Model & Cache Strategy', () => {
     it('should store, retrieve, and invalidate read models with 60s TTL', async () => {
-      const testModel = { totalUsers: 5, totalApplications: 10, totalCompanies: 2, totalAttachments: 0, statusBreakdown: {}, generatedAt: new Date().toISOString() };
+      const testModel = {
+        totalUsers: 5,
+        totalApplications: 10,
+        totalCompanies: 2,
+        totalAttachments: 0,
+        statusBreakdown: {},
+        generatedAt: new Date().toISOString(),
+      };
       await readModelService.set('statistics:e2e-test', testModel, 60);
 
-      const fetched = await readModelService.get('statistics:e2e-test', 'TestQuery');
+      const fetched = await readModelService.get(
+        'statistics:e2e-test',
+        'TestQuery',
+      );
       expect(fetched).toEqual(testModel);
 
       await readModelService.invalidate('statistics:e2e-test');
-      const afterInvalidation = await readModelService.get('statistics:e2e-test');
+      const afterInvalidation = await readModelService.get(
+        'statistics:e2e-test',
+      );
       expect(afterInvalidation).toBeNull();
     });
   });
 
   describe('Projection Updates & Replay', () => {
     it('should process ApplicationCreated projection event and invalidate cached dashboard', async () => {
-      await readModelService.set('dashboard:user-e2e', { totalApplications: 1, activeApplications: 1, interviewsScheduled: 0, offersReceived: 0, rejections: 0, lastUpdated: new Date().toISOString() }, 60);
+      await readModelService.set(
+        'dashboard:user-e2e',
+        {
+          totalApplications: 1,
+          activeApplications: 1,
+          interviewsScheduled: 0,
+          offersReceived: 0,
+          rejections: 0,
+          lastUpdated: new Date().toISOString(),
+        },
+        60,
+      );
 
       const event = await eventPublisher.publish({
         type: EventType.APPLICATION_CREATED,
-        payload: { applicationId: 'app-e2e', userId: 'user-e2e', companyId: 'comp-e2e', title: 'Developer', status: 'APPLIED' },
+        payload: {
+          applicationId: 'app-e2e',
+          userId: 'user-e2e',
+          companyId: 'comp-e2e',
+          title: 'Developer',
+          status: 'APPLIED',
+        },
       });
 
       await projectionManager.processEvent(event);

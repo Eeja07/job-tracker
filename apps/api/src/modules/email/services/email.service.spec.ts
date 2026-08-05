@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EmailService } from './email.service';
-import { EMAIL_PROVIDER_TOKEN, EmailProvider } from '../interfaces/email-provider.interface';
+import {
+  EMAIL_PROVIDER_TOKEN,
+  EmailProvider,
+} from '../interfaces/email-provider.interface';
 import { QueueService } from '../../jobs/services/queue.service';
 import { MetricsService } from '../../../core/metrics/metrics.service';
 import { BadRequestException } from '@nestjs/common';
@@ -18,7 +21,11 @@ describe('EmailService', () => {
     };
 
     mockQueueService = {
-      enqueue: jest.fn().mockImplementation((queue, job, data) => Promise.resolve({ id: 'job-777', name: job, data })),
+      enqueue: jest
+        .fn()
+        .mockImplementation((queue, job, data) =>
+          Promise.resolve({ id: 'job-777', name: job, data }),
+        ),
     } as any;
 
     mockMetricsService = {
@@ -45,13 +52,19 @@ describe('EmailService', () => {
 
   describe('renderTemplate', () => {
     it('should render welcome template with context', () => {
-      const html = service.renderTemplate('welcome', { fullName: 'Alice', loginUrl: 'https://test.com' });
+      const html = service.renderTemplate('welcome', {
+        fullName: 'Alice',
+        loginUrl: 'https://test.com',
+      });
       expect(html).toContain('Hello <strong>Alice</strong>');
       expect(html).toContain('https://test.com');
     });
 
     it('should render password-reset template with context', () => {
-      const html = service.renderTemplate('password-reset', { fullName: 'Bob', resetLink: 'https://test.com/reset' });
+      const html = service.renderTemplate('password-reset', {
+        fullName: 'Bob',
+        resetLink: 'https://test.com/reset',
+      });
       expect(html).toContain('Hello <strong>Bob</strong>');
       expect(html).toContain('https://test.com/reset');
     });
@@ -81,13 +94,19 @@ describe('EmailService', () => {
     });
 
     it('should throw BadRequestException if template does not exist', () => {
-      expect(() => service.renderTemplate('non-existent-template', {})).toThrow(BadRequestException);
+      expect(() => service.renderTemplate('non-existent-template', {})).toThrow(
+        BadRequestException,
+      );
     });
   });
 
   describe('send & sendTemplate', () => {
     it('should enqueue raw email job', async () => {
-      const job = await service.send({ to: 'user@test.com', subject: 'Raw Email', text: 'Hello' });
+      const job = await service.send({
+        to: 'user@test.com',
+        subject: 'Raw Email',
+        text: 'Hello',
+      });
 
       expect(mockQueueService.enqueue).toHaveBeenCalledWith(
         'email',
@@ -98,7 +117,9 @@ describe('EmailService', () => {
     });
 
     it('should render template and enqueue template email job with attachments support', async () => {
-      const attachments = [{ filename: 'resume.pdf', content: Buffer.from('pdf data') }];
+      const attachments = [
+        { filename: 'resume.pdf', content: Buffer.from('pdf data') },
+      ];
       const job = await service.sendTemplate({
         to: 'user@test.com',
         subject: 'Welcome!',
@@ -126,7 +147,12 @@ describe('EmailService', () => {
         recipients,
         'Weekly Digest',
         'weekly-summary',
-        (rec) => ({ fullName: rec, totalApplications: 3, interviewsScheduled: 1, offersReceived: 0 }),
+        (rec) => ({
+          fullName: rec,
+          totalApplications: 3,
+          interviewsScheduled: 1,
+          offersReceived: 0,
+        }),
       );
 
       expect(jobs.length).toBe(2);
@@ -136,24 +162,38 @@ describe('EmailService', () => {
 
   describe('sendDirect & Metrics', () => {
     it('should send email directly via provider and record metrics', async () => {
-      const result = await service.sendDirect({ to: 'direct@test.com', subject: 'Direct', html: '<p>Direct</p>' }, 'welcome');
+      const result = await service.sendDirect(
+        { to: 'direct@test.com', subject: 'Direct', html: '<p>Direct</p>' },
+        'welcome',
+      );
 
       expect(mockEmailProvider.sendEmail).toHaveBeenCalledWith(
         expect.objectContaining({ to: 'direct@test.com', subject: 'Direct' }),
       );
       expect(result.messageId).toBe('msg-123');
-      expect(mockMetricsService.emailsSentTotal.inc).toHaveBeenCalledWith({ template: 'welcome' });
-      expect(mockMetricsService.emailDurationSeconds.observe).toHaveBeenCalled();
+      expect(mockMetricsService.emailsSentTotal.inc).toHaveBeenCalledWith({
+        template: 'welcome',
+      });
+      expect(
+        mockMetricsService.emailDurationSeconds.observe,
+      ).toHaveBeenCalled();
     });
 
     it('should log and record failed email metric when provider throws error', async () => {
-      mockEmailProvider.sendEmail.mockRejectedValue(new Error('SMTP connection timed out'));
+      mockEmailProvider.sendEmail.mockRejectedValue(
+        new Error('SMTP connection timed out'),
+      );
 
       await expect(
-        service.sendDirect({ to: 'fail@test.com', subject: 'Fail', text: 'Error' }, 'welcome'),
+        service.sendDirect(
+          { to: 'fail@test.com', subject: 'Fail', text: 'Error' },
+          'welcome',
+        ),
       ).rejects.toThrow('SMTP connection timed out');
 
-      expect(mockMetricsService.emailsFailedTotal.inc).toHaveBeenCalledWith({ template: 'welcome' });
+      expect(mockMetricsService.emailsFailedTotal.inc).toHaveBeenCalledWith({
+        template: 'welcome',
+      });
     });
   });
 

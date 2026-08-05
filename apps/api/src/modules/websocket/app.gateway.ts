@@ -31,21 +31,23 @@ import { WebsocketMetricsService } from './services/websocket-metrics.service';
 import { EventSubscriberService } from '../event-bus/services/event-subscriber.service';
 import { UserRepository } from '../../repositories/user/user.repository';
 import { WsClientEvent, WsServerEvent } from './constants/ws-events.constants';
-import {
-  HEARTBEAT_TIMEOUT_MS,
-  userRoom,
-} from './constants/ws-rooms.constants';
+import { HEARTBEAT_TIMEOUT_MS, userRoom } from './constants/ws-rooms.constants';
 
 const MAX_PAYLOAD_SIZE = 64 * 1024; // 64 KB
 
 @WebSocketGateway({
   cors: {
-    origin: (origin: string | undefined, cb: (err: Error | null, allow?: boolean) => void) => {
+    origin: (
+      origin: string | undefined,
+      cb: (err: Error | null, allow?: boolean) => void,
+    ) => {
       const allowedOriginsEnv = process.env.CORS_ORIGIN || '*';
       if (!origin || allowedOriginsEnv === '*') {
         return cb(null, true);
       }
-      const allowedList = allowedOriginsEnv.split(',').map((o) => o.trim().toLowerCase());
+      const allowedList = allowedOriginsEnv
+        .split(',')
+        .map((o) => o.trim().toLowerCase());
       if (allowedList.includes(origin.toLowerCase())) {
         return cb(null, true);
       }
@@ -84,7 +86,8 @@ export class AppGateway
     private readonly realtimePublisher: RealtimePublisher,
     private readonly wsBridge: WsEventBridgeSubscriber,
     private readonly wsMetrics: WebsocketMetricsService,
-    @Optional() private readonly eventSubscriberService?: EventSubscriberService,
+    @Optional()
+    private readonly eventSubscriberService?: EventSubscriberService,
     @Optional() private readonly userRepository?: UserRepository,
   ) {}
 
@@ -102,7 +105,9 @@ export class AppGateway
 
     // JWT handshake middleware – runs before handleConnection
     server.use((socket: Socket, next) => {
-      this.authenticateSocket(socket as AuthenticatedSocket, next).catch((err) => next(err));
+      this.authenticateSocket(socket as AuthenticatedSocket, next).catch(
+        (err) => next(err),
+      );
     });
 
     // Start stale connection cleanup interval
@@ -124,11 +129,15 @@ export class AppGateway
       try {
         const sockets = await this.server.sockets.fetchSockets();
         for (const socket of sockets) {
-          socket.emit(WsServerEvent.ERROR, { message: 'Server is shutting down' });
+          socket.emit(WsServerEvent.ERROR, {
+            message: 'Server is shutting down',
+          });
           socket.disconnect(true);
         }
       } catch (err: any) {
-        this.logger.warn(`Error disconnecting sockets during shutdown: ${err.message}`);
+        this.logger.warn(
+          `Error disconnecting sockets during shutdown: ${err.message}`,
+        );
       }
 
       try {
@@ -151,18 +160,24 @@ export class AppGateway
       socket.connectionTime = Date.now();
 
       // Enforce max connections per user account
-      const maxUserConns = Number(this.configService.get<number>('WS_MAX_CONNECTIONS_PER_USER', 5));
-      const activeUserSockets = this.connectionManager.getUserSocketIds?.(userId) || [];
+      const maxUserConns = Number(
+        this.configService.get<number>('WS_MAX_CONNECTIONS_PER_USER', 5),
+      );
+      const activeUserSockets =
+        this.connectionManager.getUserSocketIds?.(userId) || [];
       if (activeUserSockets.length >= maxUserConns) {
         this.logger.warn(
           JSON.stringify({
-            message: 'WS connection rejected: maximum connections per user reached',
+            message:
+              'WS connection rejected: maximum connections per user reached',
             socketId: socket.id,
             userId,
             maxUserConns,
           }),
         );
-        socket.emit(WsServerEvent.ERROR, { message: 'Maximum connection limit reached for user account' });
+        socket.emit(WsServerEvent.ERROR, {
+          message: 'Maximum connection limit reached for user account',
+        });
         socket.disconnect(true);
         return;
       }
@@ -178,7 +193,9 @@ export class AppGateway
 
       // Update metrics
       this.wsMetrics.connectionsTotal.inc();
-      this.wsMetrics.connectionsActive.set(this.connectionManager.getConnectionCount());
+      this.wsMetrics.connectionsActive.set(
+        this.connectionManager.getConnectionCount(),
+      );
 
       // Confirm connection to client
       socket.emit(WsServerEvent.CONNECTED, {
@@ -221,7 +238,9 @@ export class AppGateway
 
     // Update metrics
     this.wsMetrics.disconnectsTotal.inc({ reason: 'client_disconnect' });
-    this.wsMetrics.connectionsActive.set(this.connectionManager.getConnectionCount());
+    this.wsMetrics.connectionsActive.set(
+      this.connectionManager.getConnectionCount(),
+    );
 
     this.logger.log(
       JSON.stringify({
@@ -238,17 +257,19 @@ export class AppGateway
   // ─────────────────────────────────────────────────────────────────────
 
   @SubscribeMessage(WsClientEvent.HEARTBEAT)
-  async handleHeartbeat(
-    @ConnectedSocket() socket: Socket,
-  ): Promise<void> {
+  async handleHeartbeat(@ConnectedSocket() socket: Socket): Promise<void> {
     const s = socket as AuthenticatedSocket;
     s.lastHeartbeat = Date.now();
     this.connectionManager.touchActivity(s.id);
 
     await this.presenceService.updateHeartbeat(s.user.sub);
-    this.wsMetrics.messagesReceivedTotal.inc({ event: WsClientEvent.HEARTBEAT });
+    this.wsMetrics.messagesReceivedTotal.inc({
+      event: WsClientEvent.HEARTBEAT,
+    });
 
-    s.emit(WsServerEvent.HEARTBEAT_ACK, { timestamp: new Date().toISOString() });
+    s.emit(WsServerEvent.HEARTBEAT_ACK, {
+      timestamp: new Date().toISOString(),
+    });
   }
 
   @SubscribeMessage(WsClientEvent.PING)
@@ -265,7 +286,10 @@ export class AppGateway
       this.wsMetrics.latencySeconds.observe(latencySeconds);
     }
 
-    s.emit(WsServerEvent.PONG, { t: Date.now(), serverTime: new Date().toISOString() });
+    s.emit(WsServerEvent.PONG, {
+      t: Date.now(),
+      serverTime: new Date().toISOString(),
+    });
   }
 
   @SubscribeMessage(WsClientEvent.JOIN_ROOM)
@@ -274,7 +298,9 @@ export class AppGateway
     @MessageBody() data: { room: string },
   ): Promise<void> {
     const s = socket as AuthenticatedSocket;
-    this.wsMetrics.messagesReceivedTotal.inc({ event: WsClientEvent.JOIN_ROOM });
+    this.wsMetrics.messagesReceivedTotal.inc({
+      event: WsClientEvent.JOIN_ROOM,
+    });
 
     if (!data?.room || typeof data.room !== 'string') {
       s.emit(WsServerEvent.ERROR, { message: 'Invalid room name' });
@@ -293,7 +319,9 @@ export class AppGateway
     @MessageBody() data: { room: string },
   ): Promise<void> {
     const s = socket as AuthenticatedSocket;
-    this.wsMetrics.messagesReceivedTotal.inc({ event: WsClientEvent.LEAVE_ROOM });
+    this.wsMetrics.messagesReceivedTotal.inc({
+      event: WsClientEvent.LEAVE_ROOM,
+    });
 
     if (!data?.room || typeof data.room !== 'string') {
       s.emit(WsServerEvent.ERROR, { message: 'Invalid room name' });
@@ -309,7 +337,9 @@ export class AppGateway
     @MessageBody() data: { applicationId: string },
   ): Promise<void> {
     const s = socket as AuthenticatedSocket;
-    this.wsMetrics.messagesReceivedTotal.inc({ event: WsClientEvent.SUBSCRIBE_APPLICATION });
+    this.wsMetrics.messagesReceivedTotal.inc({
+      event: WsClientEvent.SUBSCRIBE_APPLICATION,
+    });
 
     if (!data?.applicationId) {
       s.emit(WsServerEvent.ERROR, { message: 'applicationId required' });
@@ -326,7 +356,9 @@ export class AppGateway
     @MessageBody() data: { companyId: string },
   ): Promise<void> {
     const s = socket as AuthenticatedSocket;
-    this.wsMetrics.messagesReceivedTotal.inc({ event: WsClientEvent.SUBSCRIBE_COMPANY });
+    this.wsMetrics.messagesReceivedTotal.inc({
+      event: WsClientEvent.SUBSCRIBE_COMPANY,
+    });
 
     if (!data?.companyId) {
       s.emit(WsServerEvent.ERROR, { message: 'companyId required' });
@@ -348,7 +380,10 @@ export class AppGateway
     try {
       const token =
         (socket.handshake.auth as any)?.token ||
-        (socket.handshake.headers as any)?.authorization?.replace('Bearer ', '');
+        (socket.handshake.headers as any)?.authorization?.replace(
+          'Bearer ',
+          '',
+        );
 
       if (!token) {
         this.wsMetrics.authFailuresTotal.inc();
@@ -361,7 +396,9 @@ export class AppGateway
         return next(new Error('Authentication required'));
       }
 
-      const secret = this.configService.get<string>('JWT_ACCESS_SECRET') || 'dev-access-secret-key-12345';
+      const secret =
+        this.configService.get<string>('JWT_ACCESS_SECRET') ||
+        'dev-access-secret-key-12345';
       const payload = this.jwtService.verify<AuthenticatedUser>(token, {
         secret,
         ignoreExpiration: false,
@@ -371,13 +408,24 @@ export class AppGateway
         throw new Error('Malformed token payload');
       }
 
-      if ((payload as any).isRevoked || (payload as any).isDisabled || (payload as any).status === 'DISABLED') {
+      if (
+        (payload as any).isRevoked ||
+        (payload as any).isDisabled ||
+        (payload as any).status === 'DISABLED'
+      ) {
         throw new Error('User account is disabled or token revoked');
       }
 
       if (this.userRepository) {
-        const dbUser = await this.userRepository.findById(payload.sub).catch(() => null);
-        if (dbUser && ((dbUser as any).isRevoked || (dbUser as any).isDisabled || (dbUser as any).status === 'DISABLED')) {
+        const dbUser = await this.userRepository
+          .findById(payload.sub)
+          .catch(() => null);
+        if (
+          dbUser &&
+          ((dbUser as any).isRevoked ||
+            (dbUser as any).isDisabled ||
+            (dbUser as any).status === 'DISABLED')
+        ) {
           throw new Error('User account is disabled or token revoked');
         }
       }
@@ -402,14 +450,21 @@ export class AppGateway
           error: err.message,
         }),
       );
-      return next(new Error(`Authentication failed: ${err.message || 'Invalid or expired token'}`));
+      return next(
+        new Error(
+          `Authentication failed: ${err.message || 'Invalid or expired token'}`,
+        ),
+      );
     }
   }
 
   private evictStaleConnections(): void {
-    const staleIds = this.connectionManager.getStaleSocketIds(HEARTBEAT_TIMEOUT_MS);
+    const staleIds =
+      this.connectionManager.getStaleSocketIds(HEARTBEAT_TIMEOUT_MS);
     for (const socketId of staleIds) {
-      const s = this.server.sockets.sockets.get(socketId) as AuthenticatedSocket | undefined;
+      const s = this.server.sockets.sockets.get(socketId) as
+        | AuthenticatedSocket
+        | undefined;
       if (s) {
         this.logger.warn(
           JSON.stringify({

@@ -4,7 +4,7 @@ export const DEPRECATED_ENDPOINT_KEY = 'deprecatedEndpoint';
 
 export interface DeprecatedOptions {
   sunsetDate?: string; // e.g. "Sun, 01 Dec 2025 00:00:00 GMT" or ISO string
-  infoUrl?: string;    // e.g. "https://api.jobtracker.com/docs/deprecation/v1"
+  infoUrl?: string; // e.g. "https://api.jobtracker.com/docs/deprecation/v1"
   reason?: string;
 }
 
@@ -17,6 +17,8 @@ export function DeprecatedEndpoint(options: DeprecatedOptions = {}) {
     isDeprecated: true,
     sunsetDate: options.sunsetDate || 'Sun, 01 Dec 2025 00:00:00 GMT',
     infoUrl: options.infoUrl || '/docs/v1',
-    reason: options.reason || 'This API version is deprecated and will be sunset in the future.',
+    reason:
+      options.reason ||
+      'This API version is deprecated and will be sunset in the future.',
   });
 }

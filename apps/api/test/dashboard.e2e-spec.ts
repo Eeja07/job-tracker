@@ -60,9 +60,7 @@ describe('Dashboard Module (e2e)', () => {
   });
 
   it('GET /api/v1/dashboard should reject unauthenticated requests with 401', async () => {
-    await request(app.getHttpServer())
-      .get('/api/v1/dashboard')
-      .expect(401);
+    await request(app.getHttpServer()).get('/api/v1/dashboard').expect(401);
   });
 
   it('GET /api/v1/dashboard should return aggregated user metrics envelope', async () => {

@@ -41,21 +41,40 @@ describe('RBAC Module (e2e)', () => {
       create: { name: 'audit.read', description: 'Read audit logs' },
     });
 
-    const adminRole = await prisma.role.findUniqueOrThrow({ where: { name: 'ADMIN' } });
-    const userRole = await prisma.role.findUniqueOrThrow({ where: { name: 'USER' } });
+    const adminRole = await prisma.role.findUniqueOrThrow({
+      where: { name: 'ADMIN' },
+    });
+    const userRole = await prisma.role.findUniqueOrThrow({
+      where: { name: 'USER' },
+    });
 
     await prisma.rolePermission.upsert({
-      where: { roleId_permissionId: { roleId: adminRole.id, permissionId: companyDeletePerm.id } },
+      where: {
+        roleId_permissionId: {
+          roleId: adminRole.id,
+          permissionId: companyDeletePerm.id,
+        },
+      },
       update: {},
       create: { roleId: adminRole.id, permissionId: companyDeletePerm.id },
     });
     await prisma.rolePermission.upsert({
-      where: { roleId_permissionId: { roleId: adminRole.id, permissionId: auditReadPerm.id } },
+      where: {
+        roleId_permissionId: {
+          roleId: adminRole.id,
+          permissionId: auditReadPerm.id,
+        },
+      },
       update: {},
       create: { roleId: adminRole.id, permissionId: auditReadPerm.id },
     });
     await prisma.rolePermission.upsert({
-      where: { roleId_permissionId: { roleId: userRole.id, permissionId: companyCreatePerm.id } },
+      where: {
+        roleId_permissionId: {
+          roleId: userRole.id,
+          permissionId: companyCreatePerm.id,
+        },
+      },
       update: {},
       create: { roleId: userRole.id, permissionId: companyCreatePerm.id },
     });
@@ -98,9 +117,7 @@ describe('RBAC Module (e2e)', () => {
 
   describe('Unauthorized Access (401)', () => {
     it('GET /api/v1/rbac/roles should return 401 without bearer token', async () => {
-      await request(app.getHttpServer())
-        .get('/api/v1/rbac/roles')
-        .expect(401);
+      await request(app.getHttpServer()).get('/api/v1/rbac/roles').expect(401);
     });
 
     it('DELETE /api/v1/companies/:id should return 401 without bearer token', async () => {

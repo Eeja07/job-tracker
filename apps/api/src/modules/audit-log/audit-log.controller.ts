@@ -1,5 +1,11 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { IsOptional, IsString, IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -53,7 +59,10 @@ export class AuditLogController {
   @ApiOperation({ summary: 'Search audit logs (ADMIN only)' })
   @ApiResponse({ status: 200, description: 'Paginated audit logs' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden: requires ADMIN role and audit.read permission' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden: requires ADMIN role and audit.read permission',
+  })
   @ApiQuery({ name: 'userId', required: false })
   @ApiQuery({ name: 'action', required: false })
   @ApiQuery({ name: 'resource', required: false })

@@ -66,7 +66,9 @@ describe('ApplicationRepository', () => {
 
   describe('findById', () => {
     it('should return application by ID with company relation included', async () => {
-      (prismaService.application.findUnique as jest.Mock).mockResolvedValue(mockApplication);
+      (prismaService.application.findUnique as jest.Mock).mockResolvedValue(
+        mockApplication,
+      );
 
       const result = await repository.findById('app-uuid-1');
 
@@ -80,7 +82,9 @@ describe('ApplicationRepository', () => {
 
   describe('findByUser', () => {
     it('should return applications for a specific user ordered by appliedAt desc', async () => {
-      (prismaService.application.findMany as jest.Mock).mockResolvedValue([mockApplication]);
+      (prismaService.application.findMany as jest.Mock).mockResolvedValue([
+        mockApplication,
+      ]);
 
       const result = await repository.findByUser('user-uuid-1');
 
@@ -98,9 +102,14 @@ describe('ApplicationRepository', () => {
 
   describe('findByStatus', () => {
     it('should return applications filtered by status', async () => {
-      (prismaService.application.findMany as jest.Mock).mockResolvedValue([mockApplication]);
+      (prismaService.application.findMany as jest.Mock).mockResolvedValue([
+        mockApplication,
+      ]);
 
-      const result = await repository.findByStatus('user-uuid-1', ApplicationStatus.APPLIED);
+      const result = await repository.findByStatus(
+        'user-uuid-1',
+        ApplicationStatus.APPLIED,
+      );
 
       expect(prismaService.application.findMany).toHaveBeenCalledWith({
         where: { userId: 'user-uuid-1', status: ApplicationStatus.APPLIED },
@@ -115,7 +124,9 @@ describe('ApplicationRepository', () => {
 
   describe('findRecent', () => {
     it('should return recent applications with default limit', async () => {
-      (prismaService.application.findMany as jest.Mock).mockResolvedValue([mockApplication]);
+      (prismaService.application.findMany as jest.Mock).mockResolvedValue([
+        mockApplication,
+      ]);
 
       const result = await repository.findRecent('user-uuid-1');
 
@@ -138,7 +149,9 @@ describe('ApplicationRepository', () => {
         jobTitle: 'Backend Engineer',
       };
 
-      (prismaService.application.create as jest.Mock).mockResolvedValue(mockApplication);
+      (prismaService.application.create as jest.Mock).mockResolvedValue(
+        mockApplication,
+      );
 
       const result = await repository.create(createData);
 
@@ -156,9 +169,14 @@ describe('ApplicationRepository', () => {
         status: ApplicationStatus.INTERVIEWING,
       };
 
-      (prismaService.application.update as jest.Mock).mockResolvedValue(updatedApp);
+      (prismaService.application.update as jest.Mock).mockResolvedValue(
+        updatedApp,
+      );
 
-      const result = await repository.updateStatus('app-uuid-1', ApplicationStatus.INTERVIEWING);
+      const result = await repository.updateStatus(
+        'app-uuid-1',
+        ApplicationStatus.INTERVIEWING,
+      );
 
       expect(prismaService.application.update).toHaveBeenCalledWith({
         where: { id: 'app-uuid-1' },
@@ -173,10 +191,17 @@ describe('ApplicationRepository', () => {
 
   describe('update', () => {
     it('should update application fields', async () => {
-      const updateData: UpdateApplicationData = { jobTitle: 'Senior Backend Engineer' };
-      const updatedApp = { ...mockApplication, jobTitle: 'Senior Backend Engineer' };
+      const updateData: UpdateApplicationData = {
+        jobTitle: 'Senior Backend Engineer',
+      };
+      const updatedApp = {
+        ...mockApplication,
+        jobTitle: 'Senior Backend Engineer',
+      };
 
-      (prismaService.application.update as jest.Mock).mockResolvedValue(updatedApp);
+      (prismaService.application.update as jest.Mock).mockResolvedValue(
+        updatedApp,
+      );
 
       const result = await repository.update('app-uuid-1', updateData);
 
@@ -190,7 +215,9 @@ describe('ApplicationRepository', () => {
 
   describe('delete', () => {
     it('should delete application', async () => {
-      (prismaService.application.delete as jest.Mock).mockResolvedValue(mockApplication);
+      (prismaService.application.delete as jest.Mock).mockResolvedValue(
+        mockApplication,
+      );
 
       const result = await repository.delete('app-uuid-1');
 

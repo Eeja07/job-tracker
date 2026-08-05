@@ -58,7 +58,9 @@ describe('LocalStorageProvider', () => {
   });
 
   it('should throw NotFoundException when downloading non-existent file', async () => {
-    await expect(provider.download('invalid/path/file.txt')).rejects.toThrow(NotFoundException);
+    await expect(provider.download('invalid/path/file.txt')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('should delete a file', async () => {

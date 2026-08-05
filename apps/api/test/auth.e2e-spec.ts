@@ -87,9 +87,7 @@ describe('Authentication Module (e2e)', () => {
   });
 
   it('GET /api/v1/auth/me should fail with 401 without Bearer token', async () => {
-    await request(app.getHttpServer())
-      .get('/api/v1/auth/me')
-      .expect(401);
+    await request(app.getHttpServer()).get('/api/v1/auth/me').expect(401);
   });
 
   it('POST /api/v1/auth/refresh should issue new tokens given valid refresh token', async () => {

@@ -1,6 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Note, Prisma } from '@prisma/client';
-import { NoteRepository, CreateNoteData, UpdateNoteData } from './note.repository';
+import {
+  NoteRepository,
+  CreateNoteData,
+  UpdateNoteData,
+} from './note.repository';
 import { PrismaService } from '../../prisma/prisma.service';
 
 describe('NoteRepository', () => {
@@ -122,7 +126,9 @@ describe('NoteRepository', () => {
       const error = new Error('Foreign key constraint failed');
       (prismaService.note.create as jest.Mock).mockRejectedValue(error);
 
-      await expect(repository.create(createData)).rejects.toThrow('Foreign key constraint failed');
+      await expect(repository.create(createData)).rejects.toThrow(
+        'Foreign key constraint failed',
+      );
     });
   });
 

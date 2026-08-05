@@ -12,7 +12,9 @@ describe('GlobalExceptionFilter', () => {
     const mockJson = jest.fn();
     const mockStatus = jest.fn().mockReturnValue({ json: mockJson });
     const mockGetResponse = jest.fn().mockReturnValue({ status: mockStatus });
-    const mockGetRequest = jest.fn().mockReturnValue({ url: '/api/v1/test', method: 'GET' });
+    const mockGetRequest = jest
+      .fn()
+      .mockReturnValue({ url: '/api/v1/test', method: 'GET' });
 
     const mockHost = {
       switchToHttp: jest.fn().mockReturnValue({

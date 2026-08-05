@@ -1,7 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
-import { EmailProvider, SendEmailOptions, SendEmailResult } from '../interfaces/email-provider.interface';
+import {
+  EmailProvider,
+  SendEmailOptions,
+  SendEmailResult,
+} from '../interfaces/email-provider.interface';
 
 @Injectable()
 export class SMTPProvider implements EmailProvider {
@@ -14,7 +18,9 @@ export class SMTPProvider implements EmailProvider {
     const port = this.configService.get<number>('SMTP_PORT') || 587;
     const username = this.configService.get<string>('SMTP_USERNAME') || '';
     const password = this.configService.get<string>('SMTP_PASSWORD') || '';
-    this.defaultFrom = this.configService.get<string>('SMTP_FROM') || '"Job Tracker" <noreply@jobtracker.io>';
+    this.defaultFrom =
+      this.configService.get<string>('SMTP_FROM') ||
+      '"Job Tracker" <noreply@jobtracker.io>';
 
     const auth = username ? { user: username, pass: password } : undefined;
 
@@ -45,7 +51,9 @@ export class SMTPProvider implements EmailProvider {
     };
 
     const info = await this.transporter.sendMail(mailOptions);
-    this.logger.log(`Email sent successfully to ${mailOptions.to} (MessageId: ${info.messageId})`);
+    this.logger.log(
+      `Email sent successfully to ${mailOptions.to} (MessageId: ${info.messageId})`,
+    );
     return { messageId: info.messageId || `msg-${Date.now()}` };
   }
 

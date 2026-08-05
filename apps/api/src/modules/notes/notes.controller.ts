@@ -12,7 +12,12 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AuthenticatedRequest } from '../auth/auth.controller';
 import { NoteService } from './note.service';
@@ -27,7 +32,11 @@ export class NotesController {
 
   @Post()
   @ApiOperation({ summary: 'Create note for application' })
-  @ApiResponse({ status: 201, description: 'Note created', type: NoteResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Note created',
+    type: NoteResponseDto,
+  })
   async create(
     @NestRequest() req: any,
     @Body() dto: CreateNoteDto,
@@ -38,7 +47,11 @@ export class NotesController {
 
   @Get()
   @ApiOperation({ summary: 'Get notes for an application' })
-  @ApiResponse({ status: 200, description: 'Notes list', type: [NoteResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Notes list',
+    type: [NoteResponseDto],
+  })
   async findByApplication(
     @NestRequest() req: any,
     @Query('applicationId') applicationId: string,
@@ -49,7 +62,11 @@ export class NotesController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get note details by ID' })
-  @ApiResponse({ status: 200, description: 'Note details', type: NoteResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Note details',
+    type: NoteResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Note not found' })
   async findOne(
     @NestRequest() req: any,
@@ -61,7 +78,11 @@ export class NotesController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update note content or pinned state' })
-  @ApiResponse({ status: 200, description: 'Note updated', type: NoteResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Note updated',
+    type: NoteResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Note not found' })
   async update(
     @NestRequest() req: any,

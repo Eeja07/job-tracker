@@ -16,7 +16,9 @@ export class StatusHistoryRepository extends BaseRepository<Prisma.StatusHistory
     super(prisma);
   }
 
-  protected getDelegate(tx?: Prisma.TransactionClient): Prisma.StatusHistoryDelegate {
+  protected getDelegate(
+    tx?: Prisma.TransactionClient,
+  ): Prisma.StatusHistoryDelegate {
     return tx ? tx.statusHistory : this.prisma.statusHistory;
   }
 

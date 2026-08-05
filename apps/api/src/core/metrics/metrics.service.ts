@@ -1,5 +1,11 @@
 import { Injectable, OnModuleInit, Optional } from '@nestjs/common';
-import { Registry, collectDefaultMetrics, Counter, Histogram, Gauge } from 'prom-client';
+import {
+  Registry,
+  collectDefaultMetrics,
+  Counter,
+  Histogram,
+  Gauge,
+} from 'prom-client';
 import { RedisService } from '../../modules/redis/redis.service';
 import { QueueService } from '../../modules/jobs/services/queue.service';
 import { QUEUE_NAMES } from '../../modules/jobs/constants/jobs.constants';

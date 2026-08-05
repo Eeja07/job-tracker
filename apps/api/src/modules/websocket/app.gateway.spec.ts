@@ -12,7 +12,10 @@ import { EventSubscriberService } from '../event-bus/services/event-subscriber.s
 import { AuthenticatedSocket } from './interfaces/authenticated-socket.interface';
 import { WsClientEvent, WsServerEvent } from './constants/ws-events.constants';
 
-function makeSocket(userId = 'user-1', roles: string[] = []): jest.Mocked<AuthenticatedSocket> {
+function makeSocket(
+  userId = 'user-1',
+  roles: string[] = [],
+): jest.Mocked<AuthenticatedSocket> {
   return {
     id: 'socket-test-1',
     user: { sub: userId, email: `${userId}@test.com`, roles },
@@ -36,7 +39,9 @@ describe('AppGateway', () => {
 
   beforeEach(async () => {
     const mockJwt = {
-      verify: jest.fn().mockReturnValue({ sub: 'user-1', email: 'user-1@test.com' }),
+      verify: jest
+        .fn()
+        .mockReturnValue({ sub: 'user-1', email: 'user-1@test.com' }),
     };
     const mockConfig = {
       get: jest.fn((key: string, defaultValue?: any) => {
@@ -58,7 +63,9 @@ describe('AppGateway', () => {
     };
     const mockConnectionManager = {
       register: jest.fn(),
-      unregister: jest.fn().mockReturnValue({ userId: 'user-1', connectedAt: Date.now() }),
+      unregister: jest
+        .fn()
+        .mockReturnValue({ userId: 'user-1', connectedAt: Date.now() }),
       touchActivity: jest.fn(),
       getConnectionCount: jest.fn().mockReturnValue(1),
       getStaleSocketIds: jest.fn().mockReturnValue([]),
@@ -98,7 +105,10 @@ describe('AppGateway', () => {
         { provide: RealtimePublisher, useValue: mockPublisher },
         { provide: WsEventBridgeSubscriber, useValue: mockBridge },
         { provide: WebsocketMetricsService, useValue: mockMetrics },
-        { provide: EventSubscriberService, useValue: mockEventSubscriberService },
+        {
+          provide: EventSubscriberService,
+          useValue: mockEventSubscriberService,
+        },
       ],
     }).compile();
 
@@ -120,9 +130,15 @@ describe('AppGateway', () => {
     const socket = makeSocket();
     await gateway.handleConnection(socket);
     expect(connectionManager.register).toHaveBeenCalledWith(socket);
-    expect(presenceService.registerConnection).toHaveBeenCalledWith('user-1', socket.id);
+    expect(presenceService.registerConnection).toHaveBeenCalledWith(
+      'user-1',
+      socket.id,
+    );
     expect(roomService.autoJoinUserRoom).toHaveBeenCalledWith(socket);
-    expect(socket.emit).toHaveBeenCalledWith(WsServerEvent.CONNECTED, expect.objectContaining({ userId: 'user-1' }));
+    expect(socket.emit).toHaveBeenCalledWith(
+      WsServerEvent.CONNECTED,
+      expect.objectContaining({ userId: 'user-1' }),
+    );
     expect(wsMetrics.connectionsTotal.inc).toHaveBeenCalled();
   });
 
@@ -130,7 +146,10 @@ describe('AppGateway', () => {
     const socket = makeSocket();
     await gateway.handleDisconnect(socket);
     expect(connectionManager.unregister).toHaveBeenCalledWith(socket.id);
-    expect(presenceService.removeConnection).toHaveBeenCalledWith('user-1', socket.id);
+    expect(presenceService.removeConnection).toHaveBeenCalledWith(
+      'user-1',
+      socket.id,
+    );
     expect(wsMetrics.disconnectsTotal.inc).toHaveBeenCalled();
   });
 
@@ -138,14 +157,22 @@ describe('AppGateway', () => {
     const socket = makeSocket();
     await gateway.handleHeartbeat(socket);
     expect(presenceService.updateHeartbeat).toHaveBeenCalledWith('user-1');
-    expect(wsMetrics.messagesReceivedTotal.inc).toHaveBeenCalledWith({ event: WsClientEvent.HEARTBEAT });
-    expect(socket.emit).toHaveBeenCalledWith(WsServerEvent.HEARTBEAT_ACK, expect.anything());
+    expect(wsMetrics.messagesReceivedTotal.inc).toHaveBeenCalledWith({
+      event: WsClientEvent.HEARTBEAT,
+    });
+    expect(socket.emit).toHaveBeenCalledWith(
+      WsServerEvent.HEARTBEAT_ACK,
+      expect.anything(),
+    );
   });
 
   it('handlePing should emit pong with server timestamp', () => {
     const socket = makeSocket();
     gateway.handlePing(socket, { t: Date.now() - 20 });
-    expect(socket.emit).toHaveBeenCalledWith(WsServerEvent.PONG, expect.objectContaining({ serverTime: expect.any(String) }));
+    expect(socket.emit).toHaveBeenCalledWith(
+      WsServerEvent.PONG,
+      expect.objectContaining({ serverTime: expect.any(String) }),
+    );
   });
 
   it('handleJoinRoom should delegate to RoomService', async () => {
@@ -155,10 +182,21 @@ describe('AppGateway', () => {
   });
 
   it('should reject connection when max user sockets limit is exceeded', async () => {
-    (connectionManager.getUserSocketIds as jest.Mock).mockReturnValue(['sock-1', 'sock-2', 'sock-3', 'sock-4', 'sock-5']);
+    (connectionManager.getUserSocketIds as jest.Mock).mockReturnValue([
+      'sock-1',
+      'sock-2',
+      'sock-3',
+      'sock-4',
+      'sock-5',
+    ]);
     const socket = makeSocket();
     await gateway.handleConnection(socket);
-    expect(socket.emit).toHaveBeenCalledWith(WsServerEvent.ERROR, expect.objectContaining({ message: expect.stringContaining('Maximum connection limit') }));
+    expect(socket.emit).toHaveBeenCalledWith(
+      WsServerEvent.ERROR,
+      expect.objectContaining({
+        message: expect.stringContaining('Maximum connection limit'),
+      }),
+    );
     expect(socket.disconnect).toHaveBeenCalledWith(true);
   });
 
@@ -185,6 +223,8 @@ describe('AppGateway', () => {
     const nextFn = jest.fn();
 
     await (gateway as any).authenticateSocket(mockSocket, nextFn);
-    expect(nextFn).toHaveBeenCalledWith(expect.objectContaining({ message: 'Authentication required' }));
+    expect(nextFn).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Authentication required' }),
+    );
   });
 });

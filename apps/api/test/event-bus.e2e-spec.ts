@@ -60,7 +60,10 @@ describe('Event Bus Module (e2e)', () => {
       const handledEvents: BaseEvent[] = [];
       const emailTestSub: IEventSubscriber = {
         name: 'E2EEmailSubscriber',
-        subscribedEvents: [EventType.APPLICATION_STATUS_CHANGED, EventType.EMAIL_SENT],
+        subscribedEvents: [
+          EventType.APPLICATION_STATUS_CHANGED,
+          EventType.EMAIL_SENT,
+        ],
         handle: async (event) => {
           handledEvents.push(event);
         },
@@ -127,7 +130,10 @@ describe('Event Bus Module (e2e)', () => {
         payload: { error: 'Simulated exception' },
       });
 
-      await subscriberService.dispatchToSubscriber(failingSubscriber, failedEvent);
+      await subscriberService.dispatchToSubscriber(
+        failingSubscriber,
+        failedEvent,
+      );
 
       // Initial attempt + 3 retries = 4 attempts total
       expect(attempts).toBe(4);

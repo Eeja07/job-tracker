@@ -24,7 +24,9 @@ describe('ReadModelService', () => {
     const result = await service.get('test_key', 'TestQuery');
 
     expect(result).toEqual({ value: 'cached' });
-    expect(mockMetrics.queryCacheHitsTotal.inc).toHaveBeenCalledWith({ query: 'TestQuery' });
+    expect(mockMetrics.queryCacheHitsTotal.inc).toHaveBeenCalledWith({
+      query: 'TestQuery',
+    });
   });
 
   it('should fallback to in-memory store if Redis miss', async () => {

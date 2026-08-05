@@ -24,13 +24,19 @@ describe('QueryBus', () => {
     const result = await queryBus.execute({ queryName: 'TestQuery' });
     expect(result).toEqual({ data: 'test' });
     expect(handler.execute).toHaveBeenCalled();
-    expect(mockMetrics.queryExecutionTotal.inc).toHaveBeenCalledWith({ query: 'TestQuery', status: 'success' });
+    expect(mockMetrics.queryExecutionTotal.inc).toHaveBeenCalledWith({
+      query: 'TestQuery',
+      status: 'success',
+    });
   });
 
   it('should throw an error when executing unregistered query', async () => {
-    await expect(queryBus.execute({ queryName: 'UnknownQuery' })).rejects.toThrow(
-      'Query handler not found for: UnknownQuery',
-    );
-    expect(mockMetrics.queryExecutionTotal.inc).toHaveBeenCalledWith({ query: 'UnknownQuery', status: 'not_found' });
+    await expect(
+      queryBus.execute({ queryName: 'UnknownQuery' }),
+    ).rejects.toThrow('Query handler not found for: UnknownQuery');
+    expect(mockMetrics.queryExecutionTotal.inc).toHaveBeenCalledWith({
+      query: 'UnknownQuery',
+      status: 'not_found',
+    });
   });
 });

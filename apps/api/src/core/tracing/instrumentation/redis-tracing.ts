@@ -9,8 +9,13 @@ export class RedisTracing {
   /**
    * Wrap a Redis command in a redis.command span.
    */
-  async traceCommand<T>(command: string, args: any[], fn: () => Promise<T>): Promise<T> {
-    const key = args.length > 0 && typeof args[0] === 'string' ? args[0] : 'unknown';
+  async traceCommand<T>(
+    command: string,
+    args: any[],
+    fn: () => Promise<T>,
+  ): Promise<T> {
+    const key =
+      args.length > 0 && typeof args[0] === 'string' ? args[0] : 'unknown';
     return this.tracingService.trace(
       SPAN_NAMES.REDIS_COMMAND,
       async (span) => {

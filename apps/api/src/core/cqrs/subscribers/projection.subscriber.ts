@@ -32,7 +32,9 @@ export class ProjectionSubscriber implements IEventSubscriber, OnModuleInit {
   onModuleInit(): void {
     if (this.subscriberService) {
       this.subscriberService.registerSubscriber(this);
-      this.logger.log('Registered ProjectionSubscriber with EventSubscriberService');
+      this.logger.log(
+        'Registered ProjectionSubscriber with EventSubscriberService',
+      );
     }
   }
 

@@ -59,7 +59,9 @@ describe('AttachmentRepository', () => {
 
   describe('findById', () => {
     it('should return attachment when found by ID', async () => {
-      (prismaService.attachment.findUnique as jest.Mock).mockResolvedValue(mockAttachment);
+      (prismaService.attachment.findUnique as jest.Mock).mockResolvedValue(
+        mockAttachment,
+      );
 
       const result = await repository.findById('attachment-uuid-1');
 
@@ -70,7 +72,9 @@ describe('AttachmentRepository', () => {
     });
 
     it('should return null when attachment is not found', async () => {
-      (prismaService.attachment.findUnique as jest.Mock).mockResolvedValue(null);
+      (prismaService.attachment.findUnique as jest.Mock).mockResolvedValue(
+        null,
+      );
 
       const result = await repository.findById('non-existent-id');
 
@@ -96,7 +100,9 @@ describe('AttachmentRepository', () => {
 
   describe('findByApplication', () => {
     it('should return attachments for an application ordered by uploadedAt desc', async () => {
-      (prismaService.attachment.findMany as jest.Mock).mockResolvedValue([mockAttachment]);
+      (prismaService.attachment.findMany as jest.Mock).mockResolvedValue([
+        mockAttachment,
+      ]);
 
       const result = await repository.findByApplication('app-uuid-1');
 
@@ -118,7 +124,9 @@ describe('AttachmentRepository', () => {
         storagePath: '/uploads/cv_2026.pdf',
       };
 
-      (prismaService.attachment.create as jest.Mock).mockResolvedValue(mockAttachment);
+      (prismaService.attachment.create as jest.Mock).mockResolvedValue(
+        mockAttachment,
+      );
 
       const result = await repository.create(createData);
 
@@ -140,13 +148,17 @@ describe('AttachmentRepository', () => {
       const error = new Error('Foreign key constraint failed');
       (prismaService.attachment.create as jest.Mock).mockRejectedValue(error);
 
-      await expect(repository.create(createData)).rejects.toThrow('Foreign key constraint failed');
+      await expect(repository.create(createData)).rejects.toThrow(
+        'Foreign key constraint failed',
+      );
     });
   });
 
   describe('delete', () => {
     it('should delete and return deleted attachment', async () => {
-      (prismaService.attachment.delete as jest.Mock).mockResolvedValue(mockAttachment);
+      (prismaService.attachment.delete as jest.Mock).mockResolvedValue(
+        mockAttachment,
+      );
 
       const result = await repository.delete('attachment-uuid-1');
 

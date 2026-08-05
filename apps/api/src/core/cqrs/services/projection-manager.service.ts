@@ -10,7 +10,12 @@ export interface RebuildOptions {
   resume?: boolean;
 }
 
-export type ProjectionModel = 'application' | 'company' | 'user' | 'attachment' | 'completed';
+export type ProjectionModel =
+  | 'application'
+  | 'company'
+  | 'user'
+  | 'attachment'
+  | 'completed';
 
 export interface RebuildCheckpoint {
   model: ProjectionModel;
@@ -43,7 +48,9 @@ export class ProjectionManager {
 
   private async getCheckpoint(): Promise<RebuildCheckpoint | null> {
     try {
-      return await this.readModelService.get<RebuildCheckpoint>(this.CHECKPOINT_KEY);
+      return await this.readModelService.get<RebuildCheckpoint>(
+        this.CHECKPOINT_KEY,
+      );
     } catch {
       return null;
     }
@@ -114,8 +121,14 @@ export class ProjectionManager {
       }
 
       const durationSeconds = (Date.now() - startTime) / 1000;
-      this.metricsService.projectionUpdatesTotal?.inc({ projection: projectionName, status: 'success' });
-      this.metricsService.projectionLatencySeconds?.observe({ projection: projectionName }, durationSeconds);
+      this.metricsService.projectionUpdatesTotal?.inc({
+        projection: projectionName,
+        status: 'success',
+      });
+      this.metricsService.projectionLatencySeconds?.observe(
+        { projection: projectionName },
+        durationSeconds,
+      );
 
       this.logger.log(
         JSON.stringify({
@@ -128,9 +141,18 @@ export class ProjectionManager {
       );
     } catch (err: any) {
       const durationSeconds = (Date.now() - startTime) / 1000;
-      this.metricsService.projectionUpdatesTotal?.inc({ projection: projectionName, status: 'failure' });
-      this.metricsService.projectionFailuresTotal?.inc({ projection: projectionName, reason: err.message });
-      this.metricsService.projectionLatencySeconds?.observe({ projection: projectionName }, durationSeconds);
+      this.metricsService.projectionUpdatesTotal?.inc({
+        projection: projectionName,
+        status: 'failure',
+      });
+      this.metricsService.projectionFailuresTotal?.inc({
+        projection: projectionName,
+        reason: err.message,
+      });
+      this.metricsService.projectionLatencySeconds?.observe(
+        { projection: projectionName },
+        durationSeconds,
+      );
 
       this.logger.error(
         JSON.stringify({
@@ -149,11 +171,14 @@ export class ProjectionManager {
    * Replay / Rebuild projections from transactional database state using cursor-based batching.
    */
   async rebuildProjections(options: RebuildOptions = {}): Promise<void> {
-    const batchSize = options.batchSize && options.batchSize > 0 ? options.batchSize : 1000;
+    const batchSize =
+      options.batchSize && options.batchSize > 0 ? options.batchSize : 1000;
     const shouldResume = options.resume ?? true;
     const startTime = Date.now();
 
-    this.logger.log(`Starting Projection Rebuild (batchSize: ${batchSize}, resume: ${shouldResume})...`);
+    this.logger.log(
+      `Starting Projection Rebuild (batchSize: ${batchSize}, resume: ${shouldResume})...`,
+    );
 
     let checkpoint: RebuildCheckpoint | null = null;
     if (shouldResume) {
@@ -198,7 +223,9 @@ export class ProjectionManager {
           const batch = this.prisma.application?.findMany
             ? await this.prisma.application.findMany({
                 take: batchSize,
-                ...(checkpoint.lastId ? { skip: 1, cursor: { id: checkpoint.lastId } } : {}),
+                ...(checkpoint.lastId
+                  ? { skip: 1, cursor: { id: checkpoint.lastId } }
+                  : {}),
                 orderBy: { id: 'asc' },
                 select: { id: true, status: true },
               })
@@ -214,9 +241,14 @@ export class ProjectionManager {
           for (const item of batch) {
             checkpoint.stats.totalApplications++;
             const statusStr = String(item.status);
-            checkpoint.stats.statusBreakdown[statusStr] = (checkpoint.stats.statusBreakdown[statusStr] || 0) + 1;
+            checkpoint.stats.statusBreakdown[statusStr] =
+              (checkpoint.stats.statusBreakdown[statusStr] || 0) + 1;
 
-            if (statusStr === 'APPLIED' || statusStr === 'SCREENING' || statusStr === 'INTERVIEWING') {
+            if (
+              statusStr === 'APPLIED' ||
+              statusStr === 'SCREENING' ||
+              statusStr === 'INTERVIEWING'
+            ) {
               checkpoint.stats.activeApplications++;
             }
             if (statusStr === 'INTERVIEWING') {
@@ -234,8 +266,13 @@ export class ProjectionManager {
           checkpoint.processedRecords += batch.length;
           checkpoint.totalBatches++;
 
-          this.metricsService.projectionRecordsProcessedTotal?.inc({ model: 'application' }, batch.length);
-          this.metricsService.projectionBatchesTotal?.inc({ model: 'application' });
+          this.metricsService.projectionRecordsProcessedTotal?.inc(
+            { model: 'application' },
+            batch.length,
+          );
+          this.metricsService.projectionBatchesTotal?.inc({
+            model: 'application',
+          });
 
           this.logger.log(
             JSON.stringify({
@@ -261,7 +298,9 @@ export class ProjectionManager {
           const batch = this.prisma.company?.findMany
             ? await this.prisma.company.findMany({
                 take: batchSize,
-                ...(checkpoint.lastId ? { skip: 1, cursor: { id: checkpoint.lastId } } : {}),
+                ...(checkpoint.lastId
+                  ? { skip: 1, cursor: { id: checkpoint.lastId } }
+                  : {}),
                 orderBy: { id: 'asc' },
                 select: { id: true },
               })
@@ -279,7 +318,10 @@ export class ProjectionManager {
           checkpoint.processedRecords += batch.length;
           checkpoint.totalBatches++;
 
-          this.metricsService.projectionRecordsProcessedTotal?.inc({ model: 'company' }, batch.length);
+          this.metricsService.projectionRecordsProcessedTotal?.inc(
+            { model: 'company' },
+            batch.length,
+          );
           this.metricsService.projectionBatchesTotal?.inc({ model: 'company' });
 
           this.logger.log(
@@ -306,7 +348,9 @@ export class ProjectionManager {
           const batch = this.prisma.user?.findMany
             ? await this.prisma.user.findMany({
                 take: batchSize,
-                ...(checkpoint.lastId ? { skip: 1, cursor: { id: checkpoint.lastId } } : {}),
+                ...(checkpoint.lastId
+                  ? { skip: 1, cursor: { id: checkpoint.lastId } }
+                  : {}),
                 orderBy: { id: 'asc' },
                 select: { id: true },
               })
@@ -324,7 +368,10 @@ export class ProjectionManager {
           checkpoint.processedRecords += batch.length;
           checkpoint.totalBatches++;
 
-          this.metricsService.projectionRecordsProcessedTotal?.inc({ model: 'user' }, batch.length);
+          this.metricsService.projectionRecordsProcessedTotal?.inc(
+            { model: 'user' },
+            batch.length,
+          );
           this.metricsService.projectionBatchesTotal?.inc({ model: 'user' });
 
           this.logger.log(
@@ -351,7 +398,9 @@ export class ProjectionManager {
           const batch = this.prisma.attachment?.findMany
             ? await this.prisma.attachment.findMany({
                 take: batchSize,
-                ...(checkpoint.lastId ? { skip: 1, cursor: { id: checkpoint.lastId } } : {}),
+                ...(checkpoint.lastId
+                  ? { skip: 1, cursor: { id: checkpoint.lastId } }
+                  : {}),
                 orderBy: { id: 'asc' },
                 select: { id: true },
               })
@@ -369,8 +418,13 @@ export class ProjectionManager {
           checkpoint.processedRecords += batch.length;
           checkpoint.totalBatches++;
 
-          this.metricsService.projectionRecordsProcessedTotal?.inc({ model: 'attachment' }, batch.length);
-          this.metricsService.projectionBatchesTotal?.inc({ model: 'attachment' });
+          this.metricsService.projectionRecordsProcessedTotal?.inc(
+            { model: 'attachment' },
+            batch.length,
+          );
+          this.metricsService.projectionBatchesTotal?.inc({
+            model: 'attachment',
+          });
 
           this.logger.log(
             JSON.stringify({
@@ -418,7 +472,9 @@ export class ProjectionManager {
 
       const durationSeconds = (Date.now() - startTime) / 1000;
       this.metricsService.projectionRebuildTotal?.inc({ status: 'success' });
-      this.metricsService.projectionRebuildDurationSeconds?.observe(durationSeconds);
+      this.metricsService.projectionRebuildDurationSeconds?.observe(
+        durationSeconds,
+      );
 
       this.logger.log(
         JSON.stringify({

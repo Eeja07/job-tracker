@@ -12,7 +12,12 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AuthenticatedRequest } from '../auth/auth.controller';
 import { ApplicationService } from './application.service';
@@ -33,8 +38,14 @@ export class ApplicationsV2Controller {
   constructor(private readonly applicationService: ApplicationService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a job application (v2 API - Enhanced schema response)' })
-  @ApiResponse({ status: 201, description: 'Application created successfully (v2)', type: ApplicationResponseDto })
+  @ApiOperation({
+    summary: 'Create a job application (v2 API - Enhanced schema response)',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Application created successfully (v2)',
+    type: ApplicationResponseDto,
+  })
   async create(
     @NestRequest() req: any,
     @Body() dto: CreateApplicationDto,
@@ -49,14 +60,22 @@ export class ApplicationsV2Controller {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List job applications (v2 API - Paginated envelope format)' })
-  @ApiResponse({ status: 200, description: 'v2 Paginated applications envelope' })
+  @ApiOperation({
+    summary: 'List job applications (v2 API - Paginated envelope format)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'v2 Paginated applications envelope',
+  })
   async findAll(
     @NestRequest() req: any,
     @Query() query: ApplicationQueryDto,
   ): Promise<any> {
     const authReq = req as AuthenticatedRequest;
-    const items = await this.applicationService.findAll(authReq.user.sub, query);
+    const items = await this.applicationService.findAll(
+      authReq.user.sub,
+      query,
+    );
     return {
       version: 'v2',
       items,
@@ -68,7 +87,10 @@ export class ApplicationsV2Controller {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get application details by ID (v2 API)' })
-  async findOne(@NestRequest() req: any, @Param('id') id: string): Promise<any> {
+  async findOne(
+    @NestRequest() req: any,
+    @Param('id') id: string,
+  ): Promise<any> {
     const authReq = req as AuthenticatedRequest;
     const item = await this.applicationService.findOne(id, authReq.user.sub);
     return { version: 'v2', data: item };
@@ -82,14 +104,21 @@ export class ApplicationsV2Controller {
     @Body() dto: UpdateApplicationDto,
   ): Promise<any> {
     const authReq = req as AuthenticatedRequest;
-    const updated = await this.applicationService.update(id, authReq.user.sub, dto);
+    const updated = await this.applicationService.update(
+      id,
+      authReq.user.sub,
+      dto,
+    );
     return { version: 'v2', data: updated };
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete application (v2 API)' })
-  async remove(@NestRequest() req: any, @Param('id') id: string): Promise<void> {
+  async remove(
+    @NestRequest() req: any,
+    @Param('id') id: string,
+  ): Promise<void> {
     const authReq = req as AuthenticatedRequest;
     await this.applicationService.remove(id, authReq.user.sub);
   }

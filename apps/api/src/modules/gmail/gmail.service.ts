@@ -6,21 +6,83 @@ import { RealtimePublisher } from '../websocket/services/realtime-publisher.serv
 
 // Keywords to detect job-related emails
 const JOB_KEYWORDS = [
-  'lamaran', 'application', 'lowongan', 'job offer', 'interview', 'wawancara',
-  'rekrutmen', 'recruitment', 'hiring', 'shortlisted', 'selected', 'rejected',
-  'ditolak', 'tidak lolos', 'lolos', 'undangan', 'invitation', 'screening',
-  'hr', 'human resource', 'talent acquisition', 'onboarding', 'offering',
-  'salary', 'gaji', 'kontrak', 'contract', 'bergabung', 'join us',
-  'congratulations', 'selamat', 'kami informasikan', 'kami sampaikan',
-  'test online', 'assessmen', 'assessment',
+  'lamaran',
+  'application',
+  'lowongan',
+  'job offer',
+  'interview',
+  'wawancara',
+  'rekrutmen',
+  'recruitment',
+  'hiring',
+  'shortlisted',
+  'selected',
+  'rejected',
+  'ditolak',
+  'tidak lolos',
+  'lolos',
+  'undangan',
+  'invitation',
+  'screening',
+  'hr',
+  'human resource',
+  'talent acquisition',
+  'onboarding',
+  'offering',
+  'salary',
+  'gaji',
+  'kontrak',
+  'contract',
+  'bergabung',
+  'join us',
+  'congratulations',
+  'selamat',
+  'kami informasikan',
+  'kami sampaikan',
+  'test online',
+  'assessmen',
+  'assessment',
 ];
 
 const EMAIL_TYPE_KEYWORDS: Record<string, string[]> = {
-  INTERVIEW: ['interview', 'wawancara', 'undangan wawancara', 'invitation for interview', 'schedule an interview'],
-  OFFER: ['job offer', 'penawaran kerja', 'offer letter', 'salary offer', 'bergabung bersama kami'],
-  REJECTED: ['rejected', 'ditolak', 'tidak lolos', 'not selected', 'unfortunately', 'tidak memenuhi', 'kami menyesal'],
-  SCREENING: ['screening', 'shortlisted', 'lolos seleksi', 'test online', 'assessmen', 'psikotes'],
-  APPLIED_CONFIRM: ['diterima', 'received', 'application received', 'lamaran diterima', 'thank you for applying'],
+  INTERVIEW: [
+    'interview',
+    'wawancara',
+    'undangan wawancara',
+    'invitation for interview',
+    'schedule an interview',
+  ],
+  OFFER: [
+    'job offer',
+    'penawaran kerja',
+    'offer letter',
+    'salary offer',
+    'bergabung bersama kami',
+  ],
+  REJECTED: [
+    'rejected',
+    'ditolak',
+    'tidak lolos',
+    'not selected',
+    'unfortunately',
+    'tidak memenuhi',
+    'kami menyesal',
+  ],
+  SCREENING: [
+    'screening',
+    'shortlisted',
+    'lolos seleksi',
+    'test online',
+    'assessmen',
+    'psikotes',
+  ],
+  APPLIED_CONFIRM: [
+    'diterima',
+    'received',
+    'application received',
+    'lamaran diterima',
+    'thank you for applying',
+  ],
 };
 
 @Injectable()
@@ -91,7 +153,9 @@ export class GmailService {
       },
     });
 
-    this.logger.log(`Gmail connected for userId=${userId}, email=${gmailEmail}`);
+    this.logger.log(
+      `Gmail connected for userId=${userId}, email=${gmailEmail}`,
+    );
 
     // Run initial sync
     await this.syncEmails(userId);
@@ -104,22 +168,33 @@ export class GmailService {
     });
   }
 
-  async getConnectionStatus(userId: string): Promise<{ connected: boolean; gmailEmail?: string; lastSyncAt?: Date; unreadCount: number }> {
-    const token = await this.prisma.gmailToken.findUnique({ where: { userId } });
+  async getConnectionStatus(userId: string): Promise<{
+    connected: boolean;
+    gmailEmail?: string;
+    lastSyncAt?: Date;
+    unreadCount: number;
+  }> {
+    const token = await this.prisma.gmailToken.findUnique({
+      where: { userId },
+    });
     const unreadCount = await this.prisma.notification.count({
       where: { userId, isRead: false },
     });
 
     return {
-      connected: !!(token?.isActive),
+      connected: !!token?.isActive,
       gmailEmail: token?.gmailEmail,
       lastSyncAt: token?.lastSyncAt || undefined,
       unreadCount,
     };
   }
 
-  async syncEmails(userId: string): Promise<{ newMessages: number; jobRelated: number }> {
-    const tokenRecord = await this.prisma.gmailToken.findUnique({ where: { userId } });
+  async syncEmails(
+    userId: string,
+  ): Promise<{ newMessages: number; jobRelated: number }> {
+    const tokenRecord = await this.prisma.gmailToken.findUnique({
+      where: { userId },
+    });
     if (!tokenRecord || !tokenRecord.isActive) {
       return { newMessages: 0, jobRelated: 0 };
     }
@@ -139,7 +214,9 @@ export class GmailService {
           where: { userId },
           data: {
             accessToken: tokens.access_token,
-            expiryDate: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
+            expiryDate: tokens.expiry_date
+              ? new Date(tokens.expiry_date)
+              : null,
           },
         });
       }
@@ -177,7 +254,8 @@ export class GmailService {
 
         const headers = detail.data.payload?.headers || [];
         const getHeader = (name: string) =>
-          headers.find((h) => h.name?.toLowerCase() === name.toLowerCase())?.value || '';
+          headers.find((h) => h.name?.toLowerCase() === name.toLowerCase())
+            ?.value || '';
 
         const subject = getHeader('Subject') || '(no subject)';
         const fromRaw = getHeader('From');
@@ -195,7 +273,9 @@ export class GmailService {
 
         // Detect if job-related
         const searchText = `${subject} ${snippet} ${fromEmail}`.toLowerCase();
-        const isJobRelated = JOB_KEYWORDS.some((k) => searchText.includes(k.toLowerCase()));
+        const isJobRelated = JOB_KEYWORDS.some((k) =>
+          searchText.includes(k.toLowerCase()),
+        );
 
         // Detect email type
         let detectedType: string | null = null;
@@ -238,7 +318,9 @@ export class GmailService {
             APPLIED_CONFIRM: 'Lamaran Dikonfirmasi',
           };
 
-          const notifTitle = detectedType ? typeLabel[detectedType] || 'Email Loker Baru' : 'Email Loker Baru';
+          const notifTitle = detectedType
+            ? typeLabel[detectedType] || 'Email Loker Baru'
+            : 'Email Loker Baru';
           const notifBody = `Dari: ${fromName || fromEmail}\nSubjek: ${subject}\n${snippet.substring(0, 200)}`;
 
           const notif = await this.prisma.notification.create({
@@ -278,7 +360,9 @@ export class GmailService {
       data: { lastSyncAt: new Date() },
     });
 
-    this.logger.log(`Gmail sync for userId=${userId}: ${newMessages} new, ${jobRelated} job-related`);
+    this.logger.log(
+      `Gmail sync for userId=${userId}: ${newMessages} new, ${jobRelated} job-related`,
+    );
     return { newMessages, jobRelated };
   }
 
@@ -301,7 +385,10 @@ export class GmailService {
     });
   }
 
-  async markNotificationRead(notificationId: string, userId: string): Promise<void> {
+  async markNotificationRead(
+    notificationId: string,
+    userId: string,
+  ): Promise<void> {
     await this.prisma.notification.updateMany({
       where: { id: notificationId, userId },
       data: { isRead: true },

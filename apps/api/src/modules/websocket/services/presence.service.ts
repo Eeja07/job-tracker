@@ -55,12 +55,19 @@ export class PresenceService {
         };
       }
 
-      await this.redisService.set(presenceKey, JSON.stringify(record), PRESENCE_TTL_SECONDS * 2);
+      await this.redisService.set(
+        presenceKey,
+        JSON.stringify(record),
+        PRESENCE_TTL_SECONDS * 2,
+      );
 
       // Add socket to user's socket set
       if (this.redisService.getClient) {
         await this.redisService.getClient().sadd(connectionsKey, socketId);
-        await this.redisService.expire(connectionsKey, PRESENCE_TTL_SECONDS * 2);
+        await this.redisService.expire(
+          connectionsKey,
+          PRESENCE_TTL_SECONDS * 2,
+        );
       }
 
       this.logger.log(
@@ -72,7 +79,9 @@ export class PresenceService {
         }),
       );
     } catch (err: any) {
-      this.logger.warn(`Failed to register presence for user ${userId}: ${err.message}`);
+      this.logger.warn(
+        `Failed to register presence for user ${userId}: ${err.message}`,
+      );
     }
   }
 
@@ -88,7 +97,9 @@ export class PresenceService {
     try {
       if (this.redisService.getClient) {
         await this.redisService.getClient().srem(connectionsKey, socketId);
-        const remainingCount = await this.redisService.getClient().scard(connectionsKey);
+        const remainingCount = await this.redisService
+          .getClient()
+          .scard(connectionsKey);
 
         if (remainingCount === 0) {
           await this.redisService.del(presenceKey);
@@ -105,7 +116,11 @@ export class PresenceService {
           if (existing) {
             const record: PresenceRecord = JSON.parse(existing);
             record.tabCount = remainingCount;
-            await this.redisService.set(presenceKey, JSON.stringify(record), PRESENCE_TTL_SECONDS * 2);
+            await this.redisService.set(
+              presenceKey,
+              JSON.stringify(record),
+              PRESENCE_TTL_SECONDS * 2,
+            );
           }
           this.logger.log(
             JSON.stringify({
@@ -118,7 +133,9 @@ export class PresenceService {
         }
       }
     } catch (err: any) {
-      this.logger.warn(`Failed to remove presence for user ${userId}: ${err.message}`);
+      this.logger.warn(
+        `Failed to remove presence for user ${userId}: ${err.message}`,
+      );
     }
   }
 
@@ -134,10 +151,16 @@ export class PresenceService {
       if (existing) {
         const record: PresenceRecord = JSON.parse(existing);
         record.lastHeartbeat = new Date().toISOString();
-        await this.redisService.set(presenceKey, JSON.stringify(record), PRESENCE_TTL_SECONDS * 2);
+        await this.redisService.set(
+          presenceKey,
+          JSON.stringify(record),
+          PRESENCE_TTL_SECONDS * 2,
+        );
       }
     } catch (err: any) {
-      this.logger.warn(`Failed to update heartbeat for user ${userId}: ${err.message}`);
+      this.logger.warn(
+        `Failed to update heartbeat for user ${userId}: ${err.message}`,
+      );
     }
   }
 

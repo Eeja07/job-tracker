@@ -31,20 +31,28 @@ export class TraceInterceptor implements NestInterceptor {
       const routePath = req.route?.path || req.url || 'unknown';
 
       // Start HTTP request span
-      const httpSpan = this.tracingService.startSpan(SPAN_NAMES.HTTP_REQUEST, undefined, {
-        'http.method': req.method,
-        'http.route': routePath,
-        'http.url': req.originalUrl || req.url,
-      });
+      const httpSpan = this.tracingService.startSpan(
+        SPAN_NAMES.HTTP_REQUEST,
+        undefined,
+        {
+          'http.method': req.method,
+          'http.route': routePath,
+          'http.url': req.originalUrl || req.url,
+        },
+      );
 
       // Start Controller span
-      const controllerSpan = this.tracingService.startSpan(SPAN_NAMES.CONTROLLER, {
-        traceId: httpSpan.traceId,
-        spanId: httpSpan.spanId,
-      }, {
-        'code.namespace': className,
-        'code.function': methodName,
-      });
+      const controllerSpan = this.tracingService.startSpan(
+        SPAN_NAMES.CONTROLLER,
+        {
+          traceId: httpSpan.traceId,
+          spanId: httpSpan.spanId,
+        },
+        {
+          'code.namespace': className,
+          'code.function': methodName,
+        },
+      );
 
       // Extract user ID if authenticated
       if (req.user?.sub) {

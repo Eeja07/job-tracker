@@ -7,7 +7,13 @@ import { getChannelForEventType } from '../enums/event-channel.enum';
 
 export type EventPublishInput<T extends BaseEvent = BaseEvent> = Omit<
   T,
-  'eventId' | 'timestamp' | 'correlationId' | 'channel' | 'version' | 'aggregateId' | 'aggregateType'
+  | 'eventId'
+  | 'timestamp'
+  | 'correlationId'
+  | 'channel'
+  | 'version'
+  | 'aggregateId'
+  | 'aggregateType'
 > & {
   eventId?: string;
   timestamp?: string;
@@ -70,7 +76,11 @@ export class EventPublisherService {
     if (this.redisService) {
       try {
         const client = this.redisService.getClient?.();
-        if (client && typeof client.xadd === 'function' && this.redisService.isReady()) {
+        if (
+          client &&
+          typeof client.xadd === 'function' &&
+          this.redisService.isReady()
+        ) {
           await client.xadd(channel, '*', 'event', payloadString);
         }
         await this.redisService.publish(channel, payloadString);

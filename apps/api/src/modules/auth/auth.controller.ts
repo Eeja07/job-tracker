@@ -47,14 +47,18 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout(@Request() req: AuthenticatedRequest): Promise<{ success: boolean }> {
+  async logout(
+    @Request() req: AuthenticatedRequest,
+  ): Promise<{ success: boolean }> {
     return this.authService.logout(req.user.sub);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
   @HttpCode(HttpStatus.OK)
-  async getProfile(@Request() req: AuthenticatedRequest): Promise<Omit<User, 'passwordHash'>> {
+  async getProfile(
+    @Request() req: AuthenticatedRequest,
+  ): Promise<Omit<User, 'passwordHash'>> {
     return this.authService.getProfile(req.user.sub);
   }
 }

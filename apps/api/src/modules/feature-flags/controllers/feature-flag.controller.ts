@@ -10,7 +10,13 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../rbac/guards/roles.guard';
 import { PermissionsGuard } from '../../rbac/guards/permissions.guard';
@@ -32,17 +38,27 @@ export class FeatureFlagsController {
   @Post()
   @Roles('ADMIN')
   @ApiOperation({ summary: 'Create a new feature flag' })
-  @ApiResponse({ status: 201, description: 'Feature flag created successfully', type: FeatureFlagResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Feature flag created successfully',
+    type: FeatureFlagResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Bad request - validation error' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - requires ADMIN role' })
-  async create(@Body() dto: CreateFeatureFlagDto): Promise<FeatureFlagResponseDto> {
+  async create(
+    @Body() dto: CreateFeatureFlagDto,
+  ): Promise<FeatureFlagResponseDto> {
     return this.featureFlagService.create(dto);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all feature flags' })
-  @ApiResponse({ status: 200, description: 'List of feature flags', type: [FeatureFlagResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'List of feature flags',
+    type: [FeatureFlagResponseDto],
+  })
   async findAll(): Promise<FeatureFlagResponseDto[]> {
     return this.featureFlagService.getAll();
   }
@@ -50,7 +66,11 @@ export class FeatureFlagsController {
   @Get(':key')
   @ApiOperation({ summary: 'Get feature flag by key' })
   @ApiParam({ name: 'key', description: 'Feature flag key' })
-  @ApiResponse({ status: 200, description: 'Feature flag details', type: FeatureFlagResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Feature flag details',
+    type: FeatureFlagResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Feature flag not found' })
   async findByKey(@Param('key') key: string): Promise<FeatureFlagResponseDto> {
     const flag = await this.featureFlagService.get(key);
@@ -64,7 +84,11 @@ export class FeatureFlagsController {
   @Roles('ADMIN')
   @ApiOperation({ summary: 'Enable or disable a feature flag' })
   @ApiParam({ name: 'key', description: 'Feature flag key' })
-  @ApiResponse({ status: 200, description: 'Feature flag status updated', type: FeatureFlagResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Feature flag status updated',
+    type: FeatureFlagResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Feature flag not found' })
   async setEnabled(
     @Param('key') key: string,
@@ -77,7 +101,11 @@ export class FeatureFlagsController {
   @Roles('ADMIN')
   @ApiOperation({ summary: 'Set rollout percentage for a feature flag' })
   @ApiParam({ name: 'key', description: 'Feature flag key' })
-  @ApiResponse({ status: 200, description: 'Feature flag rollout updated', type: FeatureFlagResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Feature flag rollout updated',
+    type: FeatureFlagResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Feature flag not found' })
   async setRollout(
     @Param('key') key: string,

@@ -1,7 +1,9 @@
 import { z } from 'zod';
 
 export const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  NODE_ENV: z
+    .enum(['development', 'production', 'test'])
+    .default('development'),
   PORT: z.coerce.number().default(3000),
   DATABASE_URL: z.string().optional(),
   JWT_ACCESS_SECRET: z.string().default('dev-access-secret-key-12345'),
@@ -36,7 +38,9 @@ export type EnvConfig = z.infer<typeof envSchema>;
 export function validateEnv(config: Record<string, unknown>): EnvConfig {
   const result = envSchema.safeParse(config);
   if (!result.success) {
-    throw new Error(`Environment validation failed: ${JSON.stringify(result.error.format())}`);
+    throw new Error(
+      `Environment validation failed: ${JSON.stringify(result.error.format())}`,
+    );
   }
   return result.data;
 }

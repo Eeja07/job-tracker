@@ -23,10 +23,10 @@ export class RolesGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     if (!requiredRoles || requiredRoles.length === 0) {
       return true;
@@ -42,8 +42,12 @@ export class RolesGuard implements CanActivate {
     const userId = user.sub as string;
 
     if (!this.rbacService) {
-      this.logger.error('RbacService is not available in RolesGuard. Security fail-closed triggered.');
-      throw new InternalServerErrorException('Authorization provider unavailable');
+      this.logger.error(
+        'RbacService is not available in RolesGuard. Security fail-closed triggered.',
+      );
+      throw new InternalServerErrorException(
+        'Authorization provider unavailable',
+      );
     }
 
     for (const role of requiredRoles) {
@@ -54,8 +58,12 @@ export class RolesGuard implements CanActivate {
       }
     }
 
-    this.logger.warn(`User ${userId} denied: requires one of roles [${requiredRoles.join(', ')}]`);
+    this.logger.warn(
+      `User ${userId} denied: requires one of roles [${requiredRoles.join(', ')}]`,
+    );
     this.metricsService?.rbacPermissionDeniedTotal.inc({ type: 'role' });
-    throw new ForbiddenException(`Access denied: requires role [${requiredRoles.join(' | ')}]`);
+    throw new ForbiddenException(
+      `Access denied: requires role [${requiredRoles.join(' | ')}]`,
+    );
   }
 }

@@ -9,24 +9,37 @@ export class UserRoleRepository extends BaseRepository<Prisma.UserRoleDelegate> 
     super(prisma);
   }
 
-  protected getDelegate(tx?: Prisma.TransactionClient): Prisma.UserRoleDelegate {
+  protected getDelegate(
+    tx?: Prisma.TransactionClient,
+  ): Prisma.UserRoleDelegate {
     return tx ? tx.userRole : this.prisma.userRole;
   }
 
-  async findByUser(userId: string, tx?: Prisma.TransactionClient): Promise<UserRole[]> {
+  async findByUser(
+    userId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<UserRole[]> {
     return this.getDelegate(tx).findMany({
       where: { userId },
       include: { role: true },
     });
   }
 
-  async findByUserAndRole(userId: string, roleId: string, tx?: Prisma.TransactionClient): Promise<UserRole | null> {
+  async findByUserAndRole(
+    userId: string,
+    roleId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<UserRole | null> {
     return this.getDelegate(tx).findUnique({
       where: { userId_roleId: { userId, roleId } },
     });
   }
 
-  async assign(userId: string, roleId: string, tx?: Prisma.TransactionClient): Promise<UserRole> {
+  async assign(
+    userId: string,
+    roleId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<UserRole> {
     return this.getDelegate(tx).upsert({
       where: { userId_roleId: { userId, roleId } },
       update: {},
@@ -34,11 +47,18 @@ export class UserRoleRepository extends BaseRepository<Prisma.UserRoleDelegate> 
     });
   }
 
-  async remove(userId: string, roleId: string, tx?: Prisma.TransactionClient): Promise<void> {
+  async remove(
+    userId: string,
+    roleId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
     await this.getDelegate(tx).deleteMany({ where: { userId, roleId } });
   }
 
-  async getRoleNamesForUser(userId: string, tx?: Prisma.TransactionClient): Promise<string[]> {
+  async getRoleNamesForUser(
+    userId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<string[]> {
     const userRoles = await this.getDelegate(tx).findMany({
       where: { userId },
       include: { role: { select: { name: true } } },

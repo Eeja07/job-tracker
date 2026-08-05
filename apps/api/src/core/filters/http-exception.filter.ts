@@ -21,7 +21,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<RequestWithId>();
 
-    const requestId = (request as { id?: string })?.id || (request?.headers?.['x-request-id'] as string) || 'unknown';
+    const requestId =
+      (request as { id?: string })?.id ||
+      (request?.headers?.['x-request-id'] as string) ||
+      'unknown';
     const isHttpException = exception instanceof HttpException;
 
     const statusCode = isHttpException
@@ -45,13 +48,29 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     // Classify error type for structured logging
     let errorCategory = 'UNHANDLED_EXCEPTION';
-    const excName = exception && typeof exception === 'object' && 'name' in exception ? (exception as { name: string }).name : '';
+    const excName =
+      exception && typeof exception === 'object' && 'name' in exception
+        ? (exception as { name: string }).name
+        : '';
 
-    if (excName.includes('Prisma') || (exception && typeof exception === 'object' && 'code' in exception && String((exception as { code: unknown }).code).startsWith('P'))) {
+    if (
+      excName.includes('Prisma') ||
+      (exception &&
+        typeof exception === 'object' &&
+        'code' in exception &&
+        String((exception as { code: unknown }).code).startsWith('P'))
+    ) {
       errorCategory = 'PRISMA_ERROR';
-    } else if (excName.includes('JsonWebToken') || excName.includes('Jwt') || errorName.includes('Unauthorized')) {
+    } else if (
+      excName.includes('JsonWebToken') ||
+      excName.includes('Jwt') ||
+      errorName.includes('Unauthorized')
+    ) {
       errorCategory = 'JWT_ERROR';
-    } else if (statusCode === HttpStatus.BAD_REQUEST && Array.isArray(message)) {
+    } else if (
+      statusCode === HttpStatus.BAD_REQUEST &&
+      Array.isArray(message)
+    ) {
       errorCategory = 'VALIDATION_ERROR';
     }
 
@@ -78,7 +97,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       statusCode,
       error: errorName,
       message,
-      details: exception instanceof Error ? exception.message : String(exception),
+      details:
+        exception instanceof Error ? exception.message : String(exception),
       timestamp: logDetails.timestamp,
       path: request.url,
     });

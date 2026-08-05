@@ -18,12 +18,18 @@ export class CommandBus {
     this.logger.log(`Registered command handler: ${handler.commandName}`);
   }
 
-  async execute<TCommand extends ICommand = any, TResult = any>(command: TCommand): Promise<TResult> {
+  async execute<TCommand extends ICommand = any, TResult = any>(
+    command: TCommand,
+  ): Promise<TResult> {
     const commandName = command.commandName;
     const handler = this.handlers.get(commandName);
 
-    const traceId = command.traceId || this.traceContextService?.getTraceId() || 'unknown';
-    const correlationId = command.correlationId || this.traceContextService?.getCorrelationId() || 'unknown';
+    const traceId =
+      command.traceId || this.traceContextService?.getTraceId() || 'unknown';
+    const correlationId =
+      command.correlationId ||
+      this.traceContextService?.getCorrelationId() ||
+      'unknown';
 
     if (!handler) {
       this.logger.error(
@@ -34,7 +40,10 @@ export class CommandBus {
           correlationId,
         }),
       );
-      this.metricsService.commandExecutionTotal.inc({ command: commandName, status: 'not_found' });
+      this.metricsService.commandExecutionTotal.inc({
+        command: commandName,
+        status: 'not_found',
+      });
       throw new Error(`Command handler not found for: ${commandName}`);
     }
 
@@ -52,7 +61,10 @@ export class CommandBus {
 
     try {
       const result = await handler.execute(command);
-      this.metricsService.commandExecutionTotal.inc({ command: commandName, status: 'success' });
+      this.metricsService.commandExecutionTotal.inc({
+        command: commandName,
+        status: 'success',
+      });
       return result;
     } catch (err: any) {
       this.logger.error(
@@ -65,7 +77,10 @@ export class CommandBus {
           durationMs: Date.now() - startTime,
         }),
       );
-      this.metricsService.commandExecutionTotal.inc({ command: commandName, status: 'failure' });
+      this.metricsService.commandExecutionTotal.inc({
+        command: commandName,
+        status: 'failure',
+      });
       throw err;
     }
   }

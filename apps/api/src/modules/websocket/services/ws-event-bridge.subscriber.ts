@@ -4,7 +4,11 @@ import { BaseEvent } from '../../event-bus/interfaces/base-event.interface';
 import { EventType } from '../../event-bus/enums/event-type.enum';
 import { RealtimePublisher } from './realtime-publisher.service';
 import { WsServerEvent } from '../constants/ws-events.constants';
-import { userRoom, applicationRoom, companyRoom } from '../constants/ws-rooms.constants';
+import {
+  userRoom,
+  applicationRoom,
+  companyRoom,
+} from '../constants/ws-rooms.constants';
 
 /**
  * Bridges Event Bus domain events to Socket.IO room-targeted broadcasts.
@@ -51,14 +55,22 @@ export class WsEventBridgeSubscriber implements IEventSubscriber {
         this.publisher.emitToRoom(
           userRoom(p.userId || event.userId || ''),
           WsServerEvent.APPLICATION_CREATED,
-          { eventId: event.eventId, correlationId: event.correlationId, payload: p },
+          {
+            eventId: event.eventId,
+            correlationId: event.correlationId,
+            payload: p,
+          },
         );
         // Notify the specific application room if subscribers exist
         if (p.applicationId) {
           this.publisher.emitToRoom(
             applicationRoom(p.applicationId),
             WsServerEvent.APPLICATION_CREATED,
-            { eventId: event.eventId, correlationId: event.correlationId, payload: p },
+            {
+              eventId: event.eventId,
+              correlationId: event.correlationId,
+              payload: p,
+            },
           );
         }
         break;
@@ -70,14 +82,22 @@ export class WsEventBridgeSubscriber implements IEventSubscriber {
           this.publisher.emitToRoom(
             applicationRoom(p.applicationId),
             WsServerEvent.APPLICATION_UPDATED,
-            { eventId: event.eventId, correlationId: event.correlationId, payload: p },
+            {
+              eventId: event.eventId,
+              correlationId: event.correlationId,
+              payload: p,
+            },
           );
         }
         if (p.userId || event.userId) {
           this.publisher.emitToRoom(
             userRoom(p.userId || event.userId),
             WsServerEvent.APPLICATION_UPDATED,
-            { eventId: event.eventId, correlationId: event.correlationId, payload: p },
+            {
+              eventId: event.eventId,
+              correlationId: event.correlationId,
+              payload: p,
+            },
           );
         }
         break;
@@ -89,14 +109,22 @@ export class WsEventBridgeSubscriber implements IEventSubscriber {
           this.publisher.emitToRoom(
             applicationRoom(p.applicationId),
             WsServerEvent.APPLICATION_STATUS_CHANGED,
-            { eventId: event.eventId, correlationId: event.correlationId, payload: p },
+            {
+              eventId: event.eventId,
+              correlationId: event.correlationId,
+              payload: p,
+            },
           );
         }
         if (p.userId || event.userId) {
           this.publisher.emitToRoom(
             userRoom(p.userId || event.userId),
             WsServerEvent.APPLICATION_STATUS_CHANGED,
-            { eventId: event.eventId, correlationId: event.correlationId, payload: p },
+            {
+              eventId: event.eventId,
+              correlationId: event.correlationId,
+              payload: p,
+            },
           );
         }
         break;
@@ -110,17 +138,21 @@ export class WsEventBridgeSubscriber implements IEventSubscriber {
             ? WsServerEvent.ATTACHMENT_UPLOADED
             : WsServerEvent.ATTACHMENT_DELETED;
         if (p.applicationId) {
-          this.publisher.emitToRoom(
-            applicationRoom(p.applicationId),
-            wsEvent,
-            { eventId: event.eventId, correlationId: event.correlationId, payload: p },
-          );
+          this.publisher.emitToRoom(applicationRoom(p.applicationId), wsEvent, {
+            eventId: event.eventId,
+            correlationId: event.correlationId,
+            payload: p,
+          });
         }
         if (p.userId || event.userId) {
           this.publisher.emitToRoom(
             userRoom(p.userId || event.userId),
             wsEvent,
-            { eventId: event.eventId, correlationId: event.correlationId, payload: p },
+            {
+              eventId: event.eventId,
+              correlationId: event.correlationId,
+              payload: p,
+            },
           );
         }
         break;
@@ -134,32 +166,32 @@ export class WsEventBridgeSubscriber implements IEventSubscriber {
             ? WsServerEvent.COMPANY_CREATED
             : WsServerEvent.COMPANY_DELETED;
         if (p.companyId) {
-          this.publisher.emitToRoom(
-            companyRoom(p.companyId),
-            wsEvent,
-            { eventId: event.eventId, correlationId: event.correlationId, payload: p },
-          );
+          this.publisher.emitToRoom(companyRoom(p.companyId), wsEvent, {
+            eventId: event.eventId,
+            correlationId: event.correlationId,
+            payload: p,
+          });
         }
         break;
       }
 
       case EventType.AUDIT_CREATED: {
         // Admin room only
-        this.publisher.emitToRoom(
-          'admin',
-          WsServerEvent.AUDIT_CREATED,
-          { eventId: event.eventId, correlationId: event.correlationId, payload: event.payload },
-        );
+        this.publisher.emitToRoom('admin', WsServerEvent.AUDIT_CREATED, {
+          eventId: event.eventId,
+          correlationId: event.correlationId,
+          payload: event.payload,
+        });
         break;
       }
 
       case EventType.FEATURE_FLAG_UPDATED: {
         // Broadcast to admin room (flag changes are system-wide)
-        this.publisher.emitToRoom(
-          'admin',
-          WsServerEvent.FEATURE_FLAG_UPDATED,
-          { eventId: event.eventId, correlationId: event.correlationId, payload: event.payload },
-        );
+        this.publisher.emitToRoom('admin', WsServerEvent.FEATURE_FLAG_UPDATED, {
+          eventId: event.eventId,
+          correlationId: event.correlationId,
+          payload: event.payload,
+        });
         break;
       }
 
@@ -171,11 +203,11 @@ export class WsEventBridgeSubscriber implements IEventSubscriber {
             ? WsServerEvent.ROLE_ASSIGNED
             : WsServerEvent.ROLE_REMOVED;
         if (p.userId) {
-          this.publisher.emitToRoom(
-            userRoom(p.userId),
-            wsEvent,
-            { eventId: event.eventId, correlationId: event.correlationId, payload: p },
-          );
+          this.publisher.emitToRoom(userRoom(p.userId), wsEvent, {
+            eventId: event.eventId,
+            correlationId: event.correlationId,
+            payload: p,
+          });
         }
         break;
       }
@@ -185,7 +217,11 @@ export class WsEventBridgeSubscriber implements IEventSubscriber {
           this.publisher.emitToRoom(
             userRoom(event.userId),
             WsServerEvent.EMAIL_SENT,
-            { eventId: event.eventId, correlationId: event.correlationId, payload: event.payload },
+            {
+              eventId: event.eventId,
+              correlationId: event.correlationId,
+              payload: event.payload,
+            },
           );
         }
         break;
@@ -197,11 +233,11 @@ export class WsEventBridgeSubscriber implements IEventSubscriber {
           event.type === EventType.JOB_COMPLETED
             ? WsServerEvent.JOB_COMPLETED
             : WsServerEvent.JOB_FAILED;
-        this.publisher.emitToRoom(
-          'admin',
-          wsEvent,
-          { eventId: event.eventId, correlationId: event.correlationId, payload: event.payload },
-        );
+        this.publisher.emitToRoom('admin', wsEvent, {
+          eventId: event.eventId,
+          correlationId: event.correlationId,
+          payload: event.payload,
+        });
         break;
       }
 

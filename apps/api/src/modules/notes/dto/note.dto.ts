@@ -1,18 +1,34 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 export class CreateNoteDto {
-  @ApiProperty({ description: 'Target job application ID', example: 'app-uuid-1' })
+  @ApiProperty({
+    description: 'Target job application ID',
+    example: 'app-uuid-1',
+  })
   @IsUUID()
   @IsNotEmpty()
   applicationId!: string;
 
-  @ApiProperty({ description: 'Note markdown content', example: 'Prepared interview questions regarding microservice scalability.' })
+  @ApiProperty({
+    description: 'Note markdown content',
+    example: 'Prepared interview questions regarding microservice scalability.',
+  })
   @IsString()
   @IsNotEmpty()
   content!: string;
 
-  @ApiPropertyOptional({ description: 'Whether the note is pinned to top', default: false, example: true })
+  @ApiPropertyOptional({
+    description: 'Whether the note is pinned to top',
+    default: false,
+    example: true,
+  })
   @IsOptional()
   @IsBoolean()
   pinned?: boolean = false;
@@ -30,7 +46,9 @@ export class NoteResponseDto {
   @ApiProperty({ example: 'user-uuid-1' })
   userId!: string;
 
-  @ApiProperty({ example: 'Prepared interview questions regarding microservice scalability.' })
+  @ApiProperty({
+    example: 'Prepared interview questions regarding microservice scalability.',
+  })
   content!: string;
 
   @ApiProperty({ example: true })

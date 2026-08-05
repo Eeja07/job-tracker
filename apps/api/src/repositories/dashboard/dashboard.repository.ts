@@ -135,7 +135,10 @@ export class DashboardRepository {
     });
   }
 
-  async getRecentApplicationsForTrend(userId: string, limit = 200): Promise<{ appliedAt: Date }[]> {
+  async getRecentApplicationsForTrend(
+    userId: string,
+    limit = 200,
+  ): Promise<{ appliedAt: Date }[]> {
     return this.prisma.application.findMany({
       where: { userId },
       select: { appliedAt: true },

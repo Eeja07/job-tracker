@@ -79,17 +79,23 @@ describe('RbacService', () => {
       await service.assignRole('user-123', 'ADMIN');
 
       expect(roleRepo.findByName).toHaveBeenCalledWith('ADMIN', undefined);
-      expect(userRoleRepo.assign).toHaveBeenCalledWith('user-123', mockRole.id, undefined);
-      expect(redisService.del).toHaveBeenCalledWith('permissions:user:user-123');
+      expect(userRoleRepo.assign).toHaveBeenCalledWith(
+        'user-123',
+        mockRole.id,
+        undefined,
+      );
+      expect(redisService.del).toHaveBeenCalledWith(
+        'permissions:user:user-123',
+      );
       expect(redisService.del).toHaveBeenCalledWith('roles:user:user-123');
     });
 
     it('should throw error if role does not exist', async () => {
       roleRepo.findByName.mockResolvedValue(null);
 
-      await expect(service.assignRole('user-123', 'NONEXISTENT')).rejects.toThrow(
-        "Role 'NONEXISTENT' not found",
-      );
+      await expect(
+        service.assignRole('user-123', 'NONEXISTENT'),
+      ).rejects.toThrow("Role 'NONEXISTENT' not found");
     });
   });
 
@@ -101,15 +107,23 @@ describe('RbacService', () => {
       await service.removeRole('user-123', 'ADMIN');
 
       expect(roleRepo.findByName).toHaveBeenCalledWith('ADMIN', undefined);
-      expect(userRoleRepo.remove).toHaveBeenCalledWith('user-123', mockRole.id, undefined);
-      expect(redisService.del).toHaveBeenCalledWith('permissions:user:user-123');
+      expect(userRoleRepo.remove).toHaveBeenCalledWith(
+        'user-123',
+        mockRole.id,
+        undefined,
+      );
+      expect(redisService.del).toHaveBeenCalledWith(
+        'permissions:user:user-123',
+      );
       expect(redisService.del).toHaveBeenCalledWith('roles:user:user-123');
     });
   });
 
   describe('getPermissions', () => {
     it('should return cached permissions on Redis hit', async () => {
-      redisService.get.mockResolvedValue(JSON.stringify(['company.create', 'company.delete']));
+      redisService.get.mockResolvedValue(
+        JSON.stringify(['company.create', 'company.delete']),
+      );
 
       const perms = await service.getPermissions('user-123');
 
@@ -119,12 +133,16 @@ describe('RbacService', () => {
 
     it('should query DB and populate Redis cache on cache miss', async () => {
       redisService.get.mockResolvedValue(null);
-      rolePermRepo.getPermissionNamesForUser.mockResolvedValue(['company.create']);
+      rolePermRepo.getPermissionNamesForUser.mockResolvedValue([
+        'company.create',
+      ]);
 
       const perms = await service.getPermissions('user-123');
 
       expect(perms).toEqual(['company.create']);
-      expect(rolePermRepo.getPermissionNamesForUser).toHaveBeenCalledWith('user-123');
+      expect(rolePermRepo.getPermissionNamesForUser).toHaveBeenCalledWith(
+        'user-123',
+      );
       expect(redisService.set).toHaveBeenCalledWith(
         'permissions:user:user-123',
         JSON.stringify(['company.create']),
@@ -134,12 +152,16 @@ describe('RbacService', () => {
 
     it('should fallback to DB gracefully when Redis throws an error', async () => {
       redisService.get.mockRejectedValue(new Error('Redis connection failed'));
-      rolePermRepo.getPermissionNamesForUser.mockResolvedValue(['company.read']);
+      rolePermRepo.getPermissionNamesForUser.mockResolvedValue([
+        'company.read',
+      ]);
 
       const perms = await service.getPermissions('user-123');
 
       expect(perms).toEqual(['company.read']);
-      expect(rolePermRepo.getPermissionNamesForUser).toHaveBeenCalledWith('user-123');
+      expect(rolePermRepo.getPermissionNamesForUser).toHaveBeenCalledWith(
+        'user-123',
+      );
     });
   });
 
@@ -187,12 +209,17 @@ describe('RbacService', () => {
 
   describe('concurrent operations', () => {
     it('should execute concurrent permission checks cleanly', async () => {
-      redisService.get.mockResolvedValue(JSON.stringify(['company.create', 'company.read']));
+      redisService.get.mockResolvedValue(
+        JSON.stringify(['company.create', 'company.read']),
+      );
 
       const [res1, res2, res3] = await Promise.all([
         service.hasPermission('user-123', 'company.create'),
         service.hasAnyPermission('user-123', ['company.read']),
-        service.hasAllPermissions('user-123', ['company.create', 'company.read']),
+        service.hasAllPermissions('user-123', [
+          'company.create',
+          'company.read',
+        ]),
       ]);
 
       expect(res1).toBe(true);

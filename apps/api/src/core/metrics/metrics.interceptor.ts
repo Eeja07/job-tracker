@@ -33,7 +33,11 @@ export class MetricsInterceptor implements NestInterceptor {
     );
   }
 
-  private recordMetrics(req: Request, res: Response, start: [number, number]): void {
+  private recordMetrics(
+    req: Request,
+    res: Response,
+    start: [number, number],
+  ): void {
     this.metricsService.activeRequests.dec();
 
     const diff = process.hrtime(start);
@@ -43,7 +47,11 @@ export class MetricsInterceptor implements NestInterceptor {
     const route = req.route?.path || req.path || 'unknown';
     const statusCode = res.statusCode ? res.statusCode.toString() : '500';
 
-    this.metricsService.httpRequestsTotal.inc({ method, route, status_code: statusCode });
+    this.metricsService.httpRequestsTotal.inc({
+      method,
+      route,
+      status_code: statusCode,
+    });
     this.metricsService.httpRequestDurationSeconds.observe(
       { method, route, status_code: statusCode },
       durationInSeconds,

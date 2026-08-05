@@ -42,7 +42,11 @@ describe('AttachmentsController', () => {
 
   it('should delegate upload request to AttachmentService', async () => {
     const req = { user: { sub: 'user-1' } };
-    const dto = { applicationId: 'app-1', type: AttachmentType.CV, label: 'Resume' };
+    const dto = {
+      applicationId: 'app-1',
+      type: AttachmentType.CV,
+      label: 'Resume',
+    };
     const mockFile: Express.Multer.File = {
       fieldname: 'file',
       originalname: 'cv.pdf',
@@ -67,7 +71,11 @@ describe('AttachmentsController', () => {
     });
 
     const result = await controller.upload(req, dto, mockFile);
-    expect(mockAttachmentService.upload).toHaveBeenCalledWith('user-1', dto, mockFile);
+    expect(mockAttachmentService.upload).toHaveBeenCalledWith(
+      'user-1',
+      dto,
+      mockFile,
+    );
     expect(result.id).toBe('att-1');
   });
 });

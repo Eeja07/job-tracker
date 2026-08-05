@@ -71,9 +71,14 @@ export class RbacController {
 
   @Get('users/:userId/permissions')
   @Roles('ADMIN')
-  @ApiOperation({ summary: 'Get effective permissions for a user (ADMIN only)' })
+  @ApiOperation({
+    summary: 'Get effective permissions for a user (ADMIN only)',
+  })
   @ApiParam({ name: 'userId', type: String, format: 'uuid' })
-  @ApiResponse({ status: 200, description: 'Effective permissions of the user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Effective permissions of the user',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden: requires ADMIN role' })
   async getUserPermissions(@Param('userId', ParseUUIDPipe) userId: string) {

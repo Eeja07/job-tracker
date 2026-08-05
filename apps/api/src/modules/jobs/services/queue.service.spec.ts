@@ -14,9 +14,11 @@ describe('QueueService', () => {
 
   beforeEach(async () => {
     const createMockQueue = () => ({
-      add: jest.fn().mockImplementation((jobName, data, opts) =>
-        Promise.resolve({ id: 'job-123', name: jobName, data, opts }),
-      ),
+      add: jest
+        .fn()
+        .mockImplementation((jobName, data, opts) =>
+          Promise.resolve({ id: 'job-123', name: jobName, data, opts }),
+        ),
       getJob: jest.fn(),
       getJobCounts: jest.fn().mockResolvedValue({
         waiting: 2,
@@ -41,10 +43,22 @@ describe('QueueService', () => {
       providers: [
         QueueService,
         { provide: getQueueToken(QUEUE_NAMES.EMAIL), useValue: mockEmailQueue },
-        { provide: getQueueToken(QUEUE_NAMES.ATTACHMENT), useValue: mockAttachmentQueue },
-        { provide: getQueueToken(QUEUE_NAMES.NOTIFICATION), useValue: mockNotificationQueue },
-        { provide: getQueueToken(QUEUE_NAMES.SYSTEM), useValue: mockSystemQueue },
-        { provide: getQueueToken(QUEUE_NAMES.DEAD_LETTER), useValue: mockDeadLetterQueue },
+        {
+          provide: getQueueToken(QUEUE_NAMES.ATTACHMENT),
+          useValue: mockAttachmentQueue,
+        },
+        {
+          provide: getQueueToken(QUEUE_NAMES.NOTIFICATION),
+          useValue: mockNotificationQueue,
+        },
+        {
+          provide: getQueueToken(QUEUE_NAMES.SYSTEM),
+          useValue: mockSystemQueue,
+        },
+        {
+          provide: getQueueToken(QUEUE_NAMES.DEAD_LETTER),
+          useValue: mockDeadLetterQueue,
+        },
       ],
     }).compile();
 
@@ -57,7 +71,11 @@ describe('QueueService', () => {
 
   describe('enqueue', () => {
     it('should add job with default retry and backoff options to target queue', async () => {
-      const job = await service.enqueue(QUEUE_NAMES.EMAIL, 'SEND_WELCOME_EMAIL', { email: 'user@test.com' });
+      const job = await service.enqueue(
+        QUEUE_NAMES.EMAIL,
+        'SEND_WELCOME_EMAIL',
+        { email: 'user@test.com' },
+      );
 
       expect(mockEmailQueue.add).toHaveBeenCalledWith(
         'SEND_WELCOME_EMAIL',
@@ -80,7 +98,12 @@ describe('QueueService', () => {
 
   describe('enqueueDelayed', () => {
     it('should add job with delay option', async () => {
-      await service.enqueueDelayed(QUEUE_NAMES.SYSTEM, 'CLEANUP_TEMP_FILES', { olderThanDays: 7 }, 5000);
+      await service.enqueueDelayed(
+        QUEUE_NAMES.SYSTEM,
+        'CLEANUP_TEMP_FILES',
+        { olderThanDays: 7 },
+        5000,
+      );
 
       expect(mockSystemQueue.add).toHaveBeenCalledWith(
         'CLEANUP_TEMP_FILES',
@@ -92,7 +115,12 @@ describe('QueueService', () => {
 
   describe('enqueueRepeatable', () => {
     it('should add job with repeat pattern', async () => {
-      await service.enqueueRepeatable(QUEUE_NAMES.SYSTEM, 'GENERATE_WEEKLY_REPORT', { userId: 'u1' }, '0 0 * * 0');
+      await service.enqueueRepeatable(
+        QUEUE_NAMES.SYSTEM,
+        'GENERATE_WEEKLY_REPORT',
+        { userId: 'u1' },
+        '0 0 * * 0',
+      );
 
       expect(mockSystemQueue.add).toHaveBeenCalledWith(
         'GENERATE_WEEKLY_REPORT',

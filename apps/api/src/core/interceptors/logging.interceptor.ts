@@ -46,10 +46,22 @@ export class LoggingInterceptor implements NestInterceptor {
   ): void {
     const duration = Date.now() - startTime;
     const statusCode = res.statusCode || 500;
-    const requestId = (req as { id?: string })?.id || (req?.headers?.['x-request-id'] as string) || 'unknown';
-    const traceId = (req as any)?.traceId || (req?.headers?.['x-trace-id'] as string) || undefined;
-    const spanId = (req as any)?.spanId || (req?.headers?.['x-span-id'] as string) || undefined;
-    const correlationId = (req as any)?.correlationId || (req?.headers?.['x-correlation-id'] as string) || requestId;
+    const requestId =
+      (req as { id?: string })?.id ||
+      (req?.headers?.['x-request-id'] as string) ||
+      'unknown';
+    const traceId =
+      (req as any)?.traceId ||
+      (req?.headers?.['x-trace-id'] as string) ||
+      undefined;
+    const spanId =
+      (req as any)?.spanId ||
+      (req?.headers?.['x-span-id'] as string) ||
+      undefined;
+    const correlationId =
+      (req as any)?.correlationId ||
+      (req?.headers?.['x-correlation-id'] as string) ||
+      requestId;
     const userId = req.user?.sub || 'anonymous';
     const ip = req.ip || req.socket.remoteAddress || 'unknown';
     const userAgent = req.get('user-agent') || 'unknown';

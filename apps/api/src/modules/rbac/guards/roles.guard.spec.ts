@@ -52,14 +52,18 @@ describe('RolesGuard', () => {
     rbacService.hasRole.mockResolvedValue(false);
     const context = createMockContext({ sub: 'user-123' });
 
-    await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('should throw ForbiddenException if context has no user', async () => {
     reflector.getAllAndOverride.mockReturnValue(['ADMIN']);
     const context = createMockContext(undefined);
 
-    await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('should throw InternalServerErrorException if RbacService is unavailable (fail-closed)', async () => {

@@ -34,6 +34,8 @@ export class JobCheckWorker extends WorkerHost {
 
   @OnWorkerEvent('failed')
   async onFailed(job: Job, error: Error) {
-    this.logger.error(`Job-check [${job.name}] (ID: ${job.id}) failed: ${error.message}`);
+    this.logger.error(
+      `Job-check [${job.name}] (ID: ${job.id}) failed: ${error.message}`,
+    );
   }
 }

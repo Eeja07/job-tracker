@@ -34,8 +34,12 @@ export class AttachmentWorker extends WorkerHost {
     }
   }
 
-  private async handleVirusScan(payload: VirusScanPayload): Promise<{ clean: boolean; attachmentId: string }> {
-    this.logger.log(`[Infrastructure Demo] Virus scan completed for attachment ${payload.attachmentId} (${payload.fileKey})`);
+  private async handleVirusScan(
+    payload: VirusScanPayload,
+  ): Promise<{ clean: boolean; attachmentId: string }> {
+    this.logger.log(
+      `[Infrastructure Demo] Virus scan completed for attachment ${payload.attachmentId} (${payload.fileKey})`,
+    );
     return { clean: true, attachmentId: payload.attachmentId };
   }
 

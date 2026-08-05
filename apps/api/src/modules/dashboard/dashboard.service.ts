@@ -46,15 +46,25 @@ export class DashboardService {
     const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-    const [statusBreakdown, monthlyCounts, topSources, topCompanies, offerDates, trendApps] =
-      await Promise.all([
-        this.dashboardRepository.getStatusBreakdown(userId),
-        this.dashboardRepository.getMonthlyCounts(userId, startOfThisMonth, startOfLastMonth),
-        this.dashboardRepository.getTopSources(userId, 5),
-        this.dashboardRepository.getTopCompanies(userId, 5),
-        this.dashboardRepository.getOfferApplicationDates(userId),
-        this.dashboardRepository.getRecentApplicationsForTrend(userId, 200),
-      ]);
+    const [
+      statusBreakdown,
+      monthlyCounts,
+      topSources,
+      topCompanies,
+      offerDates,
+      trendApps,
+    ] = await Promise.all([
+      this.dashboardRepository.getStatusBreakdown(userId),
+      this.dashboardRepository.getMonthlyCounts(
+        userId,
+        startOfThisMonth,
+        startOfLastMonth,
+      ),
+      this.dashboardRepository.getTopSources(userId, 5),
+      this.dashboardRepository.getTopCompanies(userId, 5),
+      this.dashboardRepository.getOfferApplicationDates(userId),
+      this.dashboardRepository.getRecentApplicationsForTrend(userId, 200),
+    ]);
 
     // Pipeline Distribution
     const pipelineDistribution: PipelineDistributionDto = {
@@ -78,10 +88,13 @@ export class DashboardService {
     // Rates
     const offerRate =
       totalApplications > 0
-        ? Number(((pipelineDistribution.OFFER / totalApplications) * 100).toFixed(2))
+        ? Number(
+            ((pipelineDistribution.OFFER / totalApplications) * 100).toFixed(2),
+          )
         : 0;
 
-    const interviewCount = pipelineDistribution.INTERVIEWING + pipelineDistribution.OFFER;
+    const interviewCount =
+      pipelineDistribution.INTERVIEWING + pipelineDistribution.OFFER;
     const interviewRate =
       totalApplications > 0
         ? Number(((interviewCount / totalApplications) * 100).toFixed(2))
@@ -91,7 +104,8 @@ export class DashboardService {
     let averageDaysToOffer = 0;
     if (offerDates.length > 0) {
       const totalDays = offerDates.reduce((acc, curr) => {
-        const diffMs = curr.lastStatusChangedAt.getTime() - curr.appliedAt.getTime();
+        const diffMs =
+          curr.lastStatusChangedAt.getTime() - curr.appliedAt.getTime();
         const diffDays = Math.max(0, diffMs / (1000 * 60 * 60 * 24));
         return acc + diffDays;
       }, 0);
@@ -135,7 +149,11 @@ export class DashboardService {
     };
 
     if (this.redisService) {
-      await this.redisService.set(cacheKey, JSON.stringify(result), DASHBOARD_CACHE_TTL_SECONDS);
+      await this.redisService.set(
+        cacheKey,
+        JSON.stringify(result),
+        DASHBOARD_CACHE_TTL_SECONDS,
+      );
     }
 
     return result;

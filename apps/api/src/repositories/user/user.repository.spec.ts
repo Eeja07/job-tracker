@@ -1,6 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { User, Prisma } from '@prisma/client';
-import { UserRepository, CreateUserData, UpdateUserData } from './user.repository';
+import {
+  UserRepository,
+  CreateUserData,
+  UpdateUserData,
+} from './user.repository';
 import { PrismaService } from '../../prisma/prisma.service';
 
 describe('UserRepository', () => {
@@ -137,7 +141,9 @@ describe('UserRepository', () => {
         new Error('Unique constraint violation'),
       );
 
-      await expect(repository.create(createData)).rejects.toThrow('Unique constraint violation');
+      await expect(repository.create(createData)).rejects.toThrow(
+        'Unique constraint violation',
+      );
     });
   });
 

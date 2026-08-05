@@ -22,11 +22,16 @@ export class FeatureFlagRepository extends BaseRepository<Prisma.FeatureFlagDele
     super(prisma);
   }
 
-  protected getDelegate(tx?: Prisma.TransactionClient): Prisma.FeatureFlagDelegate {
+  protected getDelegate(
+    tx?: Prisma.TransactionClient,
+  ): Prisma.FeatureFlagDelegate {
     return tx ? tx.featureFlag : this.prisma.featureFlag;
   }
 
-  async findByKey(key: string, tx?: Prisma.TransactionClient): Promise<FeatureFlag | null> {
+  async findByKey(
+    key: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<FeatureFlag | null> {
     return this.getDelegate(tx).findUnique({
       where: { key },
     });
@@ -38,7 +43,10 @@ export class FeatureFlagRepository extends BaseRepository<Prisma.FeatureFlagDele
     });
   }
 
-  async create(data: CreateFeatureFlagData, tx?: Prisma.TransactionClient): Promise<FeatureFlag> {
+  async create(
+    data: CreateFeatureFlagData,
+    tx?: Prisma.TransactionClient,
+  ): Promise<FeatureFlag> {
     return this.getDelegate(tx).create({
       data: {
         key: data.key,
@@ -68,9 +76,13 @@ export class FeatureFlagRepository extends BaseRepository<Prisma.FeatureFlagDele
     return this.getDelegate(tx).upsert({
       where: { key },
       update: {
-        ...(data.description !== undefined && { description: data.description }),
+        ...(data.description !== undefined && {
+          description: data.description,
+        }),
         ...(data.enabled !== undefined && { enabled: data.enabled }),
-        ...(data.rolloutPercentage !== undefined && { rolloutPercentage: data.rolloutPercentage }),
+        ...(data.rolloutPercentage !== undefined && {
+          rolloutPercentage: data.rolloutPercentage,
+        }),
       },
       create: {
         key,
@@ -81,7 +93,10 @@ export class FeatureFlagRepository extends BaseRepository<Prisma.FeatureFlagDele
     });
   }
 
-  async delete(key: string, tx?: Prisma.TransactionClient): Promise<FeatureFlag> {
+  async delete(
+    key: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<FeatureFlag> {
     return this.getDelegate(tx).delete({
       where: { key },
     });

@@ -14,12 +14,17 @@ describe('ProjectionSubscriber', () => {
       registerSubscriber: jest.fn(),
     };
 
-    subscriber = new ProjectionSubscriber(mockProjectionManager, mockSubscriberService);
+    subscriber = new ProjectionSubscriber(
+      mockProjectionManager,
+      mockSubscriberService,
+    );
   });
 
   it('should register subscriber onInit', () => {
     subscriber.onModuleInit();
-    expect(mockSubscriberService.registerSubscriber).toHaveBeenCalledWith(subscriber);
+    expect(mockSubscriberService.registerSubscriber).toHaveBeenCalledWith(
+      subscriber,
+    );
   });
 
   it('should route event to ProjectionManager handle', async () => {

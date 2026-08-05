@@ -17,7 +17,11 @@ export class RealtimePublisher {
   /**
    * Emit an event to a specific room.
    */
-  emitToRoom(room: string, event: WsServerEvent | string, payload: unknown): void {
+  emitToRoom(
+    room: string,
+    event: WsServerEvent | string,
+    payload: unknown,
+  ): void {
     if (!this.server) {
       this.logger.warn('Server not initialized, cannot emit event');
       return;
@@ -32,7 +36,11 @@ export class RealtimePublisher {
   /**
    * Emit an event to a specific socket ID.
    */
-  emitToSocket(socketId: string, event: WsServerEvent | string, payload: unknown): void {
+  emitToSocket(
+    socketId: string,
+    event: WsServerEvent | string,
+    payload: unknown,
+  ): void {
     if (!this.server) return;
     this.server.to(socketId).emit(event, payload);
     this.metrics.messagesSentTotal.inc({ event: String(event) });

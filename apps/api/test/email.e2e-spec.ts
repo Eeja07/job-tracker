@@ -4,8 +4,14 @@ import { createTestApp, cleanDatabase, TestAppSetup } from './test-utils';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { EmailService } from '../src/modules/email/services/email.service';
 import { QueueService } from '../src/modules/jobs/services/queue.service';
-import { EMAIL_PROVIDER_TOKEN, EmailProvider } from '../src/modules/email/interfaces/email-provider.interface';
-import { QUEUE_NAMES, EmailJobName } from '../src/modules/jobs/constants/jobs.constants';
+import {
+  EMAIL_PROVIDER_TOKEN,
+  EmailProvider,
+} from '../src/modules/email/interfaces/email-provider.interface';
+import {
+  QUEUE_NAMES,
+  EmailJobName,
+} from '../src/modules/jobs/constants/jobs.constants';
 
 describe('Email Infrastructure (e2e)', () => {
   let app: INestApplication;
@@ -53,7 +59,9 @@ describe('Email Infrastructure (e2e)', () => {
     });
 
     it('should throw validation error when rendering non-existent template', () => {
-      expect(() => emailService.renderTemplate('unknown-template', {})).toThrow();
+      expect(() =>
+        emailService.renderTemplate('unknown-template', {}),
+      ).toThrow();
     });
   });
 
@@ -69,7 +77,9 @@ describe('Email Infrastructure (e2e)', () => {
         subject: 'Welcome to Job Tracker!',
         templateName: 'welcome',
         context: { fullName: 'E2E Worker' },
-        attachments: [{ filename: 'welcome.pdf', content: Buffer.from('PDF_BYTES') }],
+        attachments: [
+          { filename: 'welcome.pdf', content: Buffer.from('PDF_BYTES') },
+        ],
       });
 
       expect(job).toBeDefined();
@@ -81,7 +91,9 @@ describe('Email Infrastructure (e2e)', () => {
     });
 
     it('should directly process sending and record metrics via emailService.sendDirect', async () => {
-      jest.spyOn(emailProvider, 'sendEmail').mockResolvedValueOnce({ messageId: 'e2e-msg-123' });
+      jest
+        .spyOn(emailProvider, 'sendEmail')
+        .mockResolvedValueOnce({ messageId: 'e2e-msg-123' });
 
       const result = await emailService.sendDirect(
         {

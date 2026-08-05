@@ -1,7 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { BadRequestException, UnprocessableEntityException } from '@nestjs/common';
-import { StorageService, STORAGE_PROVIDER_TOKEN, VIRUS_SCANNER_TOKEN } from './storage.service';
+import {
+  BadRequestException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
+import {
+  StorageService,
+  STORAGE_PROVIDER_TOKEN,
+  VIRUS_SCANNER_TOKEN,
+} from './storage.service';
 import { StorageProvider as StorageProviderEnum } from '@prisma/client';
 import { LocalStorageProvider } from './providers/local-storage.provider';
 import { MinIOProvider } from './providers/minio.provider';
@@ -78,7 +85,10 @@ describe('StorageService', () => {
   });
 
   it('should throw UnprocessableEntityException if virus scanner detects malware', async () => {
-    mockVirusScanner.scan.mockResolvedValue({ isClean: false, virusName: 'EICAR-Test-Signature' });
+    mockVirusScanner.scan.mockResolvedValue({
+      isClean: false,
+      virusName: 'EICAR-Test-Signature',
+    });
 
     const pdfBuffer = Buffer.from('%PDF-1.4 sample content');
     const mockFile: Express.Multer.File = {
@@ -94,7 +104,9 @@ describe('StorageService', () => {
       path: '',
     };
 
-    await expect(service.uploadFile(mockFile)).rejects.toThrow(UnprocessableEntityException);
+    await expect(service.uploadFile(mockFile)).rejects.toThrow(
+      UnprocessableEntityException,
+    );
   });
 
   it('should throw BadRequestException if magic bytes mismatch declared MIME type', async () => {
@@ -112,7 +124,9 @@ describe('StorageService', () => {
       path: '',
     };
 
-    await expect(service.uploadFile(mockFile)).rejects.toThrow(BadRequestException);
+    await expect(service.uploadFile(mockFile)).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   describe('Storage Providers & Scanners', () => {
@@ -136,7 +150,11 @@ describe('StorageService', () => {
 
     it('ClamAVScanner should detect EICAR test signature', async () => {
       const scanner = new ClamAVScanner(mockConfigService as any);
-      const res = await scanner.scan(Buffer.from('X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*'));
+      const res = await scanner.scan(
+        Buffer.from(
+          'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*',
+        ),
+      );
       expect(res.isClean).toBe(false);
     });
   });

@@ -58,9 +58,7 @@ export class CreateCompanyHandler implements ICommandHandler<CreateCompanyComman
 export class UpdateCompanyHandler implements ICommandHandler<UpdateCompanyCommand> {
   readonly commandName = 'UpdateCompany';
 
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async execute(command: UpdateCompanyCommand): Promise<any> {
     return await this.prisma.company.update({

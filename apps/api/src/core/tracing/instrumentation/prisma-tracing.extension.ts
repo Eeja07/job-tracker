@@ -13,7 +13,11 @@ export class PrismaTracingExtension {
   /**
    * Wrap a Prisma operation in a prisma.query span.
    */
-  async traceQuery<T>(model: string, action: string, queryFn: () => Promise<T>): Promise<T> {
+  async traceQuery<T>(
+    model: string,
+    action: string,
+    queryFn: () => Promise<T>,
+  ): Promise<T> {
     return this.tracingService.trace(
       SPAN_NAMES.PRISMA_QUERY,
       async (span) => {

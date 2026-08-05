@@ -36,11 +36,16 @@ export class AuditLogRepository extends BaseRepository<Prisma.AuditLogDelegate> 
     super(prisma);
   }
 
-  protected getDelegate(tx?: Prisma.TransactionClient): Prisma.AuditLogDelegate {
+  protected getDelegate(
+    tx?: Prisma.TransactionClient,
+  ): Prisma.AuditLogDelegate {
     return tx ? tx.auditLog : this.prisma.auditLog;
   }
 
-  async create(data: CreateAuditLogData, tx?: Prisma.TransactionClient): Promise<AuditLog> {
+  async create(
+    data: CreateAuditLogData,
+    tx?: Prisma.TransactionClient,
+  ): Promise<AuditLog> {
     return this.getDelegate(tx).create({
       data: {
         userId: data.userId || null,
@@ -77,7 +82,10 @@ export class AuditLogRepository extends BaseRepository<Prisma.AuditLogDelegate> 
     return { logs, total };
   }
 
-  async findRecent(limit = 10, tx?: Prisma.TransactionClient): Promise<AuditLog[]> {
+  async findRecent(
+    limit = 10,
+    tx?: Prisma.TransactionClient,
+  ): Promise<AuditLog[]> {
     return this.getDelegate(tx).findMany({
       take: limit,
       orderBy: { createdAt: 'desc' },

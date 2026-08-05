@@ -1,5 +1,8 @@
 import { ApiVersion } from './api-version.decorator';
-import { DeprecatedEndpoint, DEPRECATED_ENDPOINT_KEY } from './deprecated-endpoint.decorator';
+import {
+  DeprecatedEndpoint,
+  DEPRECATED_ENDPOINT_KEY,
+} from './deprecated-endpoint.decorator';
 import { Reflector } from '@nestjs/core';
 
 describe('Versioning Decorators', () => {

@@ -46,7 +46,10 @@ describe('CompanyService', () => {
 
   describe('create', () => {
     it('should create and return a new company', async () => {
-      const dto: CreateCompanyDto = { name: 'Tokopedia', industry: 'E-commerce' };
+      const dto: CreateCompanyDto = {
+        name: 'Tokopedia',
+        industry: 'E-commerce',
+      };
 
       repository.findByName.mockResolvedValue(null);
       repository.create.mockResolvedValue(mockCompany);
@@ -88,7 +91,9 @@ describe('CompanyService', () => {
 
       const result = await service.remove('company-uuid-1');
 
-      expect(repository.countAssociatedApplications).toHaveBeenCalledWith('company-uuid-1');
+      expect(repository.countAssociatedApplications).toHaveBeenCalledWith(
+        'company-uuid-1',
+      );
       expect(repository.delete).toHaveBeenCalledWith('company-uuid-1');
       expect(result).toEqual(mockCompany);
     });
@@ -97,7 +102,9 @@ describe('CompanyService', () => {
       repository.findById.mockResolvedValue(mockCompany);
       repository.countAssociatedApplications.mockResolvedValue(3);
 
-      await expect(service.remove('company-uuid-1')).rejects.toThrow(ConflictException);
+      await expect(service.remove('company-uuid-1')).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 });

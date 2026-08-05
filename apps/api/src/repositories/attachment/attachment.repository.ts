@@ -29,11 +29,16 @@ export class AttachmentRepository extends BaseRepository<Prisma.AttachmentDelega
     super(prisma);
   }
 
-  protected getDelegate(tx?: Prisma.TransactionClient): Prisma.AttachmentDelegate {
+  protected getDelegate(
+    tx?: Prisma.TransactionClient,
+  ): Prisma.AttachmentDelegate {
     return tx ? tx.attachment : this.prisma.attachment;
   }
 
-  async findById(id: string, tx?: Prisma.TransactionClient): Promise<Attachment | null> {
+  async findById(
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Attachment | null> {
     return this.getDelegate(tx).findUnique({
       where: { id },
     });
@@ -49,7 +54,10 @@ export class AttachmentRepository extends BaseRepository<Prisma.AttachmentDelega
     });
   }
 
-  async create(data: CreateAttachmentData, tx?: Prisma.TransactionClient): Promise<Attachment> {
+  async create(
+    data: CreateAttachmentData,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Attachment> {
     return this.getDelegate(tx).create({
       data,
     });

@@ -29,10 +29,21 @@ describe('RedisThrottlerStorage', () => {
     redisService.expire.mockResolvedValue(true);
     redisService.ttl.mockResolvedValue(60);
 
-    const record = await storage.increment('127.0.0.1', 60000, 100, 0, 'default');
+    const record = await storage.increment(
+      '127.0.0.1',
+      60000,
+      100,
+      0,
+      'default',
+    );
 
-    expect(redisService.increment).toHaveBeenCalledWith('throttler:default:127.0.0.1');
-    expect(redisService.expire).toHaveBeenCalledWith('throttler:default:127.0.0.1', 60);
+    expect(redisService.increment).toHaveBeenCalledWith(
+      'throttler:default:127.0.0.1',
+    );
+    expect(redisService.expire).toHaveBeenCalledWith(
+      'throttler:default:127.0.0.1',
+      60,
+    );
     expect(record.totalHits).toBe(1);
     expect(record.isBlocked).toBe(false);
   });
@@ -41,7 +52,13 @@ describe('RedisThrottlerStorage', () => {
     redisService.increment.mockResolvedValue(101);
     redisService.ttl.mockResolvedValue(45);
 
-    const record = await storage.increment('127.0.0.1', 60000, 100, 0, 'default');
+    const record = await storage.increment(
+      '127.0.0.1',
+      60000,
+      100,
+      0,
+      'default',
+    );
 
     expect(record.totalHits).toBe(101);
     expect(record.isBlocked).toBe(true);
@@ -51,7 +68,13 @@ describe('RedisThrottlerStorage', () => {
   it('should degrade gracefully on Redis exception', async () => {
     redisService.increment.mockRejectedValue(new Error('Redis cluster down'));
 
-    const record = await storage.increment('127.0.0.1', 60000, 100, 0, 'default');
+    const record = await storage.increment(
+      '127.0.0.1',
+      60000,
+      100,
+      0,
+      'default',
+    );
 
     expect(record.totalHits).toBe(1);
     expect(record.isBlocked).toBe(false);

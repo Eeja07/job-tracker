@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleDestroy, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue, Job, JobsOptions } from 'bullmq';
 import { QUEUE_NAMES, QueueName } from '../constants/jobs.constants';
@@ -32,10 +37,13 @@ export class QueueService implements OnModuleDestroy {
 
   constructor(
     @InjectQueue(QUEUE_NAMES.EMAIL) private readonly emailQueue: Queue,
-    @InjectQueue(QUEUE_NAMES.ATTACHMENT) private readonly attachmentQueue: Queue,
-    @InjectQueue(QUEUE_NAMES.NOTIFICATION) private readonly notificationQueue: Queue,
+    @InjectQueue(QUEUE_NAMES.ATTACHMENT)
+    private readonly attachmentQueue: Queue,
+    @InjectQueue(QUEUE_NAMES.NOTIFICATION)
+    private readonly notificationQueue: Queue,
     @InjectQueue(QUEUE_NAMES.SYSTEM) private readonly systemQueue: Queue,
-    @InjectQueue(QUEUE_NAMES.DEAD_LETTER) private readonly deadLetterQueue: Queue,
+    @InjectQueue(QUEUE_NAMES.DEAD_LETTER)
+    private readonly deadLetterQueue: Queue,
   ) {
     this.queues = new Map<string, Queue>([
       [QUEUE_NAMES.EMAIL, this.emailQueue],
@@ -75,7 +83,9 @@ export class QueueService implements OnModuleDestroy {
     const queue = this.getQueue(queueName);
     const mergedOpts = { ...DEFAULT_JOB_OPTIONS, ...opts };
     const job = await queue.add(jobName, data, mergedOpts);
-    this.logger.log(`Enqueued job [${jobName}] (ID: ${job.id}) in queue [${queueName}]`);
+    this.logger.log(
+      `Enqueued job [${jobName}] (ID: ${job.id}) in queue [${queueName}]`,
+    );
     return job;
   }
 
@@ -111,13 +121,18 @@ export class QueueService implements OnModuleDestroy {
     }
   }
 
-  async getJob<T = any>(queueName: string, jobId: string): Promise<Job<T> | null> {
+  async getJob<T = any>(
+    queueName: string,
+    jobId: string,
+  ): Promise<Job<T> | null> {
     const queue = this.getQueue(queueName);
     const job = await queue.getJob(jobId);
     return (job as Job<T>) || null;
   }
 
-  async moveToDeadLetterQueue(payload: DeadLetterPayload): Promise<Job<DeadLetterPayload>> {
+  async moveToDeadLetterQueue(
+    payload: DeadLetterPayload,
+  ): Promise<Job<DeadLetterPayload>> {
     this.logger.warn(
       `Moving failed job [${payload.jobName}] from queue [${payload.originalQueue}] to Dead Letter Queue`,
     );
@@ -130,10 +145,22 @@ export class QueueService implements OnModuleDestroy {
   }
 
   async getQueueMetrics(queueName: string): Promise<QueueJobCounts> {
-    const defaultCounts = { waiting: 0, active: 0, delayed: 0, completed: 0, failed: 0 };
+    const defaultCounts = {
+      waiting: 0,
+      active: 0,
+      delayed: 0,
+      completed: 0,
+      failed: 0,
+    };
     try {
       const queue = this.getQueue(queueName);
-      const fetchPromise = queue.getJobCounts('waiting', 'active', 'delayed', 'completed', 'failed');
+      const fetchPromise = queue.getJobCounts(
+        'waiting',
+        'active',
+        'delayed',
+        'completed',
+        'failed',
+      );
       const timeoutPromise = new Promise<Record<string, number>>((resolve) =>
         setTimeout(() => resolve(defaultCounts), 500),
       );

@@ -5,11 +5,16 @@ export interface RequestWithApiVersion extends Request {
   apiVersion?: string;
 }
 
-export function applyVersionMiddleware(req: RequestWithApiVersion, res: Response, next: NextFunction): void {
+export function applyVersionMiddleware(
+  req: RequestWithApiVersion,
+  res: Response,
+  next: NextFunction,
+): void {
   let extractedVersion: string | null = null;
 
   // 1. Extract from Header (X-API-Version or Api-Version)
-  const headerVer = (req.headers['x-api-version'] || req.headers['api-version']) as string;
+  const headerVer = (req.headers['x-api-version'] ||
+    req.headers['api-version']) as string;
   if (headerVer) {
     extractedVersion = headerVer.replace(/^v/i, '').trim();
   }
@@ -18,7 +23,9 @@ export function applyVersionMiddleware(req: RequestWithApiVersion, res: Response
   if (!extractedVersion) {
     const acceptHeader = req.headers['accept'] as string;
     if (acceptHeader) {
-      const matchVersionParam = acceptHeader.match(/version=([0-9]+)/i) || acceptHeader.match(/\.v([0-9]+)\+/i);
+      const matchVersionParam =
+        acceptHeader.match(/version=([0-9]+)/i) ||
+        acceptHeader.match(/\.v([0-9]+)\+/i);
       if (matchVersionParam) {
         extractedVersion = matchVersionParam[1];
       }
@@ -27,7 +34,9 @@ export function applyVersionMiddleware(req: RequestWithApiVersion, res: Response
 
   // 3. Extract from URI Path if explicit (e.g. /api/v1/..., /api/v2/...)
   if (!extractedVersion) {
-    const uriMatch = req.url?.match(/\/v([0-9]+)(\/|$)/i) || req.originalUrl?.match(/\/v([0-9]+)(\/|$)/i);
+    const uriMatch =
+      req.url?.match(/\/v([0-9]+)(\/|$)/i) ||
+      req.originalUrl?.match(/\/v([0-9]+)(\/|$)/i);
     if (uriMatch) {
       extractedVersion = uriMatch[1];
     }

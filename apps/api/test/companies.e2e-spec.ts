@@ -62,7 +62,9 @@ describe('Companies Module (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
-    const list = Array.isArray(response.body) ? response.body : response.body.data;
+    const list = Array.isArray(response.body)
+      ? response.body
+      : response.body.data;
     expect(Array.isArray(list)).toBe(true);
     expect(list.length).toBeGreaterThan(0);
   });
@@ -73,7 +75,9 @@ describe('Companies Module (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
-    const list = Array.isArray(response.body) ? response.body : response.body.data;
+    const list = Array.isArray(response.body)
+      ? response.body
+      : response.body.data;
     expect(list.length).toBe(1);
     expect(list[0].name).toBe('Gojek Tokopedia');
   });

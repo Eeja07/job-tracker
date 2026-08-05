@@ -78,7 +78,12 @@ describe('RedisService', () => {
 
     it('should set key with ttl if provided', async () => {
       await service.set('my-key', 'my-val', 60);
-      expect(mockRedisInstance.set).toHaveBeenCalledWith('my-key', 'my-val', 'EX', 60);
+      expect(mockRedisInstance.set).toHaveBeenCalledWith(
+        'my-key',
+        'my-val',
+        'EX',
+        60,
+      );
     });
 
     it('should set key without ttl if not provided', async () => {
@@ -96,7 +101,13 @@ describe('RedisService', () => {
     it('should delete keys matching pattern in delByPattern using SCAN', async () => {
       mockRedisInstance.scan.mockResolvedValue(['0', ['k1', 'k2']]);
       await service.delByPattern('dashboard:*');
-      expect(mockRedisInstance.scan).toHaveBeenCalledWith('0', 'MATCH', 'dashboard:*', 'COUNT', 100);
+      expect(mockRedisInstance.scan).toHaveBeenCalledWith(
+        '0',
+        'MATCH',
+        'dashboard:*',
+        'COUNT',
+        100,
+      );
       expect(mockRedisInstance.del).toHaveBeenCalledWith('k1', 'k2');
     });
   });
@@ -141,14 +152,30 @@ describe('RedisService', () => {
       const token = await service.acquireLock('lock:job:123', 10);
       expect(typeof token).toBe('string');
       expect(token).not.toBeNull();
-      expect(mockRedisInstance.set).toHaveBeenCalledWith('lock:job:123', expect.any(String), 'EX', 10, 'NX');
+      expect(mockRedisInstance.set).toHaveBeenCalledWith(
+        'lock:job:123',
+        expect.any(String),
+        'EX',
+        10,
+        'NX',
+      );
     });
 
     it('should acquire lock with custom token', async () => {
       mockRedisInstance.set.mockResolvedValue('OK');
-      const token = await service.acquireLock('lock:job:123', 10, 'my-custom-token');
+      const token = await service.acquireLock(
+        'lock:job:123',
+        10,
+        'my-custom-token',
+      );
       expect(token).toBe('my-custom-token');
-      expect(mockRedisInstance.set).toHaveBeenCalledWith('lock:job:123', 'my-custom-token', 'EX', 10, 'NX');
+      expect(mockRedisInstance.set).toHaveBeenCalledWith(
+        'lock:job:123',
+        'my-custom-token',
+        'EX',
+        10,
+        'NX',
+      );
     });
 
     it('should return null if lock is already held', async () => {
@@ -209,7 +236,10 @@ describe('RedisService', () => {
       await service.subscribe('channel1', handler1);
       await service.subscribe('channel1', handler2);
 
-      expect(mockSubClient.on).toHaveBeenCalledWith('message', expect.any(Function));
+      expect(mockSubClient.on).toHaveBeenCalledWith(
+        'message',
+        expect.any(Function),
+      );
       expect(mockSubClient.subscribe).toHaveBeenCalledTimes(1);
       expect(mockSubClient.subscribe).toHaveBeenCalledWith('channel1');
 
@@ -245,4 +275,3 @@ describe('RedisService', () => {
     });
   });
 });
-

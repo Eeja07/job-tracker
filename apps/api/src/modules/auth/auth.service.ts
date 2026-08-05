@@ -33,7 +33,10 @@ export interface AuthResponse extends AuthTokens {
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   private readonly inMemoryLocks = new Map<string, boolean>();
-  private readonly recentTokensCache = new Map<string, { tokens: AuthTokens; expiresAt: number }>();
+  private readonly recentTokensCache = new Map<
+    string,
+    { tokens: AuthTokens; expiresAt: number }
+  >();
 
   constructor(
     private readonly userRepository: UserRepository,
@@ -65,7 +68,10 @@ export class AuthService {
 
     const session = await this.refreshSessionRepository.findByUserId(userId);
     if (session && this.redisService) {
-      const ttl = Math.max(1, Math.floor((session.expiresAt.getTime() - Date.now()) / 1000));
+      const ttl = Math.max(
+        1,
+        Math.floor((session.expiresAt.getTime() - Date.now()) / 1000),
+      );
       await this.redisService.set(cacheKey, JSON.stringify(session), ttl);
     }
 
@@ -140,7 +146,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const isPasswordValid = await argon2.verify(user.passwordHash, dto.password);
+    const isPasswordValid = await argon2.verify(
+      user.passwordHash,
+      dto.password,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid email or password');
     }
@@ -160,7 +169,8 @@ export class AuthService {
   }
 
   async refreshTokens(dto: RefreshTokenDto): Promise<AuthTokens> {
-    const refreshSecret = this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
+    const refreshSecret =
+      this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
     let payload: { sub: string; email?: string };
 
     try {
@@ -211,13 +221,18 @@ export class AuthService {
       }
 
       if (!lockToken) {
-        throw new UnauthorizedException('Refresh lock timeout: concurrent request in progress');
+        throw new UnauthorizedException(
+          'Refresh lock timeout: concurrent request in progress',
+        );
       }
     } else {
       let attempts = 0;
       while (this.inMemoryLocks.get(userId) && attempts < 40) {
         const memoryRecentWhileWaiting = this.recentTokensCache.get(userId);
-        if (memoryRecentWhileWaiting && memoryRecentWhileWaiting.expiresAt > Date.now()) {
+        if (
+          memoryRecentWhileWaiting &&
+          memoryRecentWhileWaiting.expiresAt > Date.now()
+        ) {
           return memoryRecentWhileWaiting.tokens;
         }
         await new Promise((resolve) => setTimeout(resolve, 50));
@@ -225,7 +240,9 @@ export class AuthService {
       }
 
       if (this.inMemoryLocks.get(userId)) {
-        throw new UnauthorizedException('Refresh lock timeout: concurrent request in progress');
+        throw new UnauthorizedException(
+          'Refresh lock timeout: concurrent request in progress',
+        );
       }
       this.inMemoryLocks.set(userId, true);
     }
@@ -236,7 +253,10 @@ export class AuthService {
         throw new UnauthorizedException('Invalid or expired refresh token');
       }
 
-      const isTokenValid = await argon2.verify(session.tokenHash, dto.refreshToken);
+      const isTokenValid = await argon2.verify(
+        session.tokenHash,
+        dto.refreshToken,
+      );
       if (!isTokenValid) {
         if (this.redisService) {
           const recent = await this.redisService.get(recentKey);
@@ -266,7 +286,10 @@ export class AuthService {
       if (this.redisService) {
         await this.redisService.set(recentKey, JSON.stringify(tokens), 10);
       } else {
-        this.recentTokensCache.set(userId, { tokens, expiresAt: Date.now() + 10000 });
+        this.recentTokensCache.set(userId, {
+          tokens,
+          expiresAt: Date.now() + 10000,
+        });
       }
 
       return tokens;
@@ -300,9 +323,14 @@ export class AuthService {
     return sanitizedUser;
   }
 
-  private async generateTokens(userId: string, email: string): Promise<AuthTokens> {
-    const accessSecret = this.configService.getOrThrow<string>('JWT_ACCESS_SECRET');
-    const refreshSecret = this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
+  private async generateTokens(
+    userId: string,
+    email: string,
+  ): Promise<AuthTokens> {
+    const accessSecret =
+      this.configService.getOrThrow<string>('JWT_ACCESS_SECRET');
+    const refreshSecret =
+      this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
@@ -318,7 +346,10 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private async updateRefreshTokenHash(userId: string, refreshToken: string): Promise<void> {
+  private async updateRefreshTokenHash(
+    userId: string,
+    refreshToken: string,
+  ): Promise<void> {
     const tokenHash = await argon2.hash(refreshToken, {
       type: argon2.argon2id,
       memoryCost: 65536,
@@ -337,7 +368,11 @@ export class AuthService {
 
     if (this.redisService) {
       const ttlSeconds = 7 * 24 * 60 * 60;
-      await this.redisService.set(`auth:refresh_session:${userId}`, JSON.stringify(session), ttlSeconds);
+      await this.redisService.set(
+        `auth:refresh_session:${userId}`,
+        JSON.stringify(session),
+        ttlSeconds,
+      );
     }
   }
 }

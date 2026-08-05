@@ -81,8 +81,13 @@ describe('FeatureFlagsController', () => {
   });
 
   it('setRollout should invoke service.setRollout', async () => {
-    mockService.setRollout.mockResolvedValue({ ...mockFlag, rolloutPercentage: 50 });
-    const res = await controller.setRollout('test_flag', { rolloutPercentage: 50 });
+    mockService.setRollout.mockResolvedValue({
+      ...mockFlag,
+      rolloutPercentage: 50,
+    });
+    const res = await controller.setRollout('test_flag', {
+      rolloutPercentage: 50,
+    });
     expect(service.setRollout).toHaveBeenCalledWith('test_flag', 50);
     expect(res.rolloutPercentage).toBe(50);
   });

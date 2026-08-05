@@ -1,4 +1,9 @@
-import { Injectable, Logger, Optional, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  Optional,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { RoleRepository } from '../../../repositories/role/role.repository';
 import { PermissionRepository } from '../../../repositories/permission/permission.repository';
@@ -41,18 +46,23 @@ export class RbacService {
         ]);
         this.logger.debug(`RBAC cache invalidated for user ${userId}`);
       } catch (err: any) {
-        this.logger.warn(`RBAC cache invalidation error for user ${userId}: ${err.message}`);
+        this.logger.warn(
+          `RBAC cache invalidation error for user ${userId}: ${err.message}`,
+        );
       }
     }
   }
 
   // ─── Role Management ──────────────────────────────────────────────────────
 
-  async assignRole(userId: string, roleName: string, tx?: Prisma.TransactionClient): Promise<void> {
-    let role = await this.roleRepository.findByName(roleName, tx);
+  async assignRole(
+    userId: string,
+    roleName: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
+    const role = await this.roleRepository.findByName(roleName, tx);
     if (!role) {
-      this.logger.warn(`Role '${roleName}' not found. Auto-creating default role...`);
-      role = await this.roleRepository.create({ name: roleName, description: `${roleName} default role` }, tx);
+      throw new Error(`Role '${roleName}' not found`);
     }
 
     // Double Invalidation Pattern (pre & post DB write to eliminate race condition window)
@@ -63,7 +73,11 @@ export class RbacService {
     this.logger.log(`Role '${roleName}' assigned to user ${userId}`);
   }
 
-  async removeRole(userId: string, roleName: string, tx?: Prisma.TransactionClient): Promise<void> {
+  async removeRole(
+    userId: string,
+    roleName: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
     const role = await this.roleRepository.findByName(roleName, tx);
     if (!role) {
       throw new NotFoundException(`Role '${roleName}' not found`);
@@ -97,7 +111,9 @@ export class RbacService {
           }
         }
       } catch (err: any) {
-        this.logger.warn(`RBAC Redis roles cache read failed: ${err.message}. Falling back to DB.`);
+        this.logger.warn(
+          `RBAC Redis roles cache read failed: ${err.message}. Falling back to DB.`,
+        );
       }
     }
 
@@ -128,7 +144,9 @@ export class RbacService {
     // 1. Try Redis cache
     if (this.redisService) {
       try {
-        const cached = await this.redisService.get(this.permissionsCacheKey(userId));
+        const cached = await this.redisService.get(
+          this.permissionsCacheKey(userId),
+        );
         if (cached) {
           try {
             const parsed = JSON.parse(cached) as string[];
@@ -139,14 +157,17 @@ export class RbacService {
           }
         }
       } catch (err: any) {
-        this.logger.warn(`RBAC Redis permissions cache read failed: ${err.message}. Falling back to DB.`);
+        this.logger.warn(
+          `RBAC Redis permissions cache read failed: ${err.message}. Falling back to DB.`,
+        );
       }
     }
 
     this.metricsService?.rbacCacheMissesTotal.inc({ userId });
 
     // 2. Fetch from DB
-    const permissions = await this.rolePermissionRepository.getPermissionNamesForUser(userId);
+    const permissions =
+      await this.rolePermissionRepository.getPermissionNamesForUser(userId);
 
     // 3. Write to cache
     if (this.redisService) {
@@ -157,7 +178,9 @@ export class RbacService {
           CACHE_TTL,
         );
       } catch (err: any) {
-        this.logger.warn(`RBAC Redis permissions cache write failed: ${err.message}`);
+        this.logger.warn(
+          `RBAC Redis permissions cache write failed: ${err.message}`,
+        );
       }
     }
 
@@ -169,12 +192,18 @@ export class RbacService {
     return permissions.includes(permission);
   }
 
-  async hasAnyPermission(userId: string, permissions: string[]): Promise<boolean> {
+  async hasAnyPermission(
+    userId: string,
+    permissions: string[],
+  ): Promise<boolean> {
     const userPermissions = await this.getPermissions(userId);
     return permissions.some((p) => userPermissions.includes(p));
   }
 
-  async hasAllPermissions(userId: string, permissions: string[]): Promise<boolean> {
+  async hasAllPermissions(
+    userId: string,
+    permissions: string[],
+  ): Promise<boolean> {
     const userPermissions = await this.getPermissions(userId);
     return permissions.every((p) => userPermissions.includes(p));
   }

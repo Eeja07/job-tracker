@@ -7,7 +7,10 @@ describe('FeatureFlag Decorator', () => {
   }
 
   it('should set FEATURE_FLAG_KEY metadata on decorated method', () => {
-    const metadata = Reflect.getMetadata(FEATURE_FLAG_KEY, TestClass.prototype.testMethod);
+    const metadata = Reflect.getMetadata(
+      FEATURE_FLAG_KEY,
+      TestClass.prototype.testMethod,
+    );
     expect(metadata).toBe('TEST_FEATURE');
   });
 });

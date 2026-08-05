@@ -44,7 +44,9 @@ describe('PermissionsGuard', () => {
 
     const res = await guard.canActivate(context);
     expect(res).toBe(true);
-    expect(rbacService.hasAnyPermission).toHaveBeenCalledWith('user-123', ['company.create']);
+    expect(rbacService.hasAnyPermission).toHaveBeenCalledWith('user-123', [
+      'company.create',
+    ]);
   });
 
   it('should throw ForbiddenException if user lacks required permission', async () => {
@@ -52,7 +54,9 @@ describe('PermissionsGuard', () => {
     rbacService.hasAnyPermission.mockResolvedValue(false);
     const context = createMockContext({ sub: 'user-123' });
 
-    await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('should throw InternalServerErrorException if RbacService is unavailable (fail-closed)', async () => {

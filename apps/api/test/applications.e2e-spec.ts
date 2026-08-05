@@ -30,8 +30,15 @@ describe('Applications Module (e2e)', () => {
       });
     tokenUserA = resA.body.accessToken;
 
-    const permissions = ['company.create', 'company.read', 'company.update', 'company.delete'];
-    const adminRole = await prisma.role.findUniqueOrThrow({ where: { name: 'ADMIN' } });
+    const permissions = [
+      'company.create',
+      'company.read',
+      'company.update',
+      'company.delete',
+    ];
+    const adminRole = await prisma.role.findUniqueOrThrow({
+      where: { name: 'ADMIN' },
+    });
 
     for (const permName of permissions) {
       const perm = await prisma.permission.upsert({
@@ -40,7 +47,9 @@ describe('Applications Module (e2e)', () => {
         create: { name: permName, description: permName },
       });
       await prisma.rolePermission.upsert({
-        where: { roleId_permissionId: { roleId: adminRole.id, permissionId: perm.id } },
+        where: {
+          roleId_permissionId: { roleId: adminRole.id, permissionId: perm.id },
+        },
         update: {},
         create: { roleId: adminRole.id, permissionId: perm.id },
       });
@@ -145,7 +154,9 @@ describe('Applications Module (e2e)', () => {
       .expect(400);
 
     expect(response.body.statusCode).toBe(400);
-    expect(response.body.message).toContain('Invalid application status transition');
+    expect(response.body.message).toContain(
+      'Invalid application status transition',
+    );
   });
 
   it('DELETE /api/v1/companies/:id should fail with 409 Conflict when applications reference it', async () => {

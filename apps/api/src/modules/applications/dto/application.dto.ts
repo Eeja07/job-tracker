@@ -12,78 +12,129 @@ import {
   IsDateString,
   IsArray,
 } from 'class-validator';
-import { ApplicationStatus, WorkMode, ApplicationSource, Currency } from '@prisma/client';
+import {
+  ApplicationStatus,
+  WorkMode,
+  ApplicationSource,
+  Currency,
+} from '@prisma/client';
 import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
 
 export class CreateApplicationDto {
-  @ApiPropertyOptional({ description: 'Associated Company ID', example: 'company-uuid-1' })
+  @ApiPropertyOptional({
+    description: 'Associated Company ID',
+    example: 'company-uuid-1',
+  })
   @IsOptional()
   @IsUUID()
   companyId?: string;
 
-  @ApiProperty({ description: 'Job position title', example: 'Senior Backend Engineer' })
+  @ApiProperty({
+    description: 'Job position title',
+    example: 'Senior Backend Engineer',
+  })
   @IsString()
   @IsNotEmpty({ message: 'Job title is required' })
   jobTitle!: string;
 
-  @ApiPropertyOptional({ description: 'Internal application code', example: 'APP-2026-001' })
+  @ApiPropertyOptional({
+    description: 'Internal application code',
+    example: 'APP-2026-001',
+  })
   @IsOptional()
   @IsString()
   applicationCode?: string;
 
-  @ApiPropertyOptional({ description: 'Application status', enum: ApplicationStatus, default: ApplicationStatus.SAVED })
+  @ApiPropertyOptional({
+    description: 'Application status',
+    enum: ApplicationStatus,
+    default: ApplicationStatus.SAVED,
+  })
   @IsOptional()
   @IsEnum(ApplicationStatus)
   status?: ApplicationStatus;
 
-  @ApiPropertyOptional({ description: 'Work mode arrangement', enum: WorkMode, default: WorkMode.REMOTE })
+  @ApiPropertyOptional({
+    description: 'Work mode arrangement',
+    enum: WorkMode,
+    default: WorkMode.REMOTE,
+  })
   @IsOptional()
   @IsEnum(WorkMode)
   workMode?: WorkMode;
 
-  @ApiPropertyOptional({ description: 'Application source channel', enum: ApplicationSource, default: ApplicationSource.LINKEDIN })
+  @ApiPropertyOptional({
+    description: 'Application source channel',
+    enum: ApplicationSource,
+    default: ApplicationSource.LINKEDIN,
+  })
   @IsOptional()
   @IsEnum(ApplicationSource)
   source?: ApplicationSource;
 
-  @ApiPropertyOptional({ description: 'Minimum annual/monthly salary', example: 20000000 })
+  @ApiPropertyOptional({
+    description: 'Minimum annual/monthly salary',
+    example: 20000000,
+  })
   @IsOptional()
   @IsInt()
   @Min(0)
   salaryMin?: number;
 
-  @ApiPropertyOptional({ description: 'Maximum annual/monthly salary', example: 30000000 })
+  @ApiPropertyOptional({
+    description: 'Maximum annual/monthly salary',
+    example: 30000000,
+  })
   @IsOptional()
   @IsInt()
   @Min(0)
   salaryMax?: number;
 
-  @ApiPropertyOptional({ description: 'Salary currency code', enum: Currency, default: Currency.IDR })
+  @ApiPropertyOptional({
+    description: 'Salary currency code',
+    enum: Currency,
+    default: Currency.IDR,
+  })
   @IsOptional()
   @IsEnum(Currency)
   currency?: Currency;
 
-  @ApiPropertyOptional({ description: 'Job listing URL', example: 'https://linkedin.com/jobs/1234' })
+  @ApiPropertyOptional({
+    description: 'Job listing URL',
+    example: 'https://linkedin.com/jobs/1234',
+  })
   @IsOptional()
   @IsUrl({}, { message: 'Source URL must be a valid URL' })
   sourceUrl?: string;
 
-  @ApiPropertyOptional({ description: 'Job location', example: 'Jakarta, Indonesia' })
+  @ApiPropertyOptional({
+    description: 'Job location',
+    example: 'Jakarta, Indonesia',
+  })
   @IsOptional()
   @IsString()
   location?: string;
 
-  @ApiPropertyOptional({ description: 'Application deadline timestamp', example: '2026-08-30T00:00:00.000Z' })
+  @ApiPropertyOptional({
+    description: 'Application deadline timestamp',
+    example: '2026-08-30T00:00:00.000Z',
+  })
   @IsOptional()
   @IsDateString()
   deadline?: string;
 
-  @ApiPropertyOptional({ description: 'Date applied timestamp', example: '2026-08-01T00:00:00.000Z' })
+  @ApiPropertyOptional({
+    description: 'Date applied timestamp',
+    example: '2026-08-01T00:00:00.000Z',
+  })
   @IsOptional()
   @IsDateString()
   appliedAt?: string;
 
-  @ApiPropertyOptional({ description: 'Company Name if companyId is unknown', example: 'Google' })
+  @ApiPropertyOptional({
+    description: 'Company Name if companyId is unknown',
+    example: 'Google',
+  })
   @IsOptional()
   @IsString()
   companyName?: string;
@@ -148,34 +199,53 @@ export class CreateApplicationDto {
 export class UpdateApplicationDto extends PartialType(CreateApplicationDto) {}
 
 export class UpdateApplicationStatusDto {
-  @ApiProperty({ description: 'New pipeline status', enum: ApplicationStatus, example: ApplicationStatus.INTERVIEWING })
+  @ApiProperty({
+    description: 'New pipeline status',
+    enum: ApplicationStatus,
+    example: ApplicationStatus.INTERVIEWING,
+  })
   @IsEnum(ApplicationStatus)
   @IsNotEmpty()
   status!: ApplicationStatus;
 }
 
 export class ApplicationQueryDto extends PaginationQueryDto {
-  @ApiPropertyOptional({ description: 'Filter by Application Status', enum: ApplicationStatus })
+  @ApiPropertyOptional({
+    description: 'Filter by Application Status',
+    enum: ApplicationStatus,
+  })
   @IsOptional()
   @IsEnum(ApplicationStatus)
   status?: ApplicationStatus;
 
-  @ApiPropertyOptional({ description: 'Filter by Company ID', example: 'company-uuid-1' })
+  @ApiPropertyOptional({
+    description: 'Filter by Company ID',
+    example: 'company-uuid-1',
+  })
   @IsOptional()
   @IsUUID()
   companyId?: string;
 
-  @ApiPropertyOptional({ description: 'Filter by Application Source', enum: ApplicationSource })
+  @ApiPropertyOptional({
+    description: 'Filter by Application Source',
+    enum: ApplicationSource,
+  })
   @IsOptional()
   @IsEnum(ApplicationSource)
   source?: ApplicationSource;
 
-  @ApiPropertyOptional({ description: 'Filter by Deadline before timestamp', example: '2026-08-31T23:59:59.000Z' })
+  @ApiPropertyOptional({
+    description: 'Filter by Deadline before timestamp',
+    example: '2026-08-31T23:59:59.000Z',
+  })
   @IsOptional()
   @IsDateString()
   deadlineBefore?: string;
 
-  @ApiPropertyOptional({ description: 'Filter by Deadline after timestamp', example: '2026-08-01T00:00:00.000Z' })
+  @ApiPropertyOptional({
+    description: 'Filter by Deadline after timestamp',
+    example: '2026-08-01T00:00:00.000Z',
+  })
   @IsOptional()
   @IsDateString()
   deadlineAfter?: string;
@@ -203,7 +273,10 @@ export class ApplicationResponseDto {
   @ApiPropertyOptional({ enum: WorkMode, example: WorkMode.REMOTE })
   workMode?: WorkMode | null;
 
-  @ApiPropertyOptional({ enum: ApplicationSource, example: ApplicationSource.LINKEDIN })
+  @ApiPropertyOptional({
+    enum: ApplicationSource,
+    example: ApplicationSource.LINKEDIN,
+  })
   source?: ApplicationSource | null;
 
   @ApiPropertyOptional({ example: 20000000 })

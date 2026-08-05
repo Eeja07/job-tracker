@@ -16,10 +16,7 @@ describe('RoleRepository', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        RoleRepository,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [RoleRepository, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     repository = module.get<RoleRepository>(RoleRepository);
@@ -31,11 +28,16 @@ describe('RoleRepository', () => {
 
     const result = await repository.findByName('ADMIN');
     expect(result).toEqual(mockRole);
-    expect(prisma.role.findUnique).toHaveBeenCalledWith({ where: { name: 'ADMIN' } });
+    expect(prisma.role.findUnique).toHaveBeenCalledWith({
+      where: { name: 'ADMIN' },
+    });
   });
 
   it('should find all roles', async () => {
-    const mockRoles = [{ id: '1', name: 'ADMIN' }, { id: '2', name: 'USER' }];
+    const mockRoles = [
+      { id: '1', name: 'ADMIN' },
+      { id: '2', name: 'USER' },
+    ];
     prisma.role.findMany.mockResolvedValue(mockRoles);
 
     const result = await repository.findAll();

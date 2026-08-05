@@ -17,7 +17,11 @@ describe('EventBusService', () => {
 
   beforeEach(async () => {
     const mockPublisher = {
-      publish: jest.fn().mockImplementation((input) => Promise.resolve({ ...input, eventId: 'uuid-1' })),
+      publish: jest
+        .fn()
+        .mockImplementation((input) =>
+          Promise.resolve({ ...input, eventId: 'uuid-1' }),
+        ),
     };
 
     const mockSubscriberService = {
@@ -25,11 +29,31 @@ describe('EventBusService', () => {
       onModuleInit: jest.fn(),
     };
 
-    const mockAuditSub = { name: 'AuditSubscriber', subscribedEvents: [], handle: jest.fn() };
-    const mockEmailSub = { name: 'EmailSubscriber', subscribedEvents: [], handle: jest.fn() };
-    const mockMetricsSub = { name: 'MetricsSubscriber', subscribedEvents: [], handle: jest.fn() };
-    const mockNotifSub = { name: 'NotificationSubscriber', subscribedEvents: [], handle: jest.fn() };
-    const mockWsSub = { name: 'WebsocketSubscriber', subscribedEvents: [], handle: jest.fn() };
+    const mockAuditSub = {
+      name: 'AuditSubscriber',
+      subscribedEvents: [],
+      handle: jest.fn(),
+    };
+    const mockEmailSub = {
+      name: 'EmailSubscriber',
+      subscribedEvents: [],
+      handle: jest.fn(),
+    };
+    const mockMetricsSub = {
+      name: 'MetricsSubscriber',
+      subscribedEvents: [],
+      handle: jest.fn(),
+    };
+    const mockNotifSub = {
+      name: 'NotificationSubscriber',
+      subscribedEvents: [],
+      handle: jest.fn(),
+    };
+    const mockWsSub = {
+      name: 'WebsocketSubscriber',
+      subscribedEvents: [],
+      handle: jest.fn(),
+    };
 
     const mockRedis = {
       isReady: jest.fn().mockReturnValue(true),

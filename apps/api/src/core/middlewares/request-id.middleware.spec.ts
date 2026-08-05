@@ -22,7 +22,10 @@ describe('RequestIdMiddleware', () => {
     middleware.use(req, res, next);
 
     expect(req.id).toBe('existing-uuid-1234');
-    expect(res.setHeader).toHaveBeenCalledWith('X-Request-Id', 'existing-uuid-1234');
+    expect(res.setHeader).toHaveBeenCalledWith(
+      'X-Request-Id',
+      'existing-uuid-1234',
+    );
     expect(next).toHaveBeenCalled();
   });
 

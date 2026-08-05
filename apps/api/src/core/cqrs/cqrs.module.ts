@@ -9,15 +9,37 @@ import { PrismaModule } from '../../prisma/prisma.module';
 import { EventBusModule } from '../../modules/event-bus/event-bus.module';
 
 // Handlers
-import { CreateApplicationHandler, UpdateApplicationHandler, DeleteApplicationHandler } from './commands/application.commands';
-import { CreateCompanyHandler, UpdateCompanyHandler, DeleteCompanyHandler } from './commands/company.commands';
+import {
+  CreateApplicationHandler,
+  UpdateApplicationHandler,
+  DeleteApplicationHandler,
+} from './commands/application.commands';
+import {
+  CreateCompanyHandler,
+  UpdateCompanyHandler,
+  DeleteCompanyHandler,
+} from './commands/company.commands';
 import { AssignRoleHandler, RemoveRoleHandler } from './commands/role.commands';
-import { UploadAttachmentHandler, DeleteAttachmentHandler } from './commands/attachment.commands';
+import {
+  UploadAttachmentHandler,
+  DeleteAttachmentHandler,
+} from './commands/attachment.commands';
 
 import { GetDashboardHandler } from './queries/dashboard.queries';
-import { GetApplicationHandler, ListApplicationsHandler, SearchApplicationsHandler } from './queries/application.queries';
-import { GetCompanyHandler, ListCompaniesHandler, SearchCompaniesHandler } from './queries/company.queries';
-import { StatisticsHandler, GetRecentJobsHandler } from './queries/statistics.queries';
+import {
+  GetApplicationHandler,
+  ListApplicationsHandler,
+  SearchApplicationsHandler,
+} from './queries/application.queries';
+import {
+  GetCompanyHandler,
+  ListCompaniesHandler,
+  SearchCompaniesHandler,
+} from './queries/company.queries';
+import {
+  StatisticsHandler,
+  GetRecentJobsHandler,
+} from './queries/statistics.queries';
 import { ActivityTimelineHandler } from './queries/activity.queries';
 
 const COMMAND_HANDLERS = [

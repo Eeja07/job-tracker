@@ -1,5 +1,8 @@
 import { Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
-import { EventPublisherService, EventPublishInput } from './event-publisher.service';
+import {
+  EventPublisherService,
+  EventPublishInput,
+} from './event-publisher.service';
 import { EventSubscriberService } from './event-subscriber.service';
 import { BaseEvent } from '../interfaces/base-event.interface';
 import { AuditSubscriber } from '../subscribers/audit.subscriber';
@@ -32,7 +35,9 @@ export class EventBusService implements OnModuleInit {
     this.subscriberService.registerSubscriber(this.notificationSubscriber);
     this.subscriberService.registerSubscriber(this.websocketSubscriber);
 
-    this.logger.log('EventBusService initialized and registered standard subscribers');
+    this.logger.log(
+      'EventBusService initialized and registered standard subscribers',
+    );
   }
 
   /**

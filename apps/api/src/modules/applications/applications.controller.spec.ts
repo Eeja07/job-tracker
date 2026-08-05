@@ -10,6 +10,8 @@ import {
   ApplicationQueryDto,
 } from './dto/application.dto';
 
+import { JobStatusCheckerService } from './job-status-checker.service';
+
 describe('ApplicationsController', () => {
   let controller: ApplicationsController;
   let service: jest.Mocked<ApplicationService>;
@@ -35,9 +37,16 @@ describe('ApplicationsController', () => {
       remove: jest.fn(),
     };
 
+    const mockJobChecker = {
+      checkListingStatus: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ApplicationsController],
-      providers: [{ provide: ApplicationService, useValue: mockService }],
+      providers: [
+        { provide: ApplicationService, useValue: mockService },
+        { provide: JobStatusCheckerService, useValue: mockJobChecker },
+      ],
     }).compile();
 
     controller = module.get<ApplicationsController>(ApplicationsController);
@@ -86,19 +95,33 @@ describe('ApplicationsController', () => {
 
       const result = await controller.update(mockReq as any, 'app-uuid-1', dto);
 
-      expect(service.update).toHaveBeenCalledWith('app-uuid-1', 'user-uuid-1', dto);
+      expect(service.update).toHaveBeenCalledWith(
+        'app-uuid-1',
+        'user-uuid-1',
+        dto,
+      );
       expect(result).toEqual(mockApp);
     });
   });
 
   describe('updateStatus', () => {
     it('should call service.updateStatus with id, userId, and dto', async () => {
-      const dto: UpdateApplicationStatusDto = { status: ApplicationStatus.INTERVIEWING };
+      const dto: UpdateApplicationStatusDto = {
+        status: ApplicationStatus.INTERVIEWING,
+      };
       service.updateStatus.mockResolvedValue(mockApp);
 
-      const result = await controller.updateStatus(mockReq as any, 'app-uuid-1', dto);
+      const result = await controller.updateStatus(
+        mockReq as any,
+        'app-uuid-1',
+        dto,
+      );
 
-      expect(service.updateStatus).toHaveBeenCalledWith('app-uuid-1', 'user-uuid-1', dto);
+      expect(service.updateStatus).toHaveBeenCalledWith(
+        'app-uuid-1',
+        'user-uuid-1',
+        dto,
+      );
       expect(result).toEqual(mockApp);
     });
   });

@@ -1,4 +1,10 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy, Optional } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  OnModuleDestroy,
+  Optional,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { RedisService } from '../../redis/redis.service';
 import { MetricsService } from '../../../core/metrics/metrics.service';
@@ -36,7 +42,9 @@ export class EventSubscriberService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit(): Promise<void> {
     if (!this.redisService) {
-      this.logger.warn('RedisService not provided. EventSubscriberService running without Pub/Sub listener.');
+      this.logger.warn(
+        'RedisService not provided. EventSubscriberService running without Pub/Sub listener.',
+      );
       return;
     }
 
@@ -50,7 +58,13 @@ export class EventSubscriberService implements OnModuleInit, OnModuleDestroy {
 
         for (const channel of channels) {
           try {
-            await client.xgroup('CREATE', channel, CONSUMER_GROUP_NAME, '$', 'MKSTREAM');
+            await client.xgroup(
+              'CREATE',
+              channel,
+              CONSUMER_GROUP_NAME,
+              '$',
+              'MKSTREAM',
+            );
           } catch (err: any) {
             // Ignore BUSYGROUP error if consumer group already exists
           }
@@ -58,13 +72,19 @@ export class EventSubscriberService implements OnModuleInit, OnModuleDestroy {
 
         // Start background Redis Streams consumer loop (non-test environments)
         if (process.env.NODE_ENV !== 'test') {
-          this.startStreamConsumerLoop(CONSUMER_GROUP_NAME, consumerId, channels).catch((err) => {
+          this.startStreamConsumerLoop(
+            CONSUMER_GROUP_NAME,
+            consumerId,
+            channels,
+          ).catch((err) => {
             this.logger.warn(`Stream consumer loop error: ${err.message}`);
           });
         }
       }
     } catch (err: any) {
-      this.logger.warn(`Failed to initialize Redis Streams consumer groups: ${err.message}`);
+      this.logger.warn(
+        `Failed to initialize Redis Streams consumer groups: ${err.message}`,
+      );
     }
 
     for (const channel of channels) {
@@ -82,7 +102,9 @@ export class EventSubscriberService implements OnModuleInit, OnModuleDestroy {
       });
     }
 
-    this.logger.log(`EventSubscriberService listening on channels: ${channels.join(', ')}`);
+    this.logger.log(
+      `EventSubscriberService listening on channels: ${channels.join(', ')}`,
+    );
   }
 
   onModuleDestroy(): void {
@@ -92,7 +114,11 @@ export class EventSubscriberService implements OnModuleInit, OnModuleDestroy {
   /**
    * Background Redis Streams Consumer Group reader loop.
    */
-  private async startStreamConsumerLoop(groupName: string, consumerId: string, channels: string[]): Promise<void> {
+  private async startStreamConsumerLoop(
+    groupName: string,
+    consumerId: string,
+    channels: string[],
+  ): Promise<void> {
     const client = this.redisService?.getClient();
     if (!client || typeof client.xreadgroup !== 'function') return;
 
@@ -149,17 +175,24 @@ export class EventSubscriberService implements OnModuleInit, OnModuleDestroy {
   /**
    * Parses incoming message and routes to matching subscribers asynchronously.
    */
-  async processIncomingMessage(channel: string, messageString: string): Promise<void> {
+  async processIncomingMessage(
+    channel: string,
+    messageString: string,
+  ): Promise<void> {
     let event: BaseEvent;
     try {
       event = JSON.parse(messageString);
     } catch (err: any) {
-      this.logger.error(`Failed to parse event JSON from channel [${channel}]: ${err.message}`);
+      this.logger.error(
+        `Failed to parse event JSON from channel [${channel}]: ${err.message}`,
+      );
       return;
     }
 
     const matchingSubscribers = this.subscribers.filter(
-      (sub) => sub.subscribedEvents.includes('*') || sub.subscribedEvents.includes(event.type),
+      (sub) =>
+        sub.subscribedEvents.includes('*') ||
+        sub.subscribedEvents.includes(event.type),
     );
 
     if (matchingSubscribers.length === 0) {
@@ -168,21 +201,29 @@ export class EventSubscriberService implements OnModuleInit, OnModuleDestroy {
 
     // Process all matching subscribers in parallel, non-blocking
     await Promise.allSettled(
-      matchingSubscribers.map((subscriber) => this.dispatchToSubscriber(subscriber, event)),
+      matchingSubscribers.map((subscriber) =>
+        this.dispatchToSubscriber(subscriber, event),
+      ),
     );
   }
 
   /**
    * Dispatches event to a single subscriber with atomic claim idempotency, retries, and DLQ handling.
    */
-  async dispatchToSubscriber(subscriber: IEventSubscriber, event: BaseEvent): Promise<void> {
+  async dispatchToSubscriber(
+    subscriber: IEventSubscriber,
+    event: BaseEvent,
+  ): Promise<void> {
     const idempotencyKey = `${PROCESSED_PREFIX}${subscriber.name}:${event.eventId}`;
 
     // 1. Atomic Claim Idempotency Check (SET key value NX EX ttl)
     if (this.redisService && this.redisService.isReady()) {
       let isClaimed = false;
       if (typeof this.redisService.acquireLock === 'function') {
-        const token = await this.redisService.acquireLock(idempotencyKey, IDEMPOTENCY_TTL_SECONDS);
+        const token = await this.redisService.acquireLock(
+          idempotencyKey,
+          IDEMPOTENCY_TTL_SECONDS,
+        );
         isClaimed = token !== null;
       } else if (typeof this.redisService.exists === 'function') {
         const exists = await this.redisService.exists(idempotencyKey);
@@ -238,7 +279,9 @@ export class EventSubscriberService implements OnModuleInit, OnModuleDestroy {
           }
 
           // Backoff delay: 50ms * 2^(attempt-1)
-          await new Promise((resolve) => setTimeout(resolve, 50 * Math.pow(2, attempt - 1)));
+          await new Promise((resolve) =>
+            setTimeout(resolve, 50 * Math.pow(2, attempt - 1)),
+          );
         }
 
         await subscriber.handle(event);
@@ -274,7 +317,11 @@ export class EventSubscriberService implements OnModuleInit, OnModuleDestroy {
 
     if (success) {
       if (this.redisService) {
-        await this.redisService.set(idempotencyKey, 'PROCESSED', IDEMPOTENCY_TTL_SECONDS);
+        await this.redisService.set(
+          idempotencyKey,
+          'PROCESSED',
+          IDEMPOTENCY_TTL_SECONDS,
+        );
       }
 
       if (this.metricsService) {
@@ -304,7 +351,11 @@ export class EventSubscriberService implements OnModuleInit, OnModuleDestroy {
   /**
    * Stores failed event payload in Redis Dead Letter Queue.
    */
-  private async sendToDlq(event: BaseEvent, subscriberName: string, errorMessage: string): Promise<void> {
+  private async sendToDlq(
+    event: BaseEvent,
+    subscriberName: string,
+    errorMessage: string,
+  ): Promise<void> {
     const dlqKey = `${DLQ_PREFIX}${event.type}:${event.eventId}`;
     const dlqPayload = {
       event,
@@ -326,4 +377,3 @@ export class EventSubscriberService implements OnModuleInit, OnModuleDestroy {
     }
   }
 }
-

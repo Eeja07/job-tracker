@@ -9,7 +9,9 @@ describe('TraceMiddleware', () => {
 
   beforeEach(() => {
     mockTracingService = {
-      generateTraceId: jest.fn().mockReturnValue('1234567890abcdef1234567890abcdef'),
+      generateTraceId: jest
+        .fn()
+        .mockReturnValue('1234567890abcdef1234567890abcdef'),
       generateSpanId: jest.fn().mockReturnValue('1234567890abcdef'),
       shouldSample: jest.fn().mockReturnValue(true),
     };
@@ -36,9 +38,15 @@ describe('TraceMiddleware', () => {
 
     middleware.use(req, res, next);
 
-    expect(res.setHeader).toHaveBeenCalledWith('X-Trace-Id', expect.any(String));
+    expect(res.setHeader).toHaveBeenCalledWith(
+      'X-Trace-Id',
+      expect.any(String),
+    );
     expect(res.setHeader).toHaveBeenCalledWith('X-Span-Id', expect.any(String));
-    expect(res.setHeader).toHaveBeenCalledWith('X-Request-Id', expect.any(String));
+    expect(res.setHeader).toHaveBeenCalledWith(
+      'X-Request-Id',
+      expect.any(String),
+    );
     expect(next).toHaveBeenCalled();
   });
 });

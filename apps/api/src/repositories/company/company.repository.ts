@@ -31,13 +31,19 @@ export class CompanyRepository extends BaseRepository<Prisma.CompanyDelegate> {
     return tx ? tx.company : this.prisma.company;
   }
 
-  async findById(id: string, tx?: Prisma.TransactionClient): Promise<Company | null> {
+  async findById(
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Company | null> {
     return this.getDelegate(tx).findUnique({
       where: { id },
     });
   }
 
-  async findByName(name: string, tx?: Prisma.TransactionClient): Promise<Company | null> {
+  async findByName(
+    name: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Company | null> {
     return this.getDelegate(tx).findUnique({
       where: { name },
     });
@@ -73,13 +79,20 @@ export class CompanyRepository extends BaseRepository<Prisma.CompanyDelegate> {
     });
   }
 
-  async create(data: CreateCompanyData, tx?: Prisma.TransactionClient): Promise<Company> {
+  async create(
+    data: CreateCompanyData,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Company> {
     return this.getDelegate(tx).create({
       data,
     });
   }
 
-  async update(id: string, data: UpdateCompanyData, tx?: Prisma.TransactionClient): Promise<Company> {
+  async update(
+    id: string,
+    data: UpdateCompanyData,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Company> {
     return this.getDelegate(tx).update({
       where: { id },
       data,

@@ -21,7 +21,14 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AuthenticatedRequest } from '../auth/auth.controller';
@@ -40,7 +47,9 @@ const ALLOWED_MIME_TYPES = [
   'image/webp',
 ];
 
-export class CustomMimeTypeValidator extends FileValidator<{ allowedMimes: string[] }> {
+export class CustomMimeTypeValidator extends FileValidator<{
+  allowedMimes: string[];
+}> {
   isValid(file?: Express.Multer.File): boolean {
     if (!file || !file.mimetype) return false;
     return this.validationOptions.allowedMimes.includes(file.mimetype);
@@ -64,7 +73,9 @@ export class AttachmentsController {
   @ApiBearerAuth()
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'Upload file attachment (PDF, DOCX, PNG, JPG, WEBP, max 10MB)' })
+  @ApiOperation({
+    summary: 'Upload file attachment (PDF, DOCX, PNG, JPG, WEBP, max 10MB)',
+  })
   @ApiBody({
     schema: {
       type: 'object',
@@ -72,22 +83,47 @@ export class AttachmentsController {
       properties: {
         file: { type: 'string', format: 'binary' },
         applicationId: { type: 'string', format: 'uuid' },
-        type: { type: 'string', enum: ['RESUME', 'CV', 'COVER_LETTER', 'PORTFOLIO', 'CERTIFICATE', 'OTHER'] },
+        type: {
+          type: 'string',
+          enum: [
+            'RESUME',
+            'CV',
+            'COVER_LETTER',
+            'PORTFOLIO',
+            'CERTIFICATE',
+            'OTHER',
+          ],
+        },
         label: { type: 'string' },
         version: { type: 'string' },
       },
     },
   })
-  @ApiResponse({ status: 201, description: 'Attachment uploaded successfully', type: AttachmentResponseDto })
-  @ApiResponse({ status: 400, description: 'Validation error (oversized file or invalid MIME type)' })
-  @ApiResponse({ status: 422, description: 'Security error (malware detected during virus scan)' })
+  @ApiResponse({
+    status: 201,
+    description: 'Attachment uploaded successfully',
+    type: AttachmentResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error (oversized file or invalid MIME type)',
+  })
+  @ApiResponse({
+    status: 422,
+    description: 'Security error (malware detected during virus scan)',
+  })
   async upload(
     @NestRequest() req: any,
     @Body() dto: UploadAttachmentDto,
     @UploadedFile(
       new ParseFilePipeBuilder()
-        .addMaxSizeValidator({ maxSize: MAX_FILE_SIZE_BYTES, message: 'File size exceeds maximum limit of 10 MB' })
-        .addValidator(new CustomMimeTypeValidator({ allowedMimes: ALLOWED_MIME_TYPES }))
+        .addMaxSizeValidator({
+          maxSize: MAX_FILE_SIZE_BYTES,
+          message: 'File size exceeds maximum limit of 10 MB',
+        })
+        .addValidator(
+          new CustomMimeTypeValidator({ allowedMimes: ALLOWED_MIME_TYPES }),
+        )
         .build({
           errorHttpStatusCode: HttpStatus.BAD_REQUEST,
           fileIsRequired: true,
@@ -103,19 +139,29 @@ export class AttachmentsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'List attachments for a job application' })
-  @ApiResponse({ status: 200, description: 'List of attachments', type: [AttachmentResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'List of attachments',
+    type: [AttachmentResponseDto],
+  })
   async findByApplication(
     @NestRequest() req: any,
     @Query('applicationId', ParseUUIDPipe) applicationId: string,
   ): Promise<AttachmentResponseDto[]> {
     const authReq = req as AuthenticatedRequest;
-    return this.attachmentService.findByApplication(applicationId, authReq.user.sub);
+    return this.attachmentService.findByApplication(
+      applicationId,
+      authReq.user.sub,
+    );
   }
 
   @Get('signed-access')
   @ApiOperation({ summary: 'Access attachment via signed URL token' })
   @ApiResponse({ status: 200, description: 'Binary file payload' })
-  @ApiResponse({ status: 401, description: 'Expired or invalid signed URL token' })
+  @ApiResponse({
+    status: 401,
+    description: 'Expired or invalid signed URL token',
+  })
   async accessSigned(
     @Query('key') key: string,
     @Query('mode') mode: 'GET' | 'PUT',
@@ -125,26 +171,44 @@ export class AttachmentsController {
     @NestResponse() res: Response,
   ): Promise<void> {
     const localProvider = new LocalStorageProvider();
-    const isValid = localProvider.verifySignedToken(key, mode, expires, signature);
+    const isValid = localProvider.verifySignedToken(
+      key,
+      mode,
+      expires,
+      signature,
+    );
 
     if (!isValid) {
       throw new UnauthorizedException('Expired or invalid signed URL token');
     }
 
     const { start, end } = this.parseRangeHeader(range);
-    const streamResult = await this.storageService.getReadStream(key, start, end);
+    const streamResult = await this.storageService.getReadStream(
+      key,
+      start,
+      end,
+    );
 
     if (typeof start === 'number' && typeof end === 'number') {
       res.status(HttpStatus.PARTIAL_CONTENT);
-      res.setHeader('Content-Range', `bytes ${start}-${end}/${streamResult.totalLength}`);
+      res.setHeader(
+        'Content-Range',
+        `bytes ${start}-${end}/${streamResult.totalLength}`,
+      );
       res.setHeader('Content-Length', streamResult.contentLength);
     } else {
       res.status(HttpStatus.OK);
       res.setHeader('Content-Length', streamResult.totalLength);
     }
 
-    res.setHeader('Content-Type', streamResult.mimeType || 'application/octet-stream');
-    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(key.split('/').pop() || 'file')}"`);
+    res.setHeader(
+      'Content-Type',
+      streamResult.mimeType || 'application/octet-stream',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `inline; filename="${encodeURIComponent(key.split('/').pop() || 'file')}"`,
+    );
     streamResult.stream.pipe(res);
   }
 
@@ -152,7 +216,11 @@ export class AttachmentsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get attachment metadata details by ID' })
-  @ApiResponse({ status: 200, description: 'Attachment metadata', type: AttachmentResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Attachment metadata',
+    type: AttachmentResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Attachment not found' })
   async findOne(
     @NestRequest() req: any,
@@ -165,7 +233,9 @@ export class AttachmentsController {
   @Get(':id/signed-url')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Generate 15-minute signed URL for secure download' })
+  @ApiOperation({
+    summary: 'Generate 15-minute signed URL for secure download',
+  })
   @ApiResponse({ status: 200, description: 'Signed URL string' })
   async getSignedUrl(
     @NestRequest() req: any,
@@ -174,16 +244,26 @@ export class AttachmentsController {
   ): Promise<{ signedUrl: string; expiresInSeconds: number }> {
     const authReq = req as AuthenticatedRequest;
     const urlMode = mode === 'PUT' ? 'PUT' : 'GET';
-    const signedUrl = await this.attachmentService.getSignedUrl(id, authReq.user.sub, urlMode, 900);
+    const signedUrl = await this.attachmentService.getSignedUrl(
+      id,
+      authReq.user.sub,
+      urlMode,
+      900,
+    );
     return { signedUrl, expiresInSeconds: 900 };
   }
 
   @Get(':id/download')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Download attachment file (supports HTTP byte-range streaming)' })
+  @ApiOperation({
+    summary: 'Download attachment file (supports HTTP byte-range streaming)',
+  })
   @ApiResponse({ status: 200, description: 'Binary file payload (full)' })
-  @ApiResponse({ status: 206, description: 'Partial Content (byte-range stream)' })
+  @ApiResponse({
+    status: 206,
+    description: 'Partial Content (byte-range stream)',
+  })
   @ApiResponse({ status: 404, description: 'Attachment or file not found' })
   async download(
     @NestRequest() req: any,
@@ -194,15 +274,19 @@ export class AttachmentsController {
     const authReq = req as AuthenticatedRequest;
     const { start, end } = this.parseRangeHeader(range);
 
-    const { streamResult, attachment } = await this.attachmentService.getReadStream(
-      id,
-      authReq.user.sub,
-      start,
-      end,
-    );
+    const { streamResult, attachment } =
+      await this.attachmentService.getReadStream(
+        id,
+        authReq.user.sub,
+        start,
+        end,
+      );
 
     res.setHeader('Accept-Ranges', 'bytes');
-    res.setHeader('Content-Type', attachment.mimeType || 'application/octet-stream');
+    res.setHeader(
+      'Content-Type',
+      attachment.mimeType || 'application/octet-stream',
+    );
     res.setHeader(
       'Content-Disposition',
       `attachment; filename="${encodeURIComponent(attachment.filename || 'attachment')}"`,
@@ -211,7 +295,10 @@ export class AttachmentsController {
 
     if (typeof start === 'number' && typeof end === 'number') {
       res.status(HttpStatus.PARTIAL_CONTENT);
-      res.setHeader('Content-Range', `bytes ${start}-${end}/${streamResult.totalLength}`);
+      res.setHeader(
+        'Content-Range',
+        `bytes ${start}-${end}/${streamResult.totalLength}`,
+      );
       res.setHeader('Content-Length', streamResult.contentLength);
     } else {
       res.status(HttpStatus.OK);
@@ -236,7 +323,10 @@ export class AttachmentsController {
     await this.attachmentService.remove(id, authReq.user.sub);
   }
 
-  private parseRangeHeader(rangeHeader?: string): { start?: number; end?: number } {
+  private parseRangeHeader(rangeHeader?: string): {
+    start?: number;
+    end?: number;
+  } {
     if (!rangeHeader || !rangeHeader.startsWith('bytes=')) {
       return {};
     }

@@ -30,7 +30,11 @@ describe('ProjectionManager', () => {
       attachment: { findMany: jest.fn().mockResolvedValue([]) },
     };
 
-    manager = new ProjectionManager(mockReadModelService, mockMetricsService, mockPrisma);
+    manager = new ProjectionManager(
+      mockReadModelService,
+      mockMetricsService,
+      mockPrisma,
+    );
   });
 
   it('should process ApplicationCreated event and invalidate patterns', async () => {
@@ -43,8 +47,12 @@ describe('ProjectionManager', () => {
 
     await manager.processEvent(event as any);
 
-    expect(mockReadModelService.invalidatePattern).toHaveBeenCalledWith('dashboard');
-    expect(mockReadModelService.invalidatePattern).toHaveBeenCalledWith('applications');
+    expect(mockReadModelService.invalidatePattern).toHaveBeenCalledWith(
+      'dashboard',
+    );
+    expect(mockReadModelService.invalidatePattern).toHaveBeenCalledWith(
+      'applications',
+    );
     expect(mockMetricsService.projectionUpdatesTotal.inc).toHaveBeenCalledWith({
       projection: 'ApplicationProjection',
       status: 'success',
@@ -53,7 +61,10 @@ describe('ProjectionManager', () => {
 
   it('should rebuild projections from DB state with cursor batching', async () => {
     mockPrisma.application.findMany
-      .mockResolvedValueOnce([{ id: 'app-1', status: 'APPLIED' }, { id: 'app-2', status: 'OFFER' }])
+      .mockResolvedValueOnce([
+        { id: 'app-1', status: 'APPLIED' },
+        { id: 'app-2', status: 'OFFER' },
+      ])
       .mockResolvedValueOnce([{ id: 'app-3', status: 'REJECTED' }]);
     mockPrisma.company.findMany.mockResolvedValueOnce([{ id: 'comp-1' }]);
     mockPrisma.user.findMany.mockResolvedValueOnce([{ id: 'user-1' }]);
@@ -75,9 +86,18 @@ describe('ProjectionManager', () => {
       select: { id: true, status: true },
     });
 
-    expect(mockReadModelService.set).toHaveBeenCalledWith('dashboard:global', expect.any(Object));
-    expect(mockReadModelService.set).toHaveBeenCalledWith('companies:global', expect.any(Object));
-    expect(mockReadModelService.set).toHaveBeenCalledWith('statistics:global', expect.any(Object));
+    expect(mockReadModelService.set).toHaveBeenCalledWith(
+      'dashboard:global',
+      expect.any(Object),
+    );
+    expect(mockReadModelService.set).toHaveBeenCalledWith(
+      'companies:global',
+      expect.any(Object),
+    );
+    expect(mockReadModelService.set).toHaveBeenCalledWith(
+      'statistics:global',
+      expect.any(Object),
+    );
   });
 
   it('should resume rebuild from existing checkpoint', async () => {
@@ -116,10 +136,16 @@ describe('ProjectionManager', () => {
   });
 
   it('should recover and persist checkpoint upon interruption', async () => {
-    mockPrisma.application.findMany.mockResolvedValueOnce([{ id: 'app-1', status: 'APPLIED' }]);
-    mockPrisma.company.findMany.mockRejectedValue(new Error('Database connection reset'));
+    mockPrisma.application.findMany.mockResolvedValueOnce([
+      { id: 'app-1', status: 'APPLIED' },
+    ]);
+    mockPrisma.company.findMany.mockRejectedValue(
+      new Error('Database connection reset'),
+    );
 
-    await expect(manager.rebuildProjections({ batchSize: 5 })).rejects.toThrow('Database connection reset');
+    await expect(manager.rebuildProjections({ batchSize: 5 })).rejects.toThrow(
+      'Database connection reset',
+    );
 
     expect(mockReadModelService.set).toHaveBeenCalledWith(
       'projection:rebuild:checkpoint',
@@ -129,6 +155,8 @@ describe('ProjectionManager', () => {
       }),
       86400,
     );
-    expect(mockMetricsService.projectionRebuildTotal.inc).toHaveBeenCalledWith({ status: 'failure' });
+    expect(mockMetricsService.projectionRebuildTotal.inc).toHaveBeenCalledWith({
+      status: 'failure',
+    });
   });
 });

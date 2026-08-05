@@ -10,7 +10,10 @@ export interface GetDashboardQuery extends IQuery {
 }
 
 @Injectable()
-export class GetDashboardHandler implements IQueryHandler<GetDashboardQuery, DashboardReadModel> {
+export class GetDashboardHandler implements IQueryHandler<
+  GetDashboardQuery,
+  DashboardReadModel
+> {
   readonly queryName = 'GetDashboard';
 
   constructor(
@@ -20,11 +23,16 @@ export class GetDashboardHandler implements IQueryHandler<GetDashboardQuery, Das
 
   async execute(query: GetDashboardQuery): Promise<DashboardReadModel> {
     const cacheKey = `dashboard:${query.userId}`;
-    const cached = await this.readModelService.get<DashboardReadModel>(cacheKey, 'GetDashboard');
+    const cached = await this.readModelService.get<DashboardReadModel>(
+      cacheKey,
+      'GetDashboard',
+    );
     if (cached) return cached;
 
     // Build projection from DB if cache miss
-    const totalApplications = await this.prisma.application.count({ where: { userId: query.userId } });
+    const totalApplications = await this.prisma.application.count({
+      where: { userId: query.userId },
+    });
 
     const model: DashboardReadModel = {
       totalApplications,

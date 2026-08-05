@@ -85,7 +85,10 @@ describe('Audit Logging (e2e)', () => {
       endpoint: '/api/v1/companies',
     });
 
-    const { logs } = await auditLogService.searchLogs({ resource: 'COMPANY', action: 'CREATE_COMPANY' });
+    const { logs } = await auditLogService.searchLogs({
+      resource: 'COMPANY',
+      action: 'CREATE_COMPANY',
+    });
     const compLog = logs.find((l) => l.resourceId === companyId);
     expect(compLog).toBeDefined();
     expect(compLog?.action).toBe('CREATE_COMPANY');
@@ -171,23 +174,19 @@ describe('Audit Logging (e2e)', () => {
     expect(uploadLog?.method).toBe('POST');
   });
 
-  it(
-    '5. should expose audit metrics and auditQueue in health probe',
-    async () => {
-      const healthRes = await request(app.getHttpServer())
-        .get('/api/v1/health/ready')
-        .expect(200);
+  it('5. should expose audit metrics and auditQueue in health probe', async () => {
+    const healthRes = await request(app.getHttpServer())
+      .get('/api/v1/health/ready')
+      .expect(200);
 
-      expect(healthRes.body.checks).toHaveProperty('auditQueue');
+    expect(healthRes.body.checks).toHaveProperty('auditQueue');
 
-      const metricsRes = await request(app.getHttpServer())
-        .get('/api/v1/metrics')
-        .expect(200);
+    const metricsRes = await request(app.getHttpServer())
+      .get('/api/v1/metrics')
+      .expect(200);
 
-      expect(metricsRes.text).toContain('audit_logs_total');
-      expect(metricsRes.text).toContain('audit_logs_failed_total');
-      expect(metricsRes.text).toContain('audit_queue_size');
-    },
-    15000,
-  );
+    expect(metricsRes.text).toContain('audit_logs_total');
+    expect(metricsRes.text).toContain('audit_logs_failed_total');
+    expect(metricsRes.text).toContain('audit_queue_size');
+  }, 15000);
 });

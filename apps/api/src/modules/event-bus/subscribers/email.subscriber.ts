@@ -36,7 +36,9 @@ export class EmailSubscriber implements IEventSubscriber {
           context: { name: event.payload.fullName },
         });
       } catch (err: any) {
-        this.logger.warn(`EmailSubscriber welcome email dispatch failed: ${err.message}`);
+        this.logger.warn(
+          `EmailSubscriber welcome email dispatch failed: ${err.message}`,
+        );
       }
     }
   }

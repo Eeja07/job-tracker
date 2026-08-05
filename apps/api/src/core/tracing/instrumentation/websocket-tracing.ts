@@ -9,7 +9,11 @@ export class WebSocketTracing {
   /**
    * Wrap WebSocket connection or event handling in a trace span.
    */
-  async traceConnection<T>(socketId: string, userId: string, fn: () => Promise<T>): Promise<T> {
+  async traceConnection<T>(
+    socketId: string,
+    userId: string,
+    fn: () => Promise<T>,
+  ): Promise<T> {
     return this.tracingService.trace(
       SPAN_NAMES.WEBSOCKET_CONNECTION,
       async (span) => {
@@ -21,7 +25,11 @@ export class WebSocketTracing {
     );
   }
 
-  async traceBroadcast<T>(room: string, event: string, fn: () => Promise<T>): Promise<T> {
+  async traceBroadcast<T>(
+    room: string,
+    event: string,
+    fn: () => Promise<T>,
+  ): Promise<T> {
     return this.tracingService.trace(
       SPAN_NAMES.WEBSOCKET_BROADCAST,
       async (span) => {

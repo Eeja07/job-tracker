@@ -7,27 +7,42 @@ export class CreateCompanyDto {
   @IsNotEmpty({ message: 'Company name is required' })
   name!: string;
 
-  @ApiPropertyOptional({ description: 'Industry classification', example: 'E-commerce' })
+  @ApiPropertyOptional({
+    description: 'Industry classification',
+    example: 'E-commerce',
+  })
   @IsOptional()
   @IsString()
   industry?: string;
 
-  @ApiPropertyOptional({ description: 'Company website URL', example: 'https://tokopedia.com' })
+  @ApiPropertyOptional({
+    description: 'Company website URL',
+    example: 'https://tokopedia.com',
+  })
   @IsOptional()
   @IsUrl({}, { message: 'Website must be a valid URL' })
   website?: string;
 
-  @ApiPropertyOptional({ description: 'Career page URL', example: 'https://tokopedia.com/careers' })
+  @ApiPropertyOptional({
+    description: 'Career page URL',
+    example: 'https://tokopedia.com/careers',
+  })
   @IsOptional()
   @IsUrl({}, { message: 'Career page must be a valid URL' })
   careerPage?: string;
 
-  @ApiPropertyOptional({ description: 'Headquarters location', example: 'Jakarta, Indonesia' })
+  @ApiPropertyOptional({
+    description: 'Headquarters location',
+    example: 'Jakarta, Indonesia',
+  })
   @IsOptional()
   @IsString()
   location?: string;
 
-  @ApiPropertyOptional({ description: 'Company description or notes', example: 'Leading tech e-commerce platform.' })
+  @ApiPropertyOptional({
+    description: 'Company description or notes',
+    example: 'Leading tech e-commerce platform.',
+  })
   @IsOptional()
   @IsString()
   description?: string;

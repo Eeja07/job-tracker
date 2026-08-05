@@ -3,7 +3,11 @@ import request from 'supertest';
 import { createTestApp, cleanDatabase, TestAppSetup } from './test-utils';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { QueueService } from '../src/modules/jobs/services/queue.service';
-import { QUEUE_NAMES, EmailJobName, SystemJobName } from '../src/modules/jobs/constants/jobs.constants';
+import {
+  QUEUE_NAMES,
+  EmailJobName,
+  SystemJobName,
+} from '../src/modules/jobs/constants/jobs.constants';
 
 describe('Background Jobs & BullMQ Infrastructure (e2e)', () => {
   let app: INestApplication;
@@ -42,7 +46,10 @@ describe('Background Jobs & BullMQ Infrastructure (e2e)', () => {
       expect(job).toBeDefined();
       expect(job.id).toBeDefined();
 
-      const retrievedJob = await queueService.getJob(QUEUE_NAMES.EMAIL, job.id!);
+      const retrievedJob = await queueService.getJob(
+        QUEUE_NAMES.EMAIL,
+        job.id!,
+      );
       expect(retrievedJob).toBeDefined();
       expect(retrievedJob?.name).toBe(EmailJobName.SEND_WELCOME_EMAIL);
     });

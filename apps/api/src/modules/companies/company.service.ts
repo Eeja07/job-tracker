@@ -26,7 +26,9 @@ export class CompanyService {
   async create(dto: CreateCompanyDto): Promise<Company> {
     const existing = await this.companyRepository.findByName(dto.name);
     if (existing) {
-      throw new ConflictException(`Company with name '${dto.name}' already exists`);
+      throw new ConflictException(
+        `Company with name '${dto.name}' already exists`,
+      );
     }
     const result = await this.companyRepository.create(dto);
     await this.invalidateDashboardCache();
@@ -55,7 +57,9 @@ export class CompanyService {
     if (dto.name && dto.name !== company.name) {
       const existing = await this.companyRepository.findByName(dto.name);
       if (existing) {
-        throw new ConflictException(`Company with name '${dto.name}' already exists`);
+        throw new ConflictException(
+          `Company with name '${dto.name}' already exists`,
+        );
       }
     }
 
@@ -69,7 +73,9 @@ export class CompanyService {
 
     const count = await this.companyRepository.countAssociatedApplications(id);
     if (count > 0) {
-      throw new ConflictException('Cannot delete company that is associated with job applications');
+      throw new ConflictException(
+        'Cannot delete company that is associated with job applications',
+      );
     }
 
     const result = await this.companyRepository.delete(id);

@@ -13,11 +13,17 @@ export class RoleRepository extends BaseRepository<Prisma.RoleDelegate> {
     return tx ? tx.role : this.prisma.role;
   }
 
-  async findByName(name: string, tx?: Prisma.TransactionClient): Promise<Role | null> {
+  async findByName(
+    name: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Role | null> {
     return this.getDelegate(tx).findUnique({ where: { name } });
   }
 
-  async findById(id: string, tx?: Prisma.TransactionClient): Promise<Role | null> {
+  async findById(
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Role | null> {
     return this.getDelegate(tx).findUnique({ where: { id } });
   }
 
@@ -25,7 +31,10 @@ export class RoleRepository extends BaseRepository<Prisma.RoleDelegate> {
     return this.getDelegate(tx).findMany({ orderBy: { name: 'asc' } });
   }
 
-  async create(data: { name: string; description?: string }, tx?: Prisma.TransactionClient): Promise<Role> {
+  async create(
+    data: { name: string; description?: string },
+    tx?: Prisma.TransactionClient,
+  ): Promise<Role> {
     return this.getDelegate(tx).create({ data });
   }
 }

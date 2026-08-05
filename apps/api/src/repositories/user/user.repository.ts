@@ -30,25 +30,38 @@ export class UserRepository extends BaseRepository<Prisma.UserDelegate> {
     return tx ? tx.user : this.prisma.user;
   }
 
-  async findById(id: string, tx?: Prisma.TransactionClient): Promise<User | null> {
+  async findById(
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<User | null> {
     return this.getDelegate(tx).findUnique({
       where: { id },
     });
   }
 
-  async findByEmail(email: string, tx?: Prisma.TransactionClient): Promise<User | null> {
+  async findByEmail(
+    email: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<User | null> {
     return this.getDelegate(tx).findUnique({
       where: { email },
     });
   }
 
-  async create(data: CreateUserData, tx?: Prisma.TransactionClient): Promise<User> {
+  async create(
+    data: CreateUserData,
+    tx?: Prisma.TransactionClient,
+  ): Promise<User> {
     return this.getDelegate(tx).create({
       data,
     });
   }
 
-  async update(id: string, data: UpdateUserData, tx?: Prisma.TransactionClient): Promise<User> {
+  async update(
+    id: string,
+    data: UpdateUserData,
+    tx?: Prisma.TransactionClient,
+  ): Promise<User> {
     return this.getDelegate(tx).update({
       where: { id },
       data,

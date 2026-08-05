@@ -36,7 +36,9 @@ describe('Feature Flags Module (e2e)', () => {
     adminUserId = adminRes.body.user.id;
 
     // Assign ADMIN role to admin user
-    const adminRole = await prisma.role.findUniqueOrThrow({ where: { name: 'ADMIN' } });
+    const adminRole = await prisma.role.findUniqueOrThrow({
+      where: { name: 'ADMIN' },
+    });
     await prisma.userRole.create({
       data: {
         userId: adminUserId,
@@ -135,7 +137,10 @@ describe('Feature Flags Module (e2e)', () => {
         rolloutPercentage: 100,
       });
 
-      const isEnabled = await featureFlagService.isEnabled('ENABLED_FEATURE', adminUserId);
+      const isEnabled = await featureFlagService.isEnabled(
+        'ENABLED_FEATURE',
+        adminUserId,
+      );
       expect(isEnabled).toBe(true);
     });
 
@@ -146,7 +151,10 @@ describe('Feature Flags Module (e2e)', () => {
         rolloutPercentage: 100,
       });
 
-      const isEnabled = await featureFlagService.isEnabled('DISABLED_FEATURE', adminUserId);
+      const isEnabled = await featureFlagService.isEnabled(
+        'DISABLED_FEATURE',
+        adminUserId,
+      );
       expect(isEnabled).toBe(false);
     });
 
@@ -157,14 +165,26 @@ describe('Feature Flags Module (e2e)', () => {
         rolloutPercentage: 50,
       });
 
-      const result1a = await featureFlagService.isEnabled('PERCENTAGE_FEATURE', 'user-id-alpha');
-      const result1b = await featureFlagService.isEnabled('PERCENTAGE_FEATURE', 'user-id-alpha');
+      const result1a = await featureFlagService.isEnabled(
+        'PERCENTAGE_FEATURE',
+        'user-id-alpha',
+      );
+      const result1b = await featureFlagService.isEnabled(
+        'PERCENTAGE_FEATURE',
+        'user-id-alpha',
+      );
 
       // Hash consistency: same user always receives identical evaluation result
       expect(result1a).toBe(result1b);
 
-      const result2a = await featureFlagService.isEnabled('PERCENTAGE_FEATURE', 'user-id-beta');
-      const result2b = await featureFlagService.isEnabled('PERCENTAGE_FEATURE', 'user-id-beta');
+      const result2a = await featureFlagService.isEnabled(
+        'PERCENTAGE_FEATURE',
+        'user-id-beta',
+      );
+      const result2b = await featureFlagService.isEnabled(
+        'PERCENTAGE_FEATURE',
+        'user-id-beta',
+      );
       expect(result2a).toBe(result2b);
     });
 

@@ -8,7 +8,10 @@ const DEFAULT_TTL_SECONDS = 60; // Requirement: 60 seconds TTL
 @Injectable()
 export class ReadModelService {
   private readonly logger = new Logger(ReadModelService.name);
-  private readonly inMemoryStore = new Map<string, { value: any; expiresAt: number }>();
+  private readonly inMemoryStore = new Map<
+    string,
+    { value: any; expiresAt: number }
+  >();
 
   constructor(
     @Optional() private readonly redisService?: RedisService,
@@ -47,7 +50,11 @@ export class ReadModelService {
   /**
    * Set a read model with 60s TTL.
    */
-  async set<T>(key: string, value: T, ttlSeconds = DEFAULT_TTL_SECONDS): Promise<void> {
+  async set<T>(
+    key: string,
+    value: T,
+    ttlSeconds = DEFAULT_TTL_SECONDS,
+  ): Promise<void> {
     const fullKey = `${READ_MODEL_PREFIX}${key}`;
     const serialized = JSON.stringify(value);
 

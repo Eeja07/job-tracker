@@ -50,7 +50,9 @@ describe('StatusHistoryRepository', () => {
         toStatus: ApplicationStatus.APPLIED,
       };
 
-      (prismaService.statusHistory.create as jest.Mock).mockResolvedValue(mockHistory);
+      (prismaService.statusHistory.create as jest.Mock).mockResolvedValue(
+        mockHistory,
+      );
 
       const result = await repository.append(appendData);
 
@@ -85,7 +87,9 @@ describe('StatusHistoryRepository', () => {
 
   describe('findTimeline', () => {
     it('should return chronological status timeline for an application', async () => {
-      (prismaService.statusHistory.findMany as jest.Mock).mockResolvedValue([mockHistory]);
+      (prismaService.statusHistory.findMany as jest.Mock).mockResolvedValue([
+        mockHistory,
+      ]);
 
       const result = await repository.findTimeline('app-uuid-1');
 

@@ -1,6 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Company, Prisma } from '@prisma/client';
-import { CompanyRepository, CreateCompanyData, UpdateCompanyData } from './company.repository';
+import {
+  CompanyRepository,
+  CreateCompanyData,
+  UpdateCompanyData,
+} from './company.repository';
 import { PrismaService } from '../../prisma/prisma.service';
 
 describe('CompanyRepository', () => {
@@ -46,7 +50,9 @@ describe('CompanyRepository', () => {
 
   describe('findById', () => {
     it('should return company by ID', async () => {
-      (prismaService.company.findUnique as jest.Mock).mockResolvedValue(mockCompany);
+      (prismaService.company.findUnique as jest.Mock).mockResolvedValue(
+        mockCompany,
+      );
 
       const result = await repository.findById('company-uuid-1');
 
@@ -59,7 +65,9 @@ describe('CompanyRepository', () => {
 
   describe('findByName', () => {
     it('should return company by name', async () => {
-      (prismaService.company.findUnique as jest.Mock).mockResolvedValue(mockCompany);
+      (prismaService.company.findUnique as jest.Mock).mockResolvedValue(
+        mockCompany,
+      );
 
       const result = await repository.findByName('Tokopedia');
 
@@ -72,7 +80,9 @@ describe('CompanyRepository', () => {
 
   describe('search', () => {
     it('should perform case-insensitive search with default skip and limit', async () => {
-      (prismaService.company.findMany as jest.Mock).mockResolvedValue([mockCompany]);
+      (prismaService.company.findMany as jest.Mock).mockResolvedValue([
+        mockCompany,
+      ]);
 
       const result = await repository.search('toko');
 
@@ -121,7 +131,9 @@ describe('CompanyRepository', () => {
         industry: 'E-commerce',
       };
 
-      (prismaService.company.create as jest.Mock).mockResolvedValue(mockCompany);
+      (prismaService.company.create as jest.Mock).mockResolvedValue(
+        mockCompany,
+      );
 
       const result = await repository.create(createData);
 
@@ -137,7 +149,9 @@ describe('CompanyRepository', () => {
       const updateData: UpdateCompanyData = { location: 'Jakarta South' };
       const updatedCompany = { ...mockCompany, location: 'Jakarta South' };
 
-      (prismaService.company.update as jest.Mock).mockResolvedValue(updatedCompany);
+      (prismaService.company.update as jest.Mock).mockResolvedValue(
+        updatedCompany,
+      );
 
       const result = await repository.update('company-uuid-1', updateData);
 
@@ -151,7 +165,9 @@ describe('CompanyRepository', () => {
 
   describe('delete', () => {
     it('should delete company', async () => {
-      (prismaService.company.delete as jest.Mock).mockResolvedValue(mockCompany);
+      (prismaService.company.delete as jest.Mock).mockResolvedValue(
+        mockCompany,
+      );
 
       const result = await repository.delete('company-uuid-1');
 

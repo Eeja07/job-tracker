@@ -9,7 +9,12 @@ export class BullMQTracing {
   /**
    * Wrap a BullMQ job processing function in a bullmq.job span.
    */
-  async traceJob<T>(queueName: string, jobName: string, jobId: string, fn: () => Promise<T>): Promise<T> {
+  async traceJob<T>(
+    queueName: string,
+    jobName: string,
+    jobId: string,
+    fn: () => Promise<T>,
+  ): Promise<T> {
     return this.tracingService.trace(
       SPAN_NAMES.BULLMQ_JOB,
       async (span) => {
