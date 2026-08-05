@@ -98,7 +98,7 @@ jobs:
           --health-retries 5
 
     env:
-      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/job_tracker?schema=public"
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/job_tracker?schema=public"
       JWT_ACCESS_SECRET: "test-access-secret-key-1234567890"
       JWT_REFRESH_SECRET: "test-refresh-secret-key-0987654321"
 

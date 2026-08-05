@@ -228,6 +228,7 @@ describe('RedisService', () => {
           }
         }),
       };
+      (service as any).subClient = mockSubClient;
       mockRedisInstance.duplicate.mockReturnValue(mockSubClient);
 
       const handler1 = jest.fn();
