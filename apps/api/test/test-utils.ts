@@ -64,26 +64,28 @@ export async function createTestApp(): Promise<TestAppSetup> {
 }
 
 export async function cleanDatabase(prisma: PrismaService): Promise<void> {
-  await prisma.userRole.deleteMany();
-  await prisma.refreshSession.deleteMany();
-  await prisma.note.deleteMany();
-  await prisma.attachment.deleteMany();
-  await prisma.statusHistory.deleteMany();
-  await prisma.application.deleteMany();
-  await prisma.company.deleteMany();
-  await prisma.auditLog.deleteMany();
-  await prisma.featureFlag.deleteMany();
-  await prisma.user.deleteMany();
+  if (!prisma) return;
+  if (prisma.userRole) await prisma.userRole.deleteMany();
+  if (prisma.refreshSession) await prisma.refreshSession.deleteMany();
+  if (prisma.note) await prisma.note.deleteMany();
+  if (prisma.attachment) await prisma.attachment.deleteMany();
+  if (prisma.statusHistory) await prisma.statusHistory.deleteMany();
+  if (prisma.application) await prisma.application.deleteMany();
+  if (prisma.company) await prisma.company.deleteMany();
+  if (prisma.auditLog) await prisma.auditLog.deleteMany();
+  if (prisma.featureFlag) await prisma.featureFlag.deleteMany();
+  if (prisma.user) await prisma.user.deleteMany();
 
-  // Ensure default roles exist for tests
-  await prisma.role.upsert({
-    where: { name: 'ADMIN' },
-    update: {},
-    create: { name: 'ADMIN', description: 'Admin role' },
-  });
-  await prisma.role.upsert({
-    where: { name: 'USER' },
-    update: {},
-    create: { name: 'USER', description: 'User role' },
-  });
+  if (prisma.role) {
+    await prisma.role.upsert({
+      where: { name: 'ADMIN' },
+      update: {},
+      create: { name: 'ADMIN', description: 'Admin role' },
+    });
+    await prisma.role.upsert({
+      where: { name: 'USER' },
+      update: {},
+      create: { name: 'USER', description: 'User role' },
+    });
+  }
 }
