@@ -199,7 +199,7 @@ export default function GmailSyncPage() {
           <div className={styles.loadingBox}>Memuat daftar email...</div>
         ) : filteredEmails.length === 0 ? (
           <div className={styles.emptyBox}>
-            <p>Belum ada pesan email {jobOnly ? "terkait loker" : ""} yang sesuai filter.</p>
+            <p>Belum ada pesan email terkait loker yang sesuai filter.</p>
             {status?.connected && (
               <button className={styles.subtleBtn} onClick={handleSync}>
                 Jalankan Sinkronisasi Gmail
