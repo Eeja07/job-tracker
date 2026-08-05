@@ -31,7 +31,7 @@ coverage
 .DS_Store
 .npmrc
 .prettierrc
-turbo.json
+
 
 # Docs
 README.md
