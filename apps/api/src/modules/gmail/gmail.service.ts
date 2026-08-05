@@ -378,6 +378,20 @@ export class GmailService implements OnModuleInit {
             metadata: notif.metadata,
             createdAt: notif.createdAt,
           });
+
+          // Auto-update application status if email matches an application
+          if (detectedType) {
+            await this.autoUpdateApplicationStatus(
+              userId,
+              detectedType,
+              subject,
+              fromEmail,
+              fromName,
+              snippet,
+            ).catch((err) => {
+              this.logger.warn(`Auto status update failed for user ${userId}: ${err.message}`);
+            });
+          }
         }
       } catch (err: any) {
         this.logger.warn(`Failed to process message ${msg.id}: ${err.message}`);
@@ -394,6 +408,67 @@ export class GmailService implements OnModuleInit {
       `Gmail sync for userId=${userId}: ${newMessages} new, ${jobRelated} job-related`,
     );
     return { newMessages, jobRelated };
+  }
+
+  private async autoUpdateApplicationStatus(
+    userId: string,
+    detectedType: string,
+    subject: string,
+    fromEmail: string,
+    fromName: string | null,
+    snippet: string,
+  ): Promise<void> {
+    const statusMap: Record<string, string> = {
+      REJECTED: 'REJECTED',
+      OFFER: 'OFFER',
+      INTERVIEW: 'INTERVIEWING',
+      SCREENING: 'SCREENING',
+    };
+
+    const targetStatus = statusMap[detectedType];
+    if (!targetStatus) return;
+
+    // Fetch user's non-terminal applications
+    const apps = await this.prisma.application.findMany({
+      where: {
+        userId,
+        status: { notIn: ['WITHDRAWN'] },
+      },
+      include: { company: true },
+    });
+
+    const fullSearch = `${subject} ${fromName || ''} ${fromEmail} ${snippet}`.toLowerCase();
+
+    for (const app of apps) {
+      const companyName = app.company?.name?.toLowerCase().trim();
+      const jobTitle = app.jobTitle.toLowerCase().trim();
+
+      let matched = false;
+      if (companyName && companyName.length > 2 && fullSearch.includes(companyName)) {
+        matched = true;
+      } else if (jobTitle && jobTitle.length > 3 && fullSearch.includes(jobTitle)) {
+        matched = true;
+      }
+
+      if (matched) {
+        // Update application status automatically in database
+        const updated = await this.prisma.application.update({
+          where: { id: app.id },
+          data: { status: targetStatus as any },
+        });
+
+        this.logger.log(
+          `Auto-updated application ${app.id} (${app.jobTitle} at ${app.company?.name}) to status ${targetStatus} via Gmail sync`,
+        );
+
+        // Emit real-time WebSocket event to update frontend instantly
+        this.realtime.emitToRoom(`user:${userId}`, 'application:updated', {
+          application: updated,
+        });
+
+        break; // Stop after matching first relevant application
+      }
+    }
   }
 
   async getEmailMessages(userId: string, jobRelatedOnly = false, limit = 30) {

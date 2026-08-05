@@ -27,10 +27,10 @@
   --radius: 6px;
   --radius-sm: 4px;
 
-  /* Status Badge Tokens — Consistent Monochrome Dark Mode */
-  --status-saved-color: #a1a1aa;
-  --status-saved-bg: rgba(255, 255, 255, 0.04);
-  --status-saved-border: rgba(255, 255, 255, 0.08);
+  /* Status Badge Tokens — 100% Unified Monochrome Dark Mode */
+  --status-saved-color: #f4f4f5;
+  --status-saved-bg: rgba(255, 255, 255, 0.08);
+  --status-saved-border: rgba(255, 255, 255, 0.16);
 
   --status-applied-color: #f4f4f5;
   --status-applied-bg: rgba(255, 255, 255, 0.08);
@@ -40,21 +40,21 @@
   --status-screening-bg: rgba(255, 255, 255, 0.08);
   --status-screening-border: rgba(255, 255, 255, 0.16);
 
-  --status-interviewing-color: #ffffff;
-  --status-interviewing-bg: rgba(255, 255, 255, 0.12);
-  --status-interviewing-border: rgba(255, 255, 255, 0.24);
+  --status-interviewing-color: #f4f4f5;
+  --status-interviewing-bg: rgba(255, 255, 255, 0.08);
+  --status-interviewing-border: rgba(255, 255, 255, 0.16);
 
-  --status-offer-color: #ffffff;
-  --status-offer-bg: rgba(255, 255, 255, 0.12);
-  --status-offer-border: rgba(255, 255, 255, 0.24);
+  --status-offer-color: #f4f4f5;
+  --status-offer-bg: rgba(255, 255, 255, 0.08);
+  --status-offer-border: rgba(255, 255, 255, 0.16);
 
-  --status-rejected-color: #a1a1aa;
-  --status-rejected-bg: rgba(255, 255, 255, 0.04);
-  --status-rejected-border: rgba(255, 255, 255, 0.08);
+  --status-rejected-color: #f4f4f5;
+  --status-rejected-bg: rgba(255, 255, 255, 0.08);
+  --status-rejected-border: rgba(255, 255, 255, 0.16);
 
-  --status-withdrawn-color: #71717a;
-  --status-withdrawn-bg: rgba(255, 255, 255, 0.03);
-  --status-withdrawn-border: rgba(255, 255, 255, 0.06);
+  --status-withdrawn-color: #f4f4f5;
+  --status-withdrawn-bg: rgba(255, 255, 255, 0.08);
+  --status-withdrawn-border: rgba(255, 255, 255, 0.16);
 }
 
 [data-theme="light"] {
@@ -75,34 +75,34 @@
   --btn-bg: #0f172a;
   --btn-text: #ffffff;
 
-  /* Status Badge Tokens — Consistent Monochrome Light Mode */
-  --status-saved-color: #475569;
+  /* Status Badge Tokens — 100% Unified Monochrome Light Mode */
+  --status-saved-color: #0f172a;
   --status-saved-bg: #f1f5f9;
-  --status-saved-border: #e2e8f0;
+  --status-saved-border: #cbd5e1;
 
   --status-applied-color: #0f172a;
-  --status-applied-bg: #e2e8f0;
+  --status-applied-bg: #f1f5f9;
   --status-applied-border: #cbd5e1;
 
   --status-screening-color: #0f172a;
-  --status-screening-bg: #e2e8f0;
+  --status-screening-bg: #f1f5f9;
   --status-screening-border: #cbd5e1;
 
   --status-interviewing-color: #0f172a;
-  --status-interviewing-bg: #cbd5e1;
-  --status-interviewing-border: #94a3b8;
+  --status-interviewing-bg: #f1f5f9;
+  --status-interviewing-border: #cbd5e1;
 
   --status-offer-color: #0f172a;
-  --status-offer-bg: #cbd5e1;
-  --status-offer-border: #94a3b8;
+  --status-offer-bg: #f1f5f9;
+  --status-offer-border: #cbd5e1;
 
-  --status-rejected-color: #475569;
+  --status-rejected-color: #0f172a;
   --status-rejected-bg: #f1f5f9;
-  --status-rejected-border: #e2e8f0;
+  --status-rejected-border: #cbd5e1;
 
-  --status-withdrawn-color: #64748b;
-  --status-withdrawn-bg: #f8fafc;
-  --status-withdrawn-border: #e2e8f0;
+  --status-withdrawn-color: #0f172a;
+  --status-withdrawn-bg: #f1f5f9;
+  --status-withdrawn-border: #cbd5e1;
 }
 
 html {
