@@ -109,9 +109,11 @@
 .bottom {
   border-top: 1px solid var(--border);
   padding-top: 0.75rem;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .userRow {
@@ -250,13 +252,18 @@
     top: 0;
     left: 0;
     bottom: 0;
+    height: 100dvh;
+    height: 100vh;
     width: 260px;
     min-width: 260px;
     z-index: 99;
     transform: translateX(-100%);
     transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
-    padding-top: 1.25rem;
+    padding-top: max(1.25rem, env(safe-area-inset-top));
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .mobileDrawerOpen {
