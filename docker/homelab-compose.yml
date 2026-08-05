@@ -54,6 +54,21 @@ services:
     networks:
       - homelab
 
+  job-tracker-web:
+    build:
+      context: /opt/apps/job-tracker
+      dockerfile: apps/web/Dockerfile
+    container_name: job-tracker-web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      NEXT_PUBLIC_API_URL: "http://job-tracker.eeja.fun/api"
+    depends_on:
+      - job-tracker-api
+    networks:
+      - homelab
+
 networks:
   homelab:
     external: true
