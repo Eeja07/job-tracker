@@ -83,6 +83,8 @@ export default function NotificationBell() {
     setOpen(false);
   };
 
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+
   return (
     <>
       <div className={styles.bellContainer} ref={dropdownRef}>
