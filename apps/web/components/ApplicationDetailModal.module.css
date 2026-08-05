@@ -317,17 +317,24 @@
 
 @media (max-width: 640px) {
   .overlay {
-    padding: 0.5rem 0.5rem max(0.5rem, env(safe-area-inset-bottom));
-    align-items: flex-end;
+    padding-top: calc(60px + max(8px, env(safe-area-inset-top)));
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    align-items: flex-start;
+    overscroll-behavior-y: contain;
   }
   .modal {
-    max-height: 85dvh;
-    max-height: calc(100vh - 80px);
-    border-bottom-left-radius: 12px;
-    border-bottom-right-radius: 12px;
+    max-height: calc(100dvh - 70px - max(8px, env(safe-area-inset-top)) - max(8px, env(safe-area-inset-bottom)));
+    max-height: calc(100vh - 84px);
+    border-radius: 12px;
     margin-bottom: max(0px, env(safe-area-inset-bottom));
   }
-  .modalHeader { padding: 1rem; }
+  .modalHeader {
+    padding: 1rem;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+  }
   .modalBody { padding: 1rem; gap: 1rem; padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
   .jobTitle { font-size: 1.15rem; }
   .metaGrid { grid-template-columns: repeat(2, 1fr); padding: 0.85rem; gap: 0.75rem; }
