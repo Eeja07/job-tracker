@@ -204,30 +204,26 @@ export class ApplicationService {
         : undefined;
 
     const updateData: any = {};
-    if (companyId) updateData.companyId = companyId;
-    if (dto.jobTitle !== undefined && dto.jobTitle !== null)
-      updateData.jobTitle = dto.jobTitle;
-    if (dto.applicationCode !== undefined && dto.applicationCode !== null)
-      updateData.applicationCode = dto.applicationCode;
+    if (companyId !== undefined) updateData.companyId = companyId;
+    if (dto.jobTitle !== undefined) updateData.jobTitle = dto.jobTitle;
+    if (dto.applicationCode !== undefined) updateData.applicationCode = dto.applicationCode;
     if (dto.status) updateData.status = dto.status;
-    if (dto.workMode) updateData.workMode = dto.workMode;
-    if (dto.source) updateData.source = dto.source;
-    if (dto.salaryMin !== undefined && dto.salaryMin !== null)
-      updateData.salaryMin = Number(dto.salaryMin);
-    if (dto.salaryMax !== undefined && dto.salaryMax !== null)
-      updateData.salaryMax = Number(dto.salaryMax);
+    if (dto.workMode !== undefined) updateData.workMode = dto.workMode || null;
+    if (dto.source !== undefined) updateData.source = dto.source || null;
+    if (dto.salaryMin !== undefined)
+      updateData.salaryMin = dto.salaryMin !== null && dto.salaryMin !== ('' as any) ? Number(dto.salaryMin) : null;
+    if (dto.salaryMax !== undefined)
+      updateData.salaryMax = dto.salaryMax !== null && dto.salaryMax !== ('' as any) ? Number(dto.salaryMax) : null;
     if (dto.currency) updateData.currency = dto.currency;
-    if (dto.sourceUrl !== undefined && dto.sourceUrl !== null)
-      updateData.sourceUrl = dto.sourceUrl;
-    if (dto.location !== undefined && dto.location !== null)
-      updateData.location = dto.location;
-    if (deadline) updateData.deadline = deadline;
+    if (dto.sourceUrl !== undefined) updateData.sourceUrl = dto.sourceUrl;
+    if (dto.location !== undefined) updateData.location = dto.location;
+    if (dto.deadline !== undefined) updateData.deadline = deadline ?? null;
     if (appliedAt) updateData.appliedAt = appliedAt;
 
     if (dto.requirements !== undefined)
       updateData.requirements = dto.requirements;
     if (dto.notesContent !== undefined || dto.notes !== undefined)
-      updateData.notesContent = dto.notesContent || dto.notes;
+      updateData.notesContent = dto.notesContent ?? dto.notes ?? '';
     if (dto.notesImages !== undefined) updateData.notesImages = dto.notesImages;
     if (dto.imageUrl !== undefined) updateData.imageUrl = dto.imageUrl;
     if (dto.cvName !== undefined) updateData.cvName = dto.cvName;
@@ -240,7 +236,7 @@ export class ApplicationService {
     if (dto.coverLetterName !== undefined)
       updateData.coverLetterName = dto.coverLetterName;
     if (dto.coverLetterUrl !== undefined || dto.coverLetter !== undefined)
-      updateData.coverLetterUrl = dto.coverLetterUrl || dto.coverLetter;
+      updateData.coverLetterUrl = dto.coverLetterUrl ?? dto.coverLetter ?? '';
     if (dto.coverLetterText !== undefined)
       updateData.coverLetterText = dto.coverLetterText;
 

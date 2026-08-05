@@ -40,32 +40,32 @@ export interface CreateApplicationData {
 }
 
 export interface UpdateApplicationData {
-  companyId?: string;
+  companyId?: string | null;
   jobTitle?: string;
-  applicationCode?: string;
+  applicationCode?: string | null;
   status?: ApplicationStatus;
-  workMode?: WorkMode;
-  source?: ApplicationSource;
-  salaryMin?: number;
-  salaryMax?: number;
+  workMode?: WorkMode | null;
+  source?: ApplicationSource | null;
+  salaryMin?: number | null;
+  salaryMax?: number | null;
   currency?: Currency;
-  sourceUrl?: string;
-  location?: string;
-  deadline?: Date;
+  sourceUrl?: string | null;
+  location?: string | null;
+  deadline?: Date | null;
   appliedAt?: Date;
   lastStatusChangedAt?: Date;
-  requirements?: string;
-  notesContent?: string;
+  requirements?: string | null;
+  notesContent?: string | null;
   notesImages?: string[];
-  imageUrl?: string;
-  cvName?: string;
-  cvUrl?: string;
-  cvText?: string;
-  portfolioName?: string;
-  portfolioUrl?: string;
-  coverLetterName?: string;
-  coverLetterUrl?: string;
-  coverLetterText?: string;
+  imageUrl?: string | null;
+  cvName?: string | null;
+  cvUrl?: string | null;
+  cvText?: string | null;
+  portfolioName?: string | null;
+  portfolioUrl?: string | null;
+  coverLetterName?: string | null;
+  coverLetterUrl?: string | null;
+  coverLetterText?: string | null;
 }
 
 export interface ApplicationFilterParams {
