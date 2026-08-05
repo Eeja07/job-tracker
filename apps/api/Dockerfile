@@ -9,6 +9,8 @@ RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 
 COPY . .
 
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter api exec prisma generate
 RUN pnpm --filter api build
