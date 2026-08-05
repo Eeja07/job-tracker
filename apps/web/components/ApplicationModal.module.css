@@ -296,5 +296,9 @@
 }
 
 @media (max-width: 600px) {
+  .overlay { padding: 0.5rem; align-items: flex-end; }
+  .modal { max-height: 94vh; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
   .grid2, .grid3 { grid-template-columns: 1fr; }
+  .actions { flex-direction: column; gap: 0.5rem; }
+  .cancelBtn, .saveBtn { width: 100%; justify-content: center; }
 }

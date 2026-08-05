@@ -20,12 +20,13 @@
 }
 
 .primaryBtn {
-  display: flex; align-items: center; gap: 0.4rem;
+  display: flex; align-items: center; justify-content: center; gap: 0.4rem;
   padding: 0.55rem 1rem;
   background: var(--btn-bg); color: var(--btn-text);
   border-radius: var(--radius-sm);
   font-size: 0.9rem; font-weight: 500;
   transition: opacity 0.15s; text-decoration: none;
+  white-space: nowrap;
 }
 
 .primaryBtn:hover {
@@ -129,6 +130,7 @@
   border-bottom: 1px solid var(--border-subtle);
   cursor: pointer;
   transition: opacity 0.15s ease;
+  gap: 0.75rem;
 }
 
 .recentRow:hover {
@@ -141,6 +143,7 @@
   gap: 0.75rem;
   overflow: hidden;
   padding-right: 0.5rem;
+  flex: 1;
 }
 
 .thumbImg {
@@ -180,14 +183,15 @@
 
 .recentCompany {
   font-size: 0.8rem; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 .recentRight {
-  display: flex; align-items: center; gap: 1rem; flex-shrink: 0;
+  display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0;
 }
 
 .recentTime {
-  font-size: 0.8rem; color: var(--text-subtle);
+  font-size: 0.78rem; color: var(--text-subtle);
 }
 
 .emptyState {
@@ -204,6 +208,24 @@
 }
 
 @media (max-width: 900px) {
+  .page { padding: 1.5rem 1.25rem; }
   .metricsGrid { grid-template-columns: repeat(2, 1fr); }
   .layoutGrid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .page { padding: 1.25rem 1rem; }
+  .header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .title { font-size: 1.35rem; }
+  .primaryBtn { width: 100%; }
+  .metricsGrid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+  .metricCard { padding: 1rem 1.1rem; }
+  .metricValue { font-size: 1.5rem; }
+  .sectionCard { padding: 1.1rem; }
+  .statusLabelWrap { width: 95px; }
+  .recentTime { display: none; } /* Hide time on small mobile to give title room */
+}
+
+@media (max-width: 400px) {
+  .metricsGrid { grid-template-columns: 1fr; }
 }

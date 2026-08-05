@@ -1,60 +1,96 @@
 .sidebar {
-  width: 220px; min-width: 220px; height: 100vh;
+  width: 220px;
+  min-width: 220px;
+  height: 100vh;
   background: var(--bg-card);
   border-right: 1px solid var(--border);
-  display: flex; flex-direction: column; justify-content: space-between;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   padding: 1rem 0.75rem;
+  z-index: 90;
 }
 
 .top {
-  display: flex; flex-direction: column; gap: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .brandRow {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 0.25rem 0.5rem;
 }
 
 .brand {
-  display: flex; align-items: center; gap: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .logoMark {
-  width: 24px; height: 24px;
+  width: 26px;
+  height: 26px;
   background: var(--bg-subtle);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 0.75rem; color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: var(--text);
 }
 
 .brandName {
-  font-size: 0.9rem; font-weight: 600; color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
   letter-spacing: -0.01em;
 }
 
+.desktopActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .themeToggleBtn {
-  width: 26px; height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: var(--radius-sm);
-  display: flex; align-items: center; justify-content: center;
-  color: var(--text-muted); border: 1px solid var(--border);
-  background: var(--bg-subtle); cursor: pointer; transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  cursor: pointer;
+  transition: all 0.15s;
 }
 
 .themeToggleBtn:hover {
-  color: var(--text); border-color: var(--border-focus);
+  color: var(--text);
+  border-color: var(--border-focus);
 }
 
 .nav {
-  display: flex; flex-direction: column; gap: 0.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .navItem {
-  display: flex; align-items: center; gap: 0.6rem;
-  padding: 0.5rem 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0.75rem;
   border-radius: var(--radius-sm);
   color: var(--text-muted);
-  font-size: 0.85rem; font-weight: 500;
+  font-size: 0.88rem;
+  font-weight: 500;
   transition: all 0.12s ease;
   text-decoration: none;
 }
@@ -73,45 +109,162 @@
 .bottom {
   border-top: 1px solid var(--border);
   padding-top: 0.75rem;
-  display: flex; flex-direction: column; gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .userRow {
-  display: flex; align-items: center; gap: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0.25rem 0.5rem;
 }
 
 .avatar {
-  width: 26px; height: 26px;
+  width: 28px;
+  height: 28px;
   border: 1px solid var(--border);
   border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--text-muted); flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  background: var(--bg-subtle);
 }
 
 .userMeta {
-  display: flex; flex-direction: column; overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .userName {
-  font-size: 0.8rem; font-weight: 500; color: var(--text);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .userEmail {
-  font-size: 0.7rem; color: var(--text-subtle);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .logoutBtn {
-  display: flex; align-items: center; gap: 0.5rem;
-  padding: 0.4rem 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
   border-radius: var(--radius-sm);
-  color: var(--text-subtle);
-  font-size: 0.8rem; font-weight: 500;
-  transition: color 0.15s; width: 100%;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  width: 100%;
 }
 
 .logoutBtn:hover {
   color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+}
+
+/* Mobile Specific Responsive Elements */
+.mobileTopBar {
+  display: none;
+}
+
+.hamburgerBtn {
+  display: none;
+}
+
+.backdrop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobileTopBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    z-index: 95;
+  }
+
+  .mobileRightActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hamburgerBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .hamburgerBtn:hover {
+    border-color: var(--border-focus);
+  }
+
+  .desktopActions {
+    display: none;
+  }
+
+  .backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    z-index: 98;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px;
+    min-width: 260px;
+    z-index: 99;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+    padding-top: 1.25rem;
+  }
+
+  .mobileDrawerOpen {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

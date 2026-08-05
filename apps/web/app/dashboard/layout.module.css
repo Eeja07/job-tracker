@@ -3,3 +3,15 @@
 
 .shell { display: flex; height: 100vh; overflow: hidden; }
 .main { flex: 1; overflow-y: auto; background: var(--bg); }
+
+@media (max-width: 768px) {
+  .shell {
+    flex-direction: column;
+    height: 100vh;
+  }
+  .main {
+    padding-top: 56px; /* Offset for fixed mobile topbar */
+    height: calc(100vh - 56px);
+    width: 100%;
+  }
+}

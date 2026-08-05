@@ -20,12 +20,13 @@
 }
 
 .primaryBtn {
-  display: flex; align-items: center; gap: 0.4rem;
+  display: flex; align-items: center; justify-content: center; gap: 0.4rem;
   padding: 0.55rem 1rem;
   background: var(--btn-bg); color: var(--btn-text);
   border-radius: var(--radius-sm);
   font-size: 0.9rem; font-weight: 500;
   transition: opacity 0.15s; border: none; cursor: pointer;
+  white-space: nowrap;
 }
 
 .primaryBtn:hover {
@@ -35,11 +36,12 @@
 .filterRow {
   display: flex; align-items: center; gap: 0.75rem;
   margin-bottom: 1.25rem;
+  flex-wrap: wrap;
 }
 
 .searchBox {
   display: flex; align-items: center; position: relative;
-  flex: 1; max-width: 400px;
+  flex: 1; min-width: 240px;
 }
 
 .searchIcon {
@@ -102,11 +104,12 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .table {
-  width: 100%; border-collapse: collapse; text-align: left;
+  width: 100%; border-collapse: collapse; text-align: left; min-width: 680px;
 }
 
 .table th {
@@ -260,5 +263,16 @@
 }
 
 @media (max-width: 900px) {
-  .tableContainer { overflow-x: auto; }
+  .page { padding: 1.5rem 1.25rem; }
+}
+
+@media (max-width: 600px) {
+  .page { padding: 1.25rem 1rem; }
+  .header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .title { font-size: 1.35rem; }
+  .primaryBtn { width: 100%; }
+  .filterRow { flex-direction: column; align-items: stretch; gap: 0.5rem; }
+  .searchBox { width: 100%; max-width: 100%; }
+  .selectFilter { width: 100%; }
+  .pagination { justify-content: space-between; }
 }
