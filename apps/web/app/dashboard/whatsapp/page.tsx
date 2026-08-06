@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { MessageSquare, QrCode, CheckCircle2, AlertCircle, RefreshCw, Send, LogOut, ShieldCheck, Terminal, Smartphone } from "lucide-react";
 import { fetchApi } from "@/lib/api";
+import styles from "./page.module.css";
 
 interface WaStatusResponse {
   status: "disconnected" | "connecting" | "qr_ready" | "connected";
@@ -30,7 +31,6 @@ export default function WhatsAppPage() {
       setWaState(data);
     } catch (err: any) {
       console.error("Failed to load WhatsApp status:", err);
-      setWaState({ status: "disconnected", connectedUser: null, hasQr: false });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -39,10 +39,10 @@ export default function WhatsAppPage() {
 
   useEffect(() => {
     fetchStatus();
-    // Auto refresh every 4 seconds to poll status or updated QR code
+    // Auto refresh status every 3 seconds to poll for QR Code updates or connection state changes
     const timer = setInterval(() => {
       fetchStatus();
-    }, 4000);
+    }, 3000);
 
     return () => clearInterval(timer);
   }, []);
@@ -95,15 +95,15 @@ export default function WhatsAppPage() {
   };
 
   return (
-    <div style={{ padding: "1.5rem", maxWidth: "1200px", margin: "0 auto" }}>
+    <div className={styles.container}>
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem", flexWrap: "wrap", gap: "1rem" }}>
-        <div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.75rem", margin: 0 }}>
-            <MessageSquare style={{ color: "#25D366" }} size={28} />
+      <div className={styles.header}>
+        <div className={styles.titleGroup}>
+          <h1 className={styles.title}>
+            <MessageSquare size={28} className={styles.titleIcon} />
             Central WhatsApp Gateway
           </h1>
-          <p style={{ color: "#94a3b8", marginTop: "0.25rem", fontSize: "0.95rem" }}>
+          <p className={styles.subtitle}>
             Hubungkan nomor WhatsApp untuk notifikasi otomatis email HRD dan perintah interaktif via chat bot.
           </p>
         </div>
@@ -111,20 +111,7 @@ export default function WhatsAppPage() {
         <button
           onClick={handleManualRefresh}
           disabled={refreshing}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            padding: "0.6rem 1.2rem",
-            borderRadius: "0.5rem",
-            backgroundColor: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            color: "#f8fafc",
-            cursor: "pointer",
-            fontSize: "0.9rem",
-            fontWeight: 500,
-            transition: "all 0.2s ease",
-          }}
+          className={styles.refreshBtn}
         >
           <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
           Refresh Status
@@ -132,148 +119,95 @@ export default function WhatsAppPage() {
       </div>
 
       {/* Main Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "1.5rem" }}>
+      <div className={styles.grid}>
         
         {/* Card 1: Connection & QR Scan */}
-        <div style={{
-          backgroundColor: "#1e293b",
-          borderRadius: "1rem",
-          border: "1px solid #334155",
-          padding: "1.75rem",
-          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.3)",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          textAlign: "center"
-        }}>
-          <h2 style={{ fontSize: "1.2rem", fontWeight: 600, margin: 0, marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <QrCode size={20} style={{ color: "#38bdf8" }} />
+        <div className={styles.card}>
+          <h2 className={styles.cardHeader}>
+            <QrCode size={20} className={styles.iconQr} />
             Koneksi WhatsApp Gateway
           </h2>
 
-          {loading ? (
-            <div style={{ padding: "3rem 0", color: "#94a3b8" }}>
-              <RefreshCw size={32} className="animate-spin" style={{ margin: "0 auto 1rem" }} />
-              <p>Memeriksa status koneksi...</p>
-            </div>
-          ) : waState.status === "connected" ? (
-            <div style={{ width: "100%" }}>
-              <div style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                backgroundColor: "rgba(16, 185, 129, 0.15)",
-                color: "#34d399",
-                border: "1px solid rgba(16, 185, 129, 0.3)",
-                padding: "0.5rem 1rem",
-                borderRadius: "9999px",
-                fontWeight: 600,
-                fontSize: "0.9rem",
-                marginBottom: "1.5rem"
-              }}>
-                <CheckCircle2 size={18} />
-                STATUS: TERHUBUNG
+          <div className={styles.qrContainer}>
+            {loading ? (
+              <div style={{ padding: "3rem 0", color: "var(--text-muted)" }}>
+                <RefreshCw size={32} className="animate-spin" style={{ margin: "0 auto 1rem" }} />
+                <p style={{ margin: 0 }}>Memeriksa status koneksi...</p>
               </div>
+            ) : waState.status === "connected" ? (
+              <div style={{ width: "100%" }}>
+                <div className={styles.badgeConnected}>
+                  <CheckCircle2 size={18} />
+                  STATUS: TERHUBUNG
+                </div>
 
-              <div style={{ backgroundColor: "#0f172a", borderRadius: "0.75rem", padding: "1.25rem", border: "1px solid #334155", marginBottom: "1.5rem" }}>
-                <p style={{ margin: 0, color: "#94a3b8", fontSize: "0.85rem" }}>Nomor WA Terhubung:</p>
-                <p style={{ margin: "0.25rem 0 0", color: "#38bdf8", fontWeight: 700, fontSize: "1.25rem" }}>
-                  +{waState.connectedUser}
-                </p>
-                <p style={{ margin: "0.75rem 0 0", color: "#64748b", fontSize: "0.8rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem" }}>
-                  <ShieldCheck size={14} color="#10b981" />
-                  Koneksi Persistent (Tetap aktif meskipun server restart)
-                </p>
+                <div className={styles.connectedDetails}>
+                  <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.85rem" }}>Nomor WA Terhubung:</p>
+                  <p className={styles.connectedUser}>
+                    +{waState.connectedUser}
+                  </p>
+                  <p style={{ margin: "0.75rem 0 0", color: "var(--text-subtle)", fontSize: "0.8rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem" }}>
+                    <ShieldCheck size={14} color="#10b981" />
+                    Koneksi Persistent (Tetap aktif meskipun server restart)
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleLogout}
+                  className={styles.logoutBtn}
+                >
+                  <LogOut size={18} />
+                  Putuskan Koneksi (Logout)
+                </button>
               </div>
+            ) : waState.qrDataUrl || waState.hasQr || waState.status === "qr_ready" ? (
+              <div style={{ width: "100%" }}>
+                <div className={styles.badgeQrReady}>
+                  <Smartphone size={16} />
+                  SILAKAN SCAN QR CODE
+                </div>
 
-              <button
-                onClick={handleLogout}
-                style={{
-                  width: "100%",
-                  padding: "0.75rem",
-                  borderRadius: "0.5rem",
-                  backgroundColor: "rgba(239, 68, 68, 0.15)",
-                  border: "1px solid rgba(239, 68, 68, 0.3)",
-                  color: "#f87171",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "0.5rem",
-                  transition: "all 0.2s ease"
-                }}
-              >
-                <LogOut size={18} />
-                Putuskan Koneksi (Logout)
-              </button>
-            </div>
-          ) : waState.qrDataUrl ? (
-            <div>
-              <div style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                backgroundColor: "rgba(245, 158, 11, 0.15)",
-                color: "#fbbf24",
-                border: "1px solid rgba(245, 158, 11, 0.3)",
-                padding: "0.4rem 0.9rem",
-                borderRadius: "9999px",
-                fontWeight: 600,
-                fontSize: "0.85rem",
-                marginBottom: "1.25rem"
-              }}>
-                <Smartphone size={16} />
-                SILAKAN SCAN QR CODE
+                {waState.qrDataUrl ? (
+                  <div className={styles.qrCodeFrame}>
+                    <img
+                      src={waState.qrDataUrl}
+                      alt="WhatsApp QR Code"
+                      className={styles.qrImage}
+                    />
+                  </div>
+                ) : (
+                  <div style={{ padding: "2rem 0", color: "var(--text-muted)" }}>
+                    <RefreshCw size={28} className="animate-spin" style={{ margin: "0 auto 0.75rem" }} />
+                    <p style={{ margin: 0, fontSize: "0.9rem" }}>Menyiapkan gambar QR Code...</p>
+                  </div>
+                )}
+
+                <ol className={styles.qrInstructions}>
+                  <li>Buka aplikasi WhatsApp di HP.</li>
+                  <li>Pilih <strong>Perangkat Tertaut (Linked Devices)</strong>.</li>
+                  <li>Klik <strong>Tautkan Perangkat</strong> & Scan QR Code di atas.</li>
+                </ol>
               </div>
-
-              <div style={{
-                backgroundColor: "#ffffff",
-                padding: "0.75rem",
-                borderRadius: "1rem",
-                display: "inline-block",
-                boxShadow: "0 10px 25px -5px rgba(0,0,0,0.5)",
-                marginBottom: "1.25rem"
-              }}>
-                <img
-                  src={waState.qrDataUrl}
-                  alt="WhatsApp QR Code"
-                  style={{ width: "220px", height: "220px", display: "block" }}
-                />
+            ) : (
+              <div style={{ padding: "2rem 0", color: "var(--text-muted)" }}>
+                <AlertCircle size={36} style={{ color: "var(--status-rejected-color)", margin: "0 auto 1rem" }} />
+                <p style={{ fontWeight: 600, color: "var(--text)", margin: 0 }}>Gateway Belum Siap / Disconnected</p>
+                <p style={{ fontSize: "0.85rem", marginTop: "0.35rem" }}>Menyiapkan koneksi WhatsApp Gateway baru...</p>
               </div>
-
-              <ol style={{ textAlign: "left", color: "#94a3b8", fontSize: "0.85rem", margin: "0 auto", paddingLeft: "1.25rem", maxWidth: "280px" }}>
-                <li>Buka aplikasi WhatsApp di HP.</li>
-                <li>Pilih <strong>Perangkat Tertaut (Linked Devices)</strong>.</li>
-                <li>Klik <strong>Tautkan Perangkat</strong> & Scan QR Code di atas.</li>
-              </ol>
-            </div>
-          ) : (
-            <div style={{ padding: "2rem 0", color: "#94a3b8" }}>
-              <AlertCircle size={36} style={{ color: "#ef4444", margin: "0 auto 1rem" }} />
-              <p style={{ fontWeight: 600, color: "#f8fafc" }}>Gateway Belum Siap / Disconnected</p>
-              <p style={{ fontSize: "0.85rem" }}>Menunggu WhatsApp Gateway membuat QR Code baru...</p>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Card 2: Test WhatsApp Notification */}
-        <div style={{
-          backgroundColor: "#1e293b",
-          borderRadius: "1rem",
-          border: "1px solid #334155",
-          padding: "1.75rem",
-          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.3)",
-        }}>
-          <h2 style={{ fontSize: "1.2rem", fontWeight: 600, margin: 0, marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <Send size={20} style={{ color: "#25D366" }} />
+        <div className={styles.card}>
+          <h2 className={styles.cardHeader}>
+            <Send size={20} className={styles.iconSend} />
             Kirim Pesan Uji Coba (Test Message)
           </h2>
 
-          <form onSubmit={handleSendTestMessage}>
-            <div style={{ marginBottom: "1rem" }}>
-              <label style={{ display: "block", color: "#cbd5e1", fontSize: "0.85rem", marginBottom: "0.4rem", fontWeight: 500 }}>
+          <form onSubmit={handleSendTestMessage} style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
                 Nomor WhatsApp Tujuan (cth: 081234567890)
               </label>
               <input
@@ -281,50 +215,32 @@ export default function WhatsAppPage() {
                 value={testPhone}
                 onChange={(e) => setTestPhone(e.target.value)}
                 placeholder="08xxxxxxxxxx"
-                style={{
-                  width: "100%",
-                  padding: "0.75rem",
-                  borderRadius: "0.5rem",
-                  backgroundColor: "#0f172a",
-                  border: "1px solid #334155",
-                  color: "#f8fafc",
-                  outline: "none",
-                  fontSize: "0.95rem"
-                }}
+                className={styles.input}
               />
             </div>
 
-            <div style={{ marginBottom: "1.25rem" }}>
-              <label style={{ display: "block", color: "#cbd5e1", fontSize: "0.85rem", marginBottom: "0.4rem", fontWeight: 500 }}>
+            <div className={styles.formGroup} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+              <label className={styles.label}>
                 Isi Pesan
               </label>
               <textarea
                 value={testMessage}
                 onChange={(e) => setTestMessage(e.target.value)}
                 rows={4}
-                style={{
-                  width: "100%",
-                  padding: "0.75rem",
-                  borderRadius: "0.5rem",
-                  backgroundColor: "#0f172a",
-                  border: "1px solid #334155",
-                  color: "#f8fafc",
-                  outline: "none",
-                  fontSize: "0.9rem",
-                  resize: "vertical"
-                }}
+                className={styles.textarea}
+                style={{ flex: 1 }}
               />
             </div>
 
             {msgResult && (
               <div style={{
                 padding: "0.75rem",
-                borderRadius: "0.5rem",
+                borderRadius: "var(--radius, 6px)",
                 fontSize: "0.85rem",
                 marginBottom: "1rem",
-                backgroundColor: msgResult.success ? "rgba(16, 185, 129, 0.15)" : "rgba(239, 68, 68, 0.15)",
-                color: msgResult.success ? "#34d399" : "#f87171",
-                border: `1px solid ${msgResult.success ? "rgba(16, 185, 129, 0.3)" : "rgba(239, 68, 68, 0.3)"}`
+                backgroundColor: msgResult.success ? "var(--status-offer-bg)" : "var(--status-rejected-bg)",
+                color: msgResult.success ? "var(--status-offer-color)" : "var(--status-rejected-color)",
+                border: `1px solid ${msgResult.success ? "var(--status-offer-border)" : "var(--status-rejected-border)"}`
               }}>
                 {msgResult.message}
               </div>
@@ -333,21 +249,8 @@ export default function WhatsAppPage() {
             <button
               type="submit"
               disabled={sendingMsg || waState.status !== "connected"}
-              style={{
-                width: "100%",
-                padding: "0.75rem",
-                borderRadius: "0.5rem",
-                backgroundColor: waState.status === "connected" ? "#25D366" : "#334155",
-                color: waState.status === "connected" ? "#022c22" : "#64748b",
-                fontWeight: 700,
-                cursor: waState.status === "connected" ? "pointer" : "not-allowed",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "0.5rem",
-                border: "none",
-                transition: "all 0.2s ease"
-              }}
+              className={styles.submitBtn}
+              style={{ marginTop: "auto" }}
             >
               <Send size={16} />
               {sendingMsg ? "Mengirim Pesan..." : "Kirim Pesan WhatsApp"}
@@ -358,56 +261,49 @@ export default function WhatsAppPage() {
       </div>
 
       {/* Card 3: Interactive Bot Commands Cheat Sheet */}
-      <div style={{
-        marginTop: "1.5rem",
-        backgroundColor: "#1e293b",
-        borderRadius: "1rem",
-        border: "1px solid #334155",
-        padding: "1.75rem",
-        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.3)"
-      }}>
-        <h2 style={{ fontSize: "1.2rem", fontWeight: 600, margin: 0, marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <Terminal size={20} style={{ color: "#a855f7" }} />
+      <div className={styles.card} style={{ marginTop: "0.5rem" }}>
+        <h2 className={styles.cardHeader}>
+          <Terminal size={20} className={styles.iconTerminal} />
           Daftar Perintah WhatsApp Bot Interaktif
         </h2>
 
-        <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginBottom: "1.25rem" }}>
+        <p className={styles.subtitle} style={{ marginBottom: "1.25rem" }}>
           Kirim pesan chat berikut langsung ke nomor bot WhatsApp yang terhubung untuk mengontrol Job Tracker Anda:
         </p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem" }}>
-          <div style={{ backgroundColor: "#0f172a", padding: "1rem", borderRadius: "0.75rem", border: "1px solid #334155" }}>
-            <span style={{ backgroundColor: "rgba(168, 85, 247, 0.2)", color: "#c084fc", padding: "0.2rem 0.5rem", borderRadius: "0.25rem", fontFamily: "monospace", fontWeight: 600, fontSize: "0.85rem" }}>
+        <div className={styles.cheatGrid}>
+          <div className={styles.cheatCard}>
+            <span className={`${styles.cmdTag} ${styles.cmdOverview}`}>
               !overview
             </span>
-            <p style={{ color: "#cbd5e1", fontSize: "0.85rem", marginTop: "0.5rem", marginBottom: 0 }}>
+            <p className={styles.cheatDesc}>
               Cek total lamaran, breakdown status, & analisis stage penolakan.
             </p>
           </div>
 
-          <div style={{ backgroundColor: "#0f172a", padding: "1rem", borderRadius: "0.75rem", border: "1px solid #334155" }}>
-            <span style={{ backgroundColor: "rgba(56, 189, 248, 0.2)", color: "#38bdf8", padding: "0.2rem 0.5rem", borderRadius: "0.25rem", fontFamily: "monospace", fontWeight: 600, fontSize: "0.85rem" }}>
+          <div className={styles.cheatCard}>
+            <span className={`${styles.cmdTag} ${styles.cmdLamaran}`}>
               !lamaran
             </span>
-            <p style={{ color: "#cbd5e1", fontSize: "0.85rem", marginTop: "0.5rem", marginBottom: 0 }}>
+            <p className={styles.cheatDesc}>
               Menampilkan 5 daftar lamaran kerja terbaru yang Anda daftarkan.
             </p>
           </div>
 
-          <div style={{ backgroundColor: "#0f172a", padding: "1rem", borderRadius: "0.75rem", border: "1px solid #334155" }}>
-            <span style={{ backgroundColor: "rgba(34, 197, 94, 0.2)", color: "#4ade80", padding: "0.2rem 0.5rem", borderRadius: "0.25rem", fontFamily: "monospace", fontWeight: 600, fontSize: "0.85rem" }}>
+          <div className={styles.cheatCard}>
+            <span className={`${styles.cmdTag} ${styles.cmdEmail}`}>
               !email
             </span>
-            <p style={{ color: "#cbd5e1", fontSize: "0.85rem", marginTop: "0.5rem", marginBottom: 0 }}>
+            <p className={styles.cheatDesc}>
               Cek 5 balasan email HRD / perusahaan terbaru yang terdeteksi.
             </p>
           </div>
 
-          <div style={{ backgroundColor: "#0f172a", padding: "1rem", borderRadius: "0.75rem", border: "1px solid #334155" }}>
-            <span style={{ backgroundColor: "rgba(251, 146, 60, 0.2)", color: "#fb923c", padding: "0.2rem 0.5rem", borderRadius: "0.25rem", fontFamily: "monospace", fontWeight: 600, fontSize: "0.85rem" }}>
+          <div className={styles.cheatCard}>
+            <span className={`${styles.cmdTag} ${styles.cmdTambah}`}>
               !tambah [Judul] | [Perusahaan]
             </span>
-            <p style={{ color: "#cbd5e1", fontSize: "0.85rem", marginTop: "0.5rem", marginBottom: 0 }}>
+            <p className={styles.cheatDesc}>
               Tambah lamaran kerja baru langsung via WA (contoh: <code>!tambah Dev | Tokopedia</code>).
             </p>
           </div>

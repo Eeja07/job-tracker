@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Body, HttpCode, HttpStatus, Headers } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, HttpCode, HttpStatus, Headers, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { WhatsappService } from './whatsapp.service';
 
 @ApiTags('WhatsApp')
@@ -8,11 +9,15 @@ export class WhatsappController {
   constructor(private readonly whatsappService: WhatsappService) {}
 
   @Get('status')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async getStatus() {
     return this.whatsappService.getStatus();
   }
 
   @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   async logout() {
     const success = await this.whatsappService.logoutSession();
@@ -33,6 +38,8 @@ export class WhatsappController {
   }
 
   @Post('test-send')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   async testSend(@Body() body: { to: string; message: string }) {
     const success = await this.whatsappService.sendTextMessage(body.to, body.message);
