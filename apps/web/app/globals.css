@@ -27,34 +27,34 @@
   --radius: 6px;
   --radius-sm: 4px;
 
-  /* Status Badge Tokens — 100% Unified Monochrome Dark Mode */
-  --status-saved-color: #f4f4f5;
-  --status-saved-bg: rgba(255, 255, 255, 0.08);
-  --status-saved-border: rgba(255, 255, 255, 0.16);
+  /* Status Badge Tokens — Vibrant Modern Colors */
+  --status-saved-color: #9ca3af;
+  --status-saved-bg: rgba(156, 163, 175, 0.12);
+  --status-saved-border: rgba(156, 163, 175, 0.25);
 
-  --status-applied-color: #f4f4f5;
-  --status-applied-bg: rgba(255, 255, 255, 0.08);
-  --status-applied-border: rgba(255, 255, 255, 0.16);
+  --status-applied-color: #3b82f6;
+  --status-applied-bg: rgba(59, 130, 246, 0.12);
+  --status-applied-border: rgba(59, 130, 246, 0.25);
 
-  --status-screening-color: #f4f4f5;
-  --status-screening-bg: rgba(255, 255, 255, 0.08);
-  --status-screening-border: rgba(255, 255, 255, 0.16);
+  --status-screening-color: #a855f7;
+  --status-screening-bg: rgba(168, 85, 247, 0.12);
+  --status-screening-border: rgba(168, 85, 247, 0.25);
 
-  --status-interviewing-color: #f4f4f5;
-  --status-interviewing-bg: rgba(255, 255, 255, 0.08);
-  --status-interviewing-border: rgba(255, 255, 255, 0.16);
+  --status-interviewing-color: #06b6d4;
+  --status-interviewing-bg: rgba(6, 182, 212, 0.12);
+  --status-interviewing-border: rgba(6, 182, 212, 0.25);
 
-  --status-offer-color: #f4f4f5;
-  --status-offer-bg: rgba(255, 255, 255, 0.08);
-  --status-offer-border: rgba(255, 255, 255, 0.16);
+  --status-offer-color: #10b981;
+  --status-offer-bg: rgba(16, 185, 129, 0.12);
+  --status-offer-border: rgba(16, 185, 129, 0.25);
 
-  --status-rejected-color: #f4f4f5;
-  --status-rejected-bg: rgba(255, 255, 255, 0.08);
-  --status-rejected-border: rgba(255, 255, 255, 0.16);
+  --status-rejected-color: #ef4444;
+  --status-rejected-bg: rgba(239, 68, 68, 0.12);
+  --status-rejected-border: rgba(239, 68, 68, 0.25);
 
-  --status-withdrawn-color: #f4f4f5;
-  --status-withdrawn-bg: rgba(255, 255, 255, 0.08);
-  --status-withdrawn-border: rgba(255, 255, 255, 0.16);
+  --status-withdrawn-color: #f59e0b;
+  --status-withdrawn-bg: rgba(245, 158, 11, 0.12);
+  --status-withdrawn-border: rgba(245, 158, 11, 0.25);
 }
 
 [data-theme="light"] {
