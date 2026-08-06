@@ -4,6 +4,7 @@ import { dashboardApi, applicationsApi, type Application } from "@/lib/api";
 import { STATUS_CONFIG, formatDate, getDaysAgo } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { Plus, ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ApplicationDetailModal from "@/components/ApplicationDetailModal";
 import ApplicationModal from "@/components/ApplicationModal";
@@ -12,6 +13,7 @@ import styles from "./page.module.css";
 const STATUS_ORDER = ["SAVED","APPLIED","SCREENING","INTERVIEWING","OFFER","REJECTED","WITHDRAWN"] as const;
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const [stats, setStats] = useState<Record<string,number>>({});
   const [recent, setRecent] = useState<Application[]>([]);
