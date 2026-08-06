@@ -131,12 +131,6 @@ _Atau:_ \`!tambah Frontend Engineer | Gojek | INTERVIEWING\`
   }
 
   private async getPrimaryUserId(): Promise<string> {
-    const gmailToken = await this.prisma.gmailToken.findFirst({
-      where: { isActive: true },
-      orderBy: { updatedAt: 'desc' },
-    });
-    if (gmailToken?.userId) return gmailToken.userId;
-
     const topUser = await this.prisma.application.groupBy({
       by: ['userId'],
       _count: { userId: true },
@@ -144,6 +138,12 @@ _Atau:_ \`!tambah Frontend Engineer | Gojek | INTERVIEWING\`
       take: 1,
     });
     if (topUser.length > 0) return topUser[0].userId;
+
+    const gmailToken = await this.prisma.gmailToken.findFirst({
+      where: { isActive: true },
+      orderBy: { updatedAt: 'desc' },
+    });
+    if (gmailToken?.userId) return gmailToken.userId;
 
     const user = await this.prisma.user.findFirst();
     return user?.id || '';
