@@ -212,7 +212,7 @@ _Atau:_ \`!tambah Frontend Engineer | Gojek | INTERVIEWING\`
     const userId = await this.getPrimaryUserId();
     const apps = await this.prisma.application.findMany({
       where: { userId },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { appliedAt: 'desc' },
       take: 5,
       include: { company: true },
     });
@@ -223,7 +223,10 @@ _Atau:_ \`!tambah Frontend Engineer | Gojek | INTERVIEWING\`
 
     let msg = `💼 *5 LAMARAN KERJA TERBARU*\n\n`;
     apps.forEach((app, idx) => {
-      msg += `${idx + 1}. *${app.jobTitle}*\n   🏢 Perusahaan: ${app.company?.name || 'N/A'}\n   📌 Status: *${app.status}*\n   📅 Diubah: ${new Date(app.updatedAt).toLocaleDateString('id-ID')}\n\n`;
+      const dateStr = app.appliedAt
+        ? new Date(app.appliedAt).toLocaleDateString('id-ID')
+        : new Date(app.createdAt).toLocaleDateString('id-ID');
+      msg += `${idx + 1}. *${app.jobTitle}*\n   🏢 Perusahaan: ${app.company?.name || 'N/A'}\n   📌 Status: *${app.status}*\n   📅 Apply: ${dateStr}\n\n`;
     });
 
     msg += `🔗 _Lihat Semua Lamaran:_ https://job.eeja.fun/dashboard/applications`;
@@ -232,12 +235,24 @@ _Atau:_ \`!tambah Frontend Engineer | Gojek | INTERVIEWING\`
 
   private async getHrRepliesMessage(): Promise<string> {
     const userId = await this.getPrimaryUserId();
+
+    // Priority 1: Emails with a detected HR type (INTERVIEW, OFFER, REJECTED, SCREENING, APPLIED_CONFIRM)
     let messages = await this.prisma.emailMessage.findMany({
-      where: { userId, isJobRelated: true },
+      where: { userId, detectedType: { not: null } },
       orderBy: { receivedAt: 'desc' },
       take: 5,
     });
 
+    // Priority 2: Any job-related email (may include job alerts, but better than nothing)
+    if (messages.length === 0) {
+      messages = await this.prisma.emailMessage.findMany({
+        where: { userId, isJobRelated: true },
+        orderBy: { receivedAt: 'desc' },
+        take: 5,
+      });
+    }
+
+    // Priority 3: Last resort — 5 newest emails of any kind
     if (messages.length === 0) {
       messages = await this.prisma.emailMessage.findMany({
         where: { userId },
@@ -250,9 +265,22 @@ _Atau:_ \`!tambah Frontend Engineer | Gojek | INTERVIEWING\`
       return `📩 *BALASAN EMAIL HRD*\n\nBelum ada balasan email yang terdeteksi di inbox Gmail kamu. Hubungkan akun Gmail di dashboard untuk menyinkronkan email secara otomatis!\n\n🔗 _Hubungkan Gmail:_ https://job.eeja.fun/dashboard/gmail`;
     }
 
-    let msg = `📩 *5 BALASAN EMAIL HRD TERBARU*\n\n`;
+    const typeLabel: Record<string, string> = {
+      INTERVIEW: '🎤 Undangan Interview',
+      OFFER: '🎉 Job Offer',
+      REJECTED: '❌ Penolakan',
+      SCREENING: '📋 Lolos Screening',
+      APPLIED_CONFIRM: '✅ Konfirmasi Lamaran',
+    };
+
+    const hasHrReplies = messages.some((m) => m.detectedType);
+    let msg = hasHrReplies
+      ? `📩 *BALASAN HRD TERBARU*\n\n`
+      : `📩 *5 EMAIL LOKER TERBARU*\n_(Belum ada balasan HRD yang terdeteksi)_\n\n`;
+
     messages.forEach((m, idx) => {
-      msg += `${idx + 1}. *${m.subject || 'Tanpa Subjek'}*\n   👤 Dari: ${m.fromName || m.fromEmail}\n   🏷️ Tipe: *${m.detectedType || (m.isJobRelated ? 'HR_REPLY' : 'EMAIL')}*\n   📅 Waktu: ${new Date(m.receivedAt).toLocaleString('id-ID')}\n\n`;
+      const tipe = m.detectedType ? typeLabel[m.detectedType] || m.detectedType : (m.isJobRelated ? '📢 Info Loker' : '📧 Email');
+      msg += `${idx + 1}. *${m.subject || 'Tanpa Subjek'}*\n   👤 Dari: ${m.fromName || m.fromEmail}\n   🏷️ Tipe: ${tipe}\n   📅 Waktu: ${new Date(m.receivedAt).toLocaleString('id-ID')}\n\n`;
     });
 
     msg += `🔗 _Buka Inbox Gmail:_ https://job.eeja.fun/dashboard/gmail`;
@@ -282,9 +310,9 @@ _Atau:_ \`!tambah Frontend Engineer | Gojek | INTERVIEWING\`
 
     const status = statusStr as ApplicationStatus;
 
-    // Get first user in DB to assign application
-    const user = await this.prisma.user.findFirst();
-    if (!user) {
+    // Assign to primary user (user with most applications)
+    const userId = await this.getPrimaryUserId();
+    if (!userId) {
       return `❌ *Gagal!* Tidak menemukan akun user di database.`;
     }
 
@@ -302,7 +330,7 @@ _Atau:_ \`!tambah Frontend Engineer | Gojek | INTERVIEWING\`
     // Create application
     const app = await this.prisma.application.create({
       data: {
-        userId: user.id,
+        userId,
         companyId: company.id,
         jobTitle,
         status,
