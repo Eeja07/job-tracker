@@ -128,6 +128,33 @@ export class ApplicationService {
     return result;
   }
 
+  async findAllPaginated(
+    userId: string,
+    query: ApplicationQueryDto,
+  ): Promise<{ data: Application[]; total: number; page: number; limit: number; totalPages: number }> {
+    const deadlineBefore =
+      query.deadlineBefore && !isNaN(Date.parse(query.deadlineBefore))
+        ? new Date(query.deadlineBefore)
+        : undefined;
+    const deadlineAfter =
+      query.deadlineAfter && !isNaN(Date.parse(query.deadlineAfter))
+        ? new Date(query.deadlineAfter)
+        : undefined;
+
+    const { data, total } =
+      await this.applicationRepository.findWithFiltersAndCount(userId, {
+        ...query,
+        deadlineBefore,
+        deadlineAfter,
+      });
+
+    const page = query.page || 1;
+    const limit = query.limit !== undefined ? Number(query.limit) : 20;
+    const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
+
+    return { data, total, page, limit, totalPages };
+  }
+
   async findAll(
     userId: string,
     query: ApplicationQueryDto,

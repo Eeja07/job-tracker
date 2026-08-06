@@ -95,11 +95,11 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
     return tx ? tx.application : this.prisma.application;
   }
 
-  async findWithFilters(
+  async findWithFiltersAndCount(
     userId: string,
     params: ApplicationFilterParams,
     tx?: Prisma.TransactionClient,
-  ): Promise<Application[]> {
+  ): Promise<{ data: Application[]; total: number }> {
     const {
       status,
       companyId,
@@ -141,17 +141,32 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
     const skip = takeNum > 0 ? (pageNum - 1) * takeNum : undefined;
     const take = takeNum > 0 ? takeNum : undefined;
 
-    return this.getDelegate(tx).findMany({
-      where,
-      include: {
-        company: {
-          select: { id: true, name: true },
+    const delegate = this.getDelegate(tx);
+    const [data, total] = await Promise.all([
+      delegate.findMany({
+        where,
+        include: {
+          company: {
+            select: { id: true, name: true },
+          },
         },
-      },
-      ...(skip !== undefined && { skip }),
-      ...(take !== undefined && { take }),
-      orderBy: { [sortBy]: sortOrder },
-    });
+        ...(skip !== undefined && { skip }),
+        ...(take !== undefined && { take }),
+        orderBy: { [sortBy]: sortOrder },
+      }),
+      delegate.count({ where }),
+    ]);
+
+    return { data, total };
+  }
+
+  async findWithFilters(
+    userId: string,
+    params: ApplicationFilterParams,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Application[]> {
+    const { data } = await this.findWithFiltersAndCount(userId, params, tx);
+    return data;
   }
 
   async findById(

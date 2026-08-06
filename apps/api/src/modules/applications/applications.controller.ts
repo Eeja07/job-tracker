@@ -112,9 +112,9 @@ export class ApplicationsController {
   async findAll(
     @NestRequest() req: any,
     @Query() query: ApplicationQueryDto,
-  ): Promise<ApplicationResponseDto[]> {
+  ): Promise<any> {
     const authReq = req as AuthenticatedRequest;
-    return this.applicationService.findAll(authReq.user.sub, query);
+    return this.applicationService.findAllPaginated(authReq.user.sub, query);
   }
 
   @Get(':id')
