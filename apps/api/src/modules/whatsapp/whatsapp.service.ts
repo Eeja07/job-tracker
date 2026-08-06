@@ -31,6 +31,36 @@ export class WhatsappService {
     }
   }
 
+  async getStatus(): Promise<{ status: string; connectedUser: string | null; hasQr: boolean; qrDataUrl?: string }> {
+    try {
+      const response = await fetch(`${this.gatewayUrl}/health`);
+      const data = (await response.json()) as any;
+      return {
+        status: data.status || 'disconnected',
+        connectedUser: data.connectedUser || null,
+        hasQr: !!data.hasQr,
+        qrDataUrl: data.qrDataUrl || undefined,
+      };
+    } catch (err: any) {
+      return { status: 'disconnected', connectedUser: null, hasQr: false };
+    }
+  }
+
+  async logoutSession(): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.gatewayUrl}/api/v1/messages/logout`, {
+        method: 'POST',
+        headers: {
+          'X-API-KEY': this.apiKey,
+        },
+      });
+      const data = (await response.json()) as any;
+      return data.success === true;
+    } catch (err: any) {
+      return false;
+    }
+  }
+
   private async getUserPhone(userId: string): Promise<string | null> {
     // Uses environment variable fallback or configured WA notification target phone
     return process.env.WA_NOTIFICATION_PHONE || null;

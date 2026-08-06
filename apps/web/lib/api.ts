@@ -66,7 +66,7 @@ export interface PaginatedResponse<T> {
 const getToken = () => (typeof window !== "undefined" ? localStorage.getItem("access_token") : null);
 const setToken = (t: string) => localStorage.setItem("access_token", t);
 const clearToken = () => { localStorage.removeItem("access_token"); localStorage.removeItem("refresh_token"); };
-export { getToken, setToken, clearToken };
+export { getToken, setToken, clearToken, request as fetchApi };
 
 const cacheMap = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL = 15000; // 15s in-memory cache
@@ -75,7 +75,7 @@ export function clearApiCache() {
   cacheMap.clear();
 }
 
-async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
+export async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const method = (opts.method || "GET").toUpperCase();
   
   if (method !== "GET") {

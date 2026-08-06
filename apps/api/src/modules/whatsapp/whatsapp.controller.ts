@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Headers } from '@nestjs/common';
+import { Controller, Get, Post, Body, HttpCode, HttpStatus, Headers } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { WhatsappService } from './whatsapp.service';
 
@@ -6,6 +6,18 @@ import { WhatsappService } from './whatsapp.service';
 @Controller({ path: 'whatsapp', version: '1' })
 export class WhatsappController {
   constructor(private readonly whatsappService: WhatsappService) {}
+
+  @Get('status')
+  async getStatus() {
+    return this.whatsappService.getStatus();
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout() {
+    const success = await this.whatsappService.logoutSession();
+    return { success };
+  }
 
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
