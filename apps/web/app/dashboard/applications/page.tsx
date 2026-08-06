@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { applicationsApi, type Application, type ApplicationStatus } from "@/lib/api";
 import { STATUS_CONFIG, WORK_MODE_LABELS, SOURCE_LABELS, formatCurrency, formatDate, getDaysAgo } from "@/lib/utils";
-import { Plus, Search, ExternalLink, Trash2, X, Loader2, Edit2, Eye, FileText, Image as ImageIcon, CheckSquare, RefreshCw, CheckCircle, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Search, ExternalLink, Trash2, X, Loader2, Edit2, Eye, FileText, Image as ImageIcon, CheckSquare, RefreshCw, CheckCircle, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from "lucide-react";
 import ApplicationModal from "@/components/ApplicationModal";
 import ApplicationDetailModal from "@/components/ApplicationDetailModal";
 import styles from "./page.module.css";
@@ -19,6 +19,7 @@ export default function ApplicationsPage() {
   const [apps, setApps] = useState<Application[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState<number>(15);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "">("");
@@ -26,12 +27,22 @@ export default function ApplicationsPage() {
   const [editApp, setEditApp] = useState<Application | undefined>();
   const [detailApp, setDetailApp] = useState<Application | undefined>();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  
   const [checkingAll, setCheckingAll] = useState(false);
+  const [selectedCheckTarget, setSelectedCheckTarget] = useState<string>("ALL");
   const [checkAllResults, setCheckAllResults] = useState<Array<{ applicationId: string; jobTitle: string; listingStatus: string; detail?: string }> | null>(null);
   const [showCheckResults, setShowCheckResults] = useState(false);
 
   const [sortCol, setSortCol] = useState<SortCol | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  // Synchronize status query param from URL (e.g. from Dashboard Overview Status Breakdown link)
+  useEffect(() => {
+    const paramStatus = searchParams.get("status");
+    if (paramStatus && STATUSES.includes(paramStatus as any)) {
+      setStatusFilter(paramStatus as ApplicationStatus);
+    }
+  }, [searchParams]);
 
   const handleSort = (col: SortCol) => {
     if (sortCol === col) {
@@ -43,7 +54,14 @@ export default function ApplicationsPage() {
   };
 
   const sortedApps = [...apps].sort((a, b) => {
-    if (!sortCol) return 0;
+    if (!sortCol) {
+      // If statusFilter is active, prioritize those matching status Filter to top
+      if (statusFilter) {
+        if (a.status === statusFilter && b.status !== statusFilter) return -1;
+        if (a.status !== statusFilter && b.status === statusFilter) return 1;
+      }
+      return 0;
+    }
     let valA: any = "";
     let valB: any = "";
 
@@ -69,8 +87,6 @@ export default function ApplicationsPage() {
     return 0;
   });
 
-  const limit = 15;
-
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -83,7 +99,7 @@ export default function ApplicationsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter, search]);
+  }, [page, limit, statusFilter, search]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -121,21 +137,26 @@ export default function ApplicationsPage() {
     load();
   };
 
-  const handleCheckAllListings = async () => {
+  const handleCheckListings = async () => {
     setCheckingAll(true);
     setCheckAllResults(null);
     try {
-      const results = await applicationsApi.checkAllListings();
-      setCheckAllResults(results);
+      if (selectedCheckTarget === "ALL") {
+        const results = await applicationsApi.checkAllListings();
+        setCheckAllResults(results);
+      } else {
+        const res = await applicationsApi.checkListingStatus(selectedCheckTarget);
+        setCheckAllResults([res]);
+      }
       setShowCheckResults(true);
     } catch (err: any) {
-      alert(err.message || "Gagal mengecek status listing");
+      alert(err.message || "Gagal mengecek status loker");
     } finally {
       setCheckingAll(false);
     }
   };
 
-  const totalPages = Math.ceil(total / limit);
+  const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
 
   return (
     <div className={styles.page}>
@@ -144,17 +165,39 @@ export default function ApplicationsPage() {
           <h1 className={styles.title}>Applications</h1>
           <p className={styles.subtitle}>{total} total lamaran</p>
         </div>
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-          <button
-            className={styles.primaryBtn}
-            style={{ background: "var(--bg-subtle)", color: "var(--text)", border: "1px solid var(--border)" }}
-            onClick={handleCheckAllListings}
-            disabled={checkingAll}
-            title="Cek status keaktifan semua lowongan yang tersimpan"
-          >
-            {checkingAll ? <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} /> : <RefreshCw size={14} />}
-            {checkingAll ? "Mengecek..." : "Cek Status Listing"}
-          </button>
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+            <select
+              value={selectedCheckTarget}
+              onChange={(e) => setSelectedCheckTarget(e.target.value)}
+              style={{
+                background: "var(--bg-card)",
+                color: "var(--text)",
+                border: "1px solid var(--border)",
+                padding: "0.5rem 0.65rem",
+                borderRadius: "var(--radius-sm)",
+                fontSize: "0.82rem",
+                maxWidth: "200px",
+              }}
+            >
+              <option value="ALL">Semua Loker (Aktif)</option>
+              {apps.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.jobTitle} {a.company?.name ? `(${a.company.name})` : ""}
+                </option>
+              ))}
+            </select>
+            <button
+              className={styles.primaryBtn}
+              style={{ background: "var(--bg-subtle)", color: "var(--text)", border: "1px solid var(--border)" }}
+              onClick={handleCheckListings}
+              disabled={checkingAll}
+              title="Cek status keaktifan lowongan yang dipilih"
+            >
+              {checkingAll ? <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} /> : <RefreshCw size={14} />}
+              {checkingAll ? "Mengecek..." : "Cek Status Loker"}
+            </button>
+          </div>
           <button className={styles.primaryBtn} onClick={() => { setEditApp(undefined); setShowModal(true); }}>
             <Plus size={15} /> Tambah Lamaran
           </button>
@@ -386,13 +429,63 @@ export default function ApplicationsPage() {
         </div>
       )}
 
-      {totalPages > 1 && (
-        <div className={styles.pagination}>
-          <button className={styles.pageBtn} disabled={page === 1} onClick={() => setPage(p => p - 1)}>Prev</button>
-          <span className={styles.pageInfo}>{page} / {totalPages}</span>
-          <button className={styles.pageBtn} disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>Next</button>
+      <div className={styles.pagination} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem", marginTop: "1rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.82rem", color: "var(--text-muted)" }}>
+          <span>Tampilkan:</span>
+          <select
+            value={limit}
+            onChange={(e) => {
+              setLimit(Number(e.target.value));
+              setPage(1);
+            }}
+            style={{
+              background: "var(--bg-card)",
+              color: "var(--text)",
+              border: "1px solid var(--border)",
+              padding: "0.35rem 0.6rem",
+              borderRadius: "var(--radius-sm)",
+              fontSize: "0.82rem",
+              cursor: "pointer",
+            }}
+          >
+            <option value={15}>15 lamaran</option>
+            <option value={50}>50 lamaran</option>
+            <option value={100}>100 lamaran</option>
+            <option value={0}>Semua lamaran</option>
+          </select>
+          <span>
+            {limit > 0
+              ? `Menampilkan ${total > 0 ? Math.min((page - 1) * limit + 1, total) : 0}-${Math.min(page * limit, total)} dari ${total} lamaran`
+              : `Menampilkan seluruh ${total} lamaran`}
+          </span>
         </div>
-      )}
+
+        {limit > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <button
+              className={styles.pageBtn}
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              title="Halaman Sebelumnya"
+              style={{ display: "flex", alignItems: "center", gap: "4px" }}
+            >
+              <ChevronLeft size={16} /> Prev
+            </button>
+            <span className={styles.pageInfo} style={{ fontSize: "0.85rem", fontWeight: 600 }}>
+              Halaman {page} dari {Math.max(1, totalPages)}
+            </span>
+            <button
+              className={styles.pageBtn}
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              title="Halaman Selanjutnya"
+              style={{ display: "flex", alignItems: "center", gap: "4px" }}
+            >
+              Next <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Edit / Create Modal */}
       {showModal && (

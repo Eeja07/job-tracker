@@ -198,6 +198,12 @@ export interface EmailMessage {
   receivedAt: string;
   isJobRelated: boolean;
   detectedType?: string;
+  isHrReply?: boolean;
+  matchedApp?: {
+    id: string;
+    jobTitle: string;
+    companyName: string;
+  } | null;
 }
 
 export interface NotificationItem {

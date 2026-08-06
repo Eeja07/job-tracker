@@ -126,7 +126,13 @@ export default function DashboardPage() {
               const count = stats[status] ?? 0;
               const pct = total > 0 ? Math.round((count / total) * 100) : 0;
               return (
-                <div key={status} className={styles.statusRow}>
+                <div
+                  key={status}
+                  className={styles.statusRow}
+                  onClick={() => router.push(`/dashboard/applications?status=${status}`)}
+                  style={{ cursor: "pointer" }}
+                  title={`Lihatsemua lamaran status ${cfg.label}`}
+                >
                   <div className={styles.statusLabelWrap}>
                     <span className={styles.statusBadge} style={{ color: cfg.color, background: cfg.bg, borderColor: cfg.border }}>
                       {cfg.label}

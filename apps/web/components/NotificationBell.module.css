@@ -28,13 +28,15 @@
   position: absolute;
   top: -4px;
   right: -4px;
-  background: var(--status-rejected-color);
-  color: white;
-  font-size: 0.62rem;
-  font-weight: 700;
-  padding: 1px 4px;
-  border-radius: 10px;
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 9999px;
   line-height: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  z-index: 10;
 }
 
 .dropdown {

@@ -134,6 +134,11 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
         : {}),
     };
 
+    const takeNum = Number(limit);
+    const pageNum = Number(page);
+    const skip = takeNum > 0 ? (pageNum - 1) * takeNum : undefined;
+    const take = takeNum > 0 ? takeNum : undefined;
+
     return this.getDelegate(tx).findMany({
       where,
       include: {
@@ -141,8 +146,8 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
           select: { id: true, name: true },
         },
       },
-      skip: (page - 1) * limit,
-      take: limit,
+      ...(skip !== undefined && { skip }),
+      ...(take !== undefined && { take }),
       orderBy: { [sortBy]: sortOrder },
     });
   }

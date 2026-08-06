@@ -267,23 +267,35 @@
 .emailTop {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   font-size: 0.78rem;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 0.35rem;
 }
 
 .senderGroup {
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+  overflow: hidden;
 }
 
 .senderName {
   font-weight: 600;
   color: var(--text);
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .senderEmail {
   color: var(--text-subtle);
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  font-size: 0.75rem;
 }
 
 .emailDate {

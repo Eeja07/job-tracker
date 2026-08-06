@@ -9,6 +9,7 @@ export default function GmailSyncPage() {
   const [emails, setEmails] = useState<EmailMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<"HR_REPLY" | "JOB_INFO">("HR_REPLY");
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
@@ -33,8 +34,13 @@ export default function GmailSyncPage() {
     loadData();
   }, []);
 
+  const hrRepliesCount = emails.filter((m) => m.isHrReply).length;
+  const jobInfoCount = emails.filter((m) => !m.isHrReply).length;
+
   const filteredEmails = emails
     .filter((m) => {
+      const matchCategory = activeCategory === "HR_REPLY" ? Boolean(m.isHrReply) : !m.isHrReply;
+      if (!matchCategory) return false;
       if (!typeFilter) return true;
       return m.detectedType === typeFilter;
     })
@@ -146,8 +152,28 @@ export default function GmailSyncPage() {
 
       {/* Filter & Messages List */}
       <div className={styles.inboxSection}>
+        {/* Category Tabs */}
+        <div style={{ display: "flex", gap: "0.5rem", borderBottom: "1px solid var(--border)", paddingBottom: "0.5rem", flexWrap: "wrap" }}>
+          <button
+            className={`${styles.filterBtn} ${activeCategory === "HR_REPLY" ? styles.filterActive : ""}`}
+            onClick={() => setActiveCategory("HR_REPLY")}
+            style={{ fontSize: "0.85rem", padding: "0.5rem 1rem", fontWeight: 600 }}
+          >
+            Balasan Lamaran (HR) <span style={{ opacity: 0.8, fontSize: "0.75rem", marginLeft: "4px" }}>({hrRepliesCount})</span>
+          </button>
+          <button
+            className={`${styles.filterBtn} ${activeCategory === "JOB_INFO" ? styles.filterActive : ""}`}
+            onClick={() => setActiveCategory("JOB_INFO")}
+            style={{ fontSize: "0.85rem", padding: "0.5rem 1rem", fontWeight: 600 }}
+          >
+            Info Loker & Peluang <span style={{ opacity: 0.8, fontSize: "0.75rem", marginLeft: "4px" }}>({jobInfoCount})</span>
+          </button>
+        </div>
+
         <div className={styles.inboxHeader} style={{ flexWrap: "wrap", gap: "0.75rem" }}>
-          <h2 className={styles.inboxTitle}>Email Loker Masuk & Terlacak</h2>
+          <h2 className={styles.inboxTitle}>
+            {activeCategory === "HR_REPLY" ? "Balasan Langsung HR & Lamaran" : "Info Lowongan & Rekomendasi Loker"}
+          </h2>
           <div className={styles.filterGroup} style={{ flexWrap: "wrap", gap: "0.5rem" }}>
             {/* Filter by Status/Type */}
             <select

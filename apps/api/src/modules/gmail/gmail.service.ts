@@ -329,6 +329,9 @@ export class GmailService implements OnModuleInit {
           }
         }
 
+        const labelIds = detail.data.labelIds || [];
+        const isUnreadInGmail = labelIds.includes('UNREAD');
+
         await this.prisma.emailMessage.create({
           data: {
             userId,
@@ -347,8 +350,8 @@ export class GmailService implements OnModuleInit {
 
         newMessages++;
 
-        // Create notification if job-related
-        if (isJobRelated) {
+        // Create notification ONLY if job-related AND message is UNREAD in Gmail
+        if (isJobRelated && isUnreadInGmail) {
           jobRelated++;
 
           const typeLabel: Record<string, string> = {
@@ -508,13 +511,59 @@ export class GmailService implements OnModuleInit {
   }
 
   async getEmailMessages(userId: string, jobRelatedOnly = false, limit = 200) {
-    return this.prisma.emailMessage.findMany({
+    const messages = await this.prisma.emailMessage.findMany({
       where: {
         userId,
         ...(jobRelatedOnly ? { isJobRelated: true } : {}),
       },
       orderBy: { receivedAt: 'desc' },
       take: limit,
+    });
+
+    const userApps = await this.prisma.application.findMany({
+      where: { userId },
+      include: { company: true },
+    });
+
+    return messages.map((msg) => {
+      const fullSearch = `${msg.subject || ''} ${msg.fromName || ''} ${msg.fromEmail || ''} ${msg.snippet || ''}`.toLowerCase();
+
+      let matchedApp: { id: string; jobTitle: string; companyName: string } | null = null;
+      for (const app of userApps) {
+        const companyName = app.company?.name?.toLowerCase().trim();
+        const jobTitle = app.jobTitle?.toLowerCase().trim();
+
+        let isMatch = false;
+        if (companyName && companyName.length > 2 && fullSearch.includes(companyName)) {
+          isMatch = true;
+        } else if (jobTitle && jobTitle.length > 3 && fullSearch.includes(jobTitle)) {
+          isMatch = true;
+        }
+
+        if (isMatch) {
+          matchedApp = {
+            id: app.id,
+            jobTitle: app.jobTitle,
+            companyName: app.company?.name || 'Perusahaan',
+          };
+          break;
+        }
+      }
+
+      const isHrReply =
+        matchedApp !== null ||
+        Boolean(
+          msg.detectedType &&
+            ['INTERVIEW', 'OFFER', 'REJECTED', 'SCREENING', 'APPLIED_CONFIRM'].includes(
+              msg.detectedType,
+            ),
+        );
+
+      return {
+        ...msg,
+        isHrReply,
+        matchedApp,
+      };
     });
   }
 
