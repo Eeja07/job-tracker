@@ -170,6 +170,8 @@ const EMAIL_TYPE_KEYWORDS: Record<string, string[]> = {
   ],
 };
 
+import { WhatsappService } from '../whatsapp/whatsapp.service';
+
 @Injectable()
 export class GmailService implements OnModuleInit {
   private readonly logger = new Logger(GmailService.name);
@@ -178,6 +180,7 @@ export class GmailService implements OnModuleInit {
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
     private readonly realtime: RealtimePublisher,
+    private readonly whatsapp: WhatsappService,
   ) {}
 
   onModuleInit() {
@@ -464,6 +467,11 @@ export class GmailService implements OnModuleInit {
             body: notif.body,
             metadata: notif.metadata,
             createdAt: notif.createdAt,
+          });
+
+          // Push instant notification to WhatsApp Bot
+          this.whatsapp.notifyEmailNotification(userId, notifTitle, notifBody).catch((err) => {
+            this.logger.warn(`Failed to send WhatsApp notification to user ${userId}: ${err.message}`);
           });
 
           // Auto-update application status if email matches an application

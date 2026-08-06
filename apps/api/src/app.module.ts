@@ -28,6 +28,7 @@ import { FeatureFlagsModule } from './modules/feature-flags/feature-flags.module
 import { EventBusModule } from './modules/event-bus/event-bus.module';
 import { WebsocketModule } from './modules/websocket/websocket.module';
 import { GmailModule } from './modules/gmail/gmail.module';
+import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
 import { CqrsModule } from './core/cqrs/cqrs.module';
 import { VersioningModule } from './core/versioning/versioning.module';
 import { TracingModule } from './core/tracing/tracing.module';
@@ -87,6 +88,7 @@ import { RequestIdMiddleware } from './core/middlewares/request-id.middleware';
     FeatureFlagsModule,
     WebsocketModule,
     GmailModule,
+    WhatsappModule,
   ],
   controllers: [AppController],
   providers: [
