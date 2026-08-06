@@ -33,7 +33,7 @@
 }
 
 .titleIcon {
-  color: #25D366;
+  color: var(--text);
 }
 
 .subtitle {
@@ -73,9 +73,11 @@
   border: 1px solid var(--border);
   border-radius: var(--radius, 6px);
   padding: 1.75rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .cardHeader {
@@ -85,19 +87,13 @@
   margin: 0 0 1.25rem 0;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.6rem;
+  width: 100%;
 }
 
-.iconQr {
-  color: var(--status-applied-color);
-}
-
-.iconSend {
-  color: #25D366;
-}
-
-.iconTerminal {
-  color: var(--status-screening-color);
+.iconMonochrome {
+  color: var(--text);
 }
 
 .qrContainer {
@@ -106,30 +102,33 @@
   align-items: center;
   justify-content: center;
   text-align: center;
+  width: 100%;
   flex: 1;
 }
 
 .badgeConnected {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  background-color: var(--status-offer-bg);
-  color: var(--status-offer-color);
-  border: 1px solid var(--status-offer-border);
+  background-color: var(--bg-subtle);
+  color: var(--text);
+  border: 1px solid var(--border);
   padding: 0.45rem 1rem;
   border-radius: 9999px;
   font-weight: 600;
   font-size: 0.85rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .badgeQrReady {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  background-color: var(--status-withdrawn-bg);
-  color: var(--status-withdrawn-color);
-  border: 1px solid var(--status-withdrawn-border);
+  background-color: var(--bg-subtle);
+  color: var(--text);
+  border: 1px solid var(--border);
   padding: 0.45rem 1rem;
   border-radius: 9999px;
   font-weight: 600;
@@ -140,10 +139,11 @@
 .badgeDisconnected {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  background-color: var(--status-rejected-bg);
-  color: var(--status-rejected-color);
-  border: 1px solid var(--status-rejected-border);
+  background-color: var(--bg-subtle);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
   padding: 0.45rem 1rem;
   border-radius: 9999px;
   font-weight: 600;
@@ -163,7 +163,7 @@
 
 .connectedUser {
   margin: 0.25rem 0 0 0;
-  color: var(--status-applied-color);
+  color: var(--text);
   font-weight: 700;
   font-size: 1.25rem;
 }
@@ -172,9 +172,9 @@
   width: 100%;
   padding: 0.75rem;
   border-radius: var(--radius, 6px);
-  background-color: var(--status-rejected-bg);
-  border: 1px solid var(--status-rejected-border);
-  color: var(--status-rejected-color);
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border);
+  color: var(--text);
   font-weight: 600;
   cursor: pointer;
   display: flex;
@@ -185,16 +185,19 @@
 }
 
 .logoutBtn:hover {
-  opacity: 0.9;
+  background-color: var(--bg-card-hover);
+  border-color: var(--border-focus);
 }
 
 .qrCodeFrame {
   background-color: #ffffff;
   padding: 0.75rem;
-  border-radius: 1rem;
-  display: inline-block;
-  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15);
-  margin-bottom: 1.25rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  margin: 0 auto 1.25rem auto;
   border: 1px solid var(--border);
 }
 
@@ -205,17 +208,19 @@
 }
 
 .qrInstructions {
-  text-align: left;
+  text-align: center;
   color: var(--text-muted);
   font-size: 0.85rem;
   margin: 0 auto;
-  padding-left: 1.25rem;
-  max-width: 300px;
-  line-height: 1.6;
+  padding: 0;
+  list-style-position: inside;
+  line-height: 1.65;
 }
 
 .formGroup {
   margin-bottom: 1rem;
+  width: 100%;
+  text-align: left;
 }
 
 .label {
@@ -247,9 +252,9 @@
   width: 100%;
   padding: 0.75rem;
   border-radius: var(--radius, 6px);
-  background-color: #25D366;
-  color: #022c22;
-  font-weight: 700;
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
+  font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -272,6 +277,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1rem;
+  width: 100%;
 }
 
 .cheatCard {
@@ -279,6 +285,7 @@
   padding: 1rem;
   border-radius: var(--radius, 6px);
   border: 1px solid var(--border);
+  text-align: left;
 }
 
 .cmdTag {
@@ -288,30 +295,9 @@
   font-family: monospace;
   font-weight: 600;
   font-size: 0.85rem;
-}
-
-.cmdOverview {
-  background-color: var(--status-screening-bg);
-  color: var(--status-screening-color);
-  border: 1px solid var(--status-screening-border);
-}
-
-.cmdLamaran {
-  background-color: var(--status-applied-bg);
-  color: var(--status-applied-color);
-  border: 1px solid var(--status-applied-border);
-}
-
-.cmdEmail {
-  background-color: var(--status-offer-bg);
-  color: var(--status-offer-color);
-  border: 1px solid var(--status-offer-border);
-}
-
-.cmdTambah {
-  background-color: var(--status-withdrawn-bg);
-  color: var(--status-withdrawn-color);
-  border: 1px solid var(--status-withdrawn-border);
+  background-color: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 .cheatDesc {

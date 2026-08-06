@@ -100,7 +100,7 @@ export default function WhatsAppPage() {
       <div className={styles.header}>
         <div className={styles.titleGroup}>
           <h1 className={styles.title}>
-            <MessageSquare size={28} className={styles.titleIcon} />
+            <MessageSquare size={26} className={styles.titleIcon} />
             Central WhatsApp Gateway
           </h1>
           <p className={styles.subtitle}>
@@ -113,7 +113,7 @@ export default function WhatsAppPage() {
           disabled={refreshing}
           className={styles.refreshBtn}
         >
-          <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
+          <RefreshCw size={15} className={refreshing ? "animate-spin" : ""} />
           Refresh Status
         </button>
       </div>
@@ -124,7 +124,7 @@ export default function WhatsAppPage() {
         {/* Card 1: Connection & QR Scan */}
         <div className={styles.card}>
           <h2 className={styles.cardHeader}>
-            <QrCode size={20} className={styles.iconQr} />
+            <QrCode size={20} className={styles.iconMonochrome} />
             Koneksi WhatsApp Gateway
           </h2>
 
@@ -135,9 +135,9 @@ export default function WhatsAppPage() {
                 <p style={{ margin: 0 }}>Memeriksa status koneksi...</p>
               </div>
             ) : waState.status === "connected" ? (
-              <div style={{ width: "100%" }}>
+              <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <div className={styles.badgeConnected}>
-                  <CheckCircle2 size={18} />
+                  <CheckCircle2 size={16} />
                   STATUS: TERHUBUNG
                 </div>
 
@@ -147,7 +147,7 @@ export default function WhatsAppPage() {
                     +{waState.connectedUser}
                   </p>
                   <p style={{ margin: "0.75rem 0 0", color: "var(--text-subtle)", fontSize: "0.8rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem" }}>
-                    <ShieldCheck size={14} color="#10b981" />
+                    <ShieldCheck size={14} />
                     Koneksi Persistent (Tetap aktif meskipun server restart)
                   </p>
                 </div>
@@ -156,14 +156,14 @@ export default function WhatsAppPage() {
                   onClick={handleLogout}
                   className={styles.logoutBtn}
                 >
-                  <LogOut size={18} />
+                  <LogOut size={16} />
                   Putuskan Koneksi (Logout)
                 </button>
               </div>
             ) : waState.qrDataUrl || waState.hasQr || waState.status === "qr_ready" ? (
-              <div style={{ width: "100%" }}>
+              <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <div className={styles.badgeQrReady}>
-                  <Smartphone size={16} />
+                  <Smartphone size={15} />
                   SILAKAN SCAN QR CODE
                 </div>
 
@@ -189,8 +189,8 @@ export default function WhatsAppPage() {
                 </ol>
               </div>
             ) : (
-              <div style={{ padding: "2rem 0", color: "var(--text-muted)" }}>
-                <AlertCircle size={36} style={{ color: "var(--status-rejected-color)", margin: "0 auto 1rem" }} />
+              <div style={{ padding: "2rem 0", color: "var(--text-muted)", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <AlertCircle size={36} style={{ color: "var(--text-muted)", margin: "0 auto 1rem" }} />
                 <p style={{ fontWeight: 600, color: "var(--text)", margin: 0 }}>Gateway Belum Siap / Disconnected</p>
                 <p style={{ fontSize: "0.85rem", marginTop: "0.35rem" }}>Menyiapkan koneksi WhatsApp Gateway baru...</p>
               </div>
@@ -201,11 +201,11 @@ export default function WhatsAppPage() {
         {/* Card 2: Test WhatsApp Notification */}
         <div className={styles.card}>
           <h2 className={styles.cardHeader}>
-            <Send size={20} className={styles.iconSend} />
+            <Send size={20} className={styles.iconMonochrome} />
             Kirim Pesan Uji Coba (Test Message)
           </h2>
 
-          <form onSubmit={handleSendTestMessage} style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+          <form onSubmit={handleSendTestMessage} style={{ display: "flex", flexDirection: "column", width: "100%", flex: 1 }}>
             <div className={styles.formGroup}>
               <label className={styles.label}>
                 Nomor WhatsApp Tujuan (cth: 081234567890)
@@ -238,9 +238,10 @@ export default function WhatsAppPage() {
                 borderRadius: "var(--radius, 6px)",
                 fontSize: "0.85rem",
                 marginBottom: "1rem",
-                backgroundColor: msgResult.success ? "var(--status-offer-bg)" : "var(--status-rejected-bg)",
-                color: msgResult.success ? "var(--status-offer-color)" : "var(--status-rejected-color)",
-                border: `1px solid ${msgResult.success ? "var(--status-offer-border)" : "var(--status-rejected-border)"}`
+                backgroundColor: "var(--bg-subtle)",
+                color: "var(--text)",
+                border: "1px solid var(--border)",
+                textAlign: "center",
               }}>
                 {msgResult.message}
               </div>
@@ -252,7 +253,7 @@ export default function WhatsAppPage() {
               className={styles.submitBtn}
               style={{ marginTop: "auto" }}
             >
-              <Send size={16} />
+              <Send size={15} />
               {sendingMsg ? "Mengirim Pesan..." : "Kirim Pesan WhatsApp"}
             </button>
           </form>
@@ -263,7 +264,7 @@ export default function WhatsAppPage() {
       {/* Card 3: Interactive Bot Commands Cheat Sheet */}
       <div className={styles.card} style={{ marginTop: "0.5rem" }}>
         <h2 className={styles.cardHeader}>
-          <Terminal size={20} className={styles.iconTerminal} />
+          <Terminal size={20} className={styles.iconMonochrome} />
           Daftar Perintah WhatsApp Bot Interaktif
         </h2>
 
@@ -273,7 +274,7 @@ export default function WhatsAppPage() {
 
         <div className={styles.cheatGrid}>
           <div className={styles.cheatCard}>
-            <span className={`${styles.cmdTag} ${styles.cmdOverview}`}>
+            <span className={styles.cmdTag}>
               !overview
             </span>
             <p className={styles.cheatDesc}>
@@ -282,7 +283,7 @@ export default function WhatsAppPage() {
           </div>
 
           <div className={styles.cheatCard}>
-            <span className={`${styles.cmdTag} ${styles.cmdLamaran}`}>
+            <span className={styles.cmdTag}>
               !lamaran
             </span>
             <p className={styles.cheatDesc}>
@@ -291,7 +292,7 @@ export default function WhatsAppPage() {
           </div>
 
           <div className={styles.cheatCard}>
-            <span className={`${styles.cmdTag} ${styles.cmdEmail}`}>
+            <span className={styles.cmdTag}>
               !email
             </span>
             <p className={styles.cheatDesc}>
@@ -300,7 +301,7 @@ export default function WhatsAppPage() {
           </div>
 
           <div className={styles.cheatCard}>
-            <span className={`${styles.cmdTag} ${styles.cmdTambah}`}>
+            <span className={styles.cmdTag}>
               !tambah [Judul] | [Perusahaan]
             </span>
             <p className={styles.cheatDesc}>
