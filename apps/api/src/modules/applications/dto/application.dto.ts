@@ -11,6 +11,7 @@ import {
   Min,
   IsDateString,
   IsArray,
+  ValidateIf,
 } from 'class-validator';
 import {
   ApplicationStatus,
@@ -104,6 +105,7 @@ export class CreateApplicationDto {
     example: 'https://linkedin.com/jobs/1234',
   })
   @IsOptional()
+  @ValidateIf((o) => typeof o.sourceUrl === 'string' && o.sourceUrl.trim().length > 0)
   @IsUrl({}, { message: 'Source URL must be a valid URL' })
   sourceUrl?: string;
 

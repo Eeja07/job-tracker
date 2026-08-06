@@ -6,7 +6,7 @@ import styles from "./ApplicationModal.module.css";
 
 const STATUSES: ApplicationStatus[] = ["SAVED","APPLIED","SCREENING","INTERVIEWING","OFFER","REJECTED","WITHDRAWN"];
 const WORK_MODES = ["REMOTE","HYBRID","ONSITE"];
-const SOURCES = ["LINKEDIN","JOBSTREET","GLINTS","KALIBRR","EMAIL","WHATSAPP","TELEGRAM","WEBSITE","OTHER"];
+const SOURCES = ["LINKEDIN","JOBSTREET","GLINTS","KALIBRR","EMAIL","WHATSAPP","TELEGRAM","WEBSITE","INSTAGRAM","THREADS","DEALLS","KITALULUS","OTHER"];
 const CURRENCIES = ["IDR","USD","SGD","EUR","GBP","AUD","JPY","MYR","CNY"];
 
 interface Props {
@@ -411,7 +411,7 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
                   <input className={styles.input} value={form.appliedAt} onChange={set("appliedAt")} type="date" />
                 </div>
                 <div className={styles.field}>
-                  <label className={styles.label}>Deadline Lamaran (Opsional)</label>
+                  <label className={styles.label}>Deadline Lamaran</label>
                   <input className={styles.input} value={form.deadline} onChange={set("deadline")} type="date" />
                 </div>
               </div>

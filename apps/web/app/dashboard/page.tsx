@@ -133,7 +133,7 @@ export default function DashboardPage() {
                   className={styles.statusRow}
                   onClick={() => router.push(`/dashboard/applications?status=${status}`)}
                   style={{ cursor: "pointer" }}
-                  title={`Lihatsemua lamaran status ${cfg.label}`}
+                  title={`Lihat semua lamaran status ${cfg.label}`}
                 >
                   <div className={styles.statusLabelWrap}>
                     <span className={styles.statusBadge} style={{ color: cfg.color, background: cfg.bg, borderColor: cfg.border }}>
@@ -147,6 +147,89 @@ export default function DashboardPage() {
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        <div className={styles.sectionCard}>
+          <div className={styles.cardHeader}>
+            <h2 className={styles.cardTitle}>Persentase Diagram Overview</h2>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-around", flexWrap: "wrap", gap: "1.25rem" }}>
+              <div style={{ position: "relative", width: "130px", height: "130px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="130" height="130" viewBox="0 0 100 100" style={{ transform: "rotate(-90deg)" }}>
+                  <circle cx="50" cy="50" r="40" fill="transparent" stroke="var(--bg-subtle)" strokeWidth="12" />
+                  {(() => {
+                    let accumulated = 0;
+                    const r = 40;
+                    const circumference = 2 * Math.PI * r;
+                    return STATUS_ORDER.map((status) => {
+                      const cfg = STATUS_CONFIG[status];
+                      const count = stats[status] ?? 0;
+                      if (!count || total <= 0) return null;
+                      const pct = (count / total) * 100;
+                      const dashArray = `${(pct / 100) * circumference} ${circumference}`;
+                      const dashOffset = -((accumulated / 100) * circumference);
+                      accumulated += pct;
+
+                      return (
+                        <circle
+                          key={status}
+                          cx="50"
+                          cy="50"
+                          r={r}
+                          fill="transparent"
+                          stroke={cfg.color}
+                          strokeWidth="12"
+                          strokeDasharray={dashArray}
+                          strokeDashoffset={dashOffset}
+                          style={{ transition: "all 0.4s ease", cursor: "pointer" }}
+                          onClick={() => router.push(`/dashboard/applications?status=${status}`)}
+                        >
+                          <title>{`${cfg.label}: ${count} (${pct.toFixed(1)}%)`}</title>
+                        </circle>
+                      );
+                    });
+                  })()}
+                </svg>
+                <div style={{ position: "absolute", textAlign: "center" }}>
+                  <div style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text)" }}>{total}</div>
+                  <div style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>Lamaran</div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", flex: 1, minWidth: "160px" }}>
+                {STATUS_ORDER.map((status) => {
+                  const cfg = STATUS_CONFIG[status];
+                  const count = stats[status] ?? 0;
+                  if (!count) return null;
+                  const pct = total > 0 ? ((count / total) * 100).toFixed(1) : "0";
+                  return (
+                    <div
+                      key={status}
+                      onClick={() => router.push(`/dashboard/applications?status=${status}`)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        fontSize: "0.78rem",
+                        cursor: "pointer",
+                        padding: "0.3rem 0.5rem",
+                        borderRadius: "var(--radius-sm)",
+                        background: "var(--bg-subtle)",
+                        border: "1px solid var(--border-subtle)",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: cfg.color }} />
+                        <span style={{ fontWeight: 500, color: "var(--text)" }}>{cfg.label}</span>
+                      </div>
+                      <span style={{ fontWeight: 700, color: cfg.color }}>{pct}% ({count})</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
 

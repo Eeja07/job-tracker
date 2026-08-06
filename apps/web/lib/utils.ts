@@ -12,8 +12,19 @@ export const STATUS_CONFIG: Record<ApplicationStatus, { label: string; color: st
 
 export const WORK_MODE_LABELS = { REMOTE: "Remote", HYBRID: "Hybrid", ONSITE: "Onsite" };
 export const SOURCE_LABELS: Record<string, string> = {
-  LINKEDIN: "LinkedIn", JOBSTREET: "JobStreet", GLINTS: "Glints", KALIBRR: "Kalibrr",
-  EMAIL: "Email", WHATSAPP: "WhatsApp", TELEGRAM: "Telegram", WEBSITE: "Website", OTHER: "Other",
+  LINKEDIN: "LinkedIn",
+  JOBSTREET: "JobStreet",
+  GLINTS: "Glints",
+  KALIBRR: "Kalibrr",
+  EMAIL: "Email",
+  WHATSAPP: "WhatsApp",
+  TELEGRAM: "Telegram",
+  WEBSITE: "Website",
+  INSTAGRAM: "Instagram",
+  THREADS: "Threads",
+  DEALLS: "Dealls",
+  KITALULUS: "KitaLulus",
+  OTHER: "Lainnya",
 };
 
 export function formatCurrency(amount: number, currency = "IDR"): string {
