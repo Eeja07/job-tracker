@@ -1,7 +1,9 @@
 import { Controller, Post, Body, HttpCode, HttpStatus, Headers } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { WhatsappService } from './whatsapp.service';
 
-@Controller('whatsapp')
+@ApiTags('WhatsApp')
+@Controller({ path: 'whatsapp', version: '1' })
 export class WhatsappController {
   constructor(private readonly whatsappService: WhatsappService) {}
 
@@ -11,7 +13,6 @@ export class WhatsappController {
     @Body() payload: { from: string; body: string; pushName?: string },
     @Headers('x-api-key') apiKey?: string,
   ) {
-    // Process incoming message asynchronously
     this.whatsappService.handleIncomingWebhook(payload).catch((err) => {
       console.error('Webhook error:', err);
     });
