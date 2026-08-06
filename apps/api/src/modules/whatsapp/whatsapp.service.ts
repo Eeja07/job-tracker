@@ -130,9 +130,29 @@ _Atau:_ \`!tambah Frontend Engineer | Gojek | INTERVIEWING\`
 💡 _Ketik salah satu perintah di atas untuk mulai._`;
   }
 
+  private async getPrimaryUserId(): Promise<string> {
+    const gmailToken = await this.prisma.gmailToken.findFirst({
+      where: { isActive: true },
+      orderBy: { updatedAt: 'desc' },
+    });
+    if (gmailToken?.userId) return gmailToken.userId;
+
+    const topUser = await this.prisma.application.groupBy({
+      by: ['userId'],
+      _count: { userId: true },
+      orderBy: { _count: { userId: 'desc' } },
+      take: 1,
+    });
+    if (topUser.length > 0) return topUser[0].userId;
+
+    const user = await this.prisma.user.findFirst();
+    return user?.id || '';
+  }
+
   private async getOverviewMessage(): Promise<string> {
-    const totalApps = await this.prisma.application.count();
-    const apps = await this.prisma.application.findMany();
+    const userId = await this.getPrimaryUserId();
+    const totalApps = await this.prisma.application.count({ where: { userId } });
+    const apps = await this.prisma.application.findMany({ where: { userId } });
 
     const statusCounts: Record<string, number> = {
       SAVED: 0,
@@ -189,7 +209,9 @@ _Atau:_ \`!tambah Frontend Engineer | Gojek | INTERVIEWING\`
   }
 
   private async getApplicationsMessage(): Promise<string> {
+    const userId = await this.getPrimaryUserId();
     const apps = await this.prisma.application.findMany({
+      where: { userId },
       orderBy: { updatedAt: 'desc' },
       take: 5,
       include: { company: true },
@@ -209,14 +231,16 @@ _Atau:_ \`!tambah Frontend Engineer | Gojek | INTERVIEWING\`
   }
 
   private async getHrRepliesMessage(): Promise<string> {
+    const userId = await this.getPrimaryUserId();
     let messages = await this.prisma.emailMessage.findMany({
-      where: { isJobRelated: true },
+      where: { userId, isJobRelated: true },
       orderBy: { receivedAt: 'desc' },
       take: 5,
     });
 
     if (messages.length === 0) {
       messages = await this.prisma.emailMessage.findMany({
+        where: { userId },
         orderBy: { receivedAt: 'desc' },
         take: 5,
       });
