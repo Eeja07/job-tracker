@@ -129,9 +129,9 @@ export const applicationsApi = {
     request<Application>("/api/v1/applications", { method: "POST", body: JSON.stringify(body) }),
   update: (id: string, body: Partial<Application>) =>
     request<Application>(`/api/v1/applications/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
-  updateStatus: (id: string, status: ApplicationStatus, note?: string) =>
+  updateStatus: (id: string, status: ApplicationStatus, rejectedAtStage?: string) =>
     request<Application>(`/api/v1/applications/${id}/status`, {
-      method: "PATCH", body: JSON.stringify({ status, note }),
+      method: "PATCH", body: JSON.stringify({ status, rejectedAtStage }),
     }),
   delete: (id: string) => request(`/api/v1/applications/${id}`, { method: "DELETE" }),
   scrapeUrl: (url: string) =>

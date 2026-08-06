@@ -1,16 +1,16 @@
 import type { ApplicationStatus } from "./api";
 
 export const STATUS_CONFIG: Record<ApplicationStatus, { label: string; color: string; bg: string; border: string }> = {
-  SAVED:          { label: "Saved",            color: "var(--status-saved-color)", bg: "var(--status-saved-bg)", border: "var(--status-saved-border)" },
-  APPLIED:        { label: "Applied",          color: "var(--status-applied-color)", bg: "var(--status-applied-bg)", border: "var(--status-applied-border)" },
+  SAVED:          { label: "Saved",            color: "#9ca3af", bg: "rgba(156, 163, 175, 0.12)", border: "rgba(156, 163, 175, 0.25)" },
+  APPLIED:        { label: "Applied",          color: "#3b82f6", bg: "rgba(59, 130, 246, 0.12)", border: "rgba(59, 130, 246, 0.25)" },
   ASSESSMENT:     { label: "Assessment / Tes", color: "#a855f7", bg: "rgba(168, 85, 247, 0.12)", border: "rgba(168, 85, 247, 0.25)" },
-  HR_INTERVIEW:   { label: "Interview HR",     color: "#3b82f6", bg: "rgba(59, 130, 246, 0.12)", border: "rgba(59, 130, 246, 0.25)" },
-  USER_INTERVIEW: { label: "Interview User",   color: "#06b6d4", bg: "rgba(6, 182, 212, 0.12)", border: "rgba(6, 182, 212, 0.25)" },
-  OFFER:          { label: "Offer",            color: "var(--status-offer-color)", bg: "var(--status-offer-bg)", border: "var(--status-offer-border)" },
-  REJECTED:       { label: "Rejected",         color: "var(--status-rejected-color)", bg: "var(--status-rejected-bg)", border: "var(--status-rejected-border)" },
-  WITHDRAWN:      { label: "Withdrawn",        color: "var(--status-withdrawn-color)", bg: "var(--status-withdrawn-bg)", border: "var(--status-withdrawn-border)" },
+  HR_INTERVIEW:   { label: "Interview HR",     color: "#06b6d4", bg: "rgba(6, 182, 212, 0.12)", border: "rgba(6, 182, 212, 0.25)" },
+  USER_INTERVIEW: { label: "Interview User",   color: "#6366f1", bg: "rgba(99, 102, 241, 0.12)", border: "rgba(99, 102, 241, 0.25)" },
+  OFFER:          { label: "Offer",            color: "#10b981", bg: "rgba(16, 185, 129, 0.12)", border: "rgba(16, 185, 129, 0.25)" },
+  REJECTED:       { label: "Rejected",         color: "#ef4444", bg: "rgba(239, 68, 68, 0.12)", border: "rgba(239, 68, 68, 0.25)" },
+  WITHDRAWN:      { label: "Withdrawn",        color: "#f59e0b", bg: "rgba(245, 158, 11, 0.12)", border: "rgba(245, 158, 11, 0.25)" },
   SCREENING:      { label: "Assessment / Tes", color: "#a855f7", bg: "rgba(168, 85, 247, 0.12)", border: "rgba(168, 85, 247, 0.25)" },
-  INTERVIEWING:   { label: "Interview HR",     color: "#3b82f6", bg: "rgba(59, 130, 246, 0.12)", border: "rgba(59, 130, 246, 0.25)" },
+  INTERVIEWING:   { label: "Interview HR",     color: "#06b6d4", bg: "rgba(6, 182, 212, 0.12)", border: "rgba(6, 182, 212, 0.25)" },
 };
 
 export const REJECTION_STAGE_LABELS: Record<string, string> = {

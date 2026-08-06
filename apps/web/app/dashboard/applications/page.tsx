@@ -133,7 +133,9 @@ export default function ApplicationsPage() {
   };
 
   const handleStatusChange = async (id: string, status: ApplicationStatus) => {
-    await applicationsApi.updateStatus(id, status);
+    const existing = apps.find(a => a.id === id);
+    const rejectedAtStage = status === "REJECTED" ? (existing?.rejectedAtStage || (existing?.status !== "REJECTED" ? existing?.status : "APPLIED")) : undefined;
+    await applicationsApi.updateStatus(id, status, rejectedAtStage);
     load();
   };
 

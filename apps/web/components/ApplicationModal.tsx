@@ -240,6 +240,7 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
         jobTitle: form.jobTitle,
         companyId,
         status: form.status,
+        rejectedAtStage: form.status === "REJECTED" ? form.rejectedAtStage : undefined,
         workMode: form.workMode || undefined,
         source: form.source || undefined,
         location: form.location ?? "",

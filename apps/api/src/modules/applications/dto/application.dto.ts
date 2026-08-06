@@ -232,6 +232,14 @@ export class UpdateApplicationStatusDto {
   @IsEnum(ApplicationStatus)
   @IsNotEmpty()
   status!: ApplicationStatus;
+
+  @ApiPropertyOptional({
+    description: 'Stage at which application was rejected',
+    example: 'HR_INTERVIEW',
+  })
+  @IsOptional()
+  @IsString()
+  rejectedAtStage?: string;
 }
 
 export class ApplicationQueryDto extends PaginationQueryDto {
