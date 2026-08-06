@@ -15,44 +15,56 @@ function isKeywordMatched(text: string, keyword: string): boolean {
   return text.toLowerCase().includes(cleanKeyword);
 }
 
-// Keywords to detect job-related emails
+// Non-job system/marketing senders to exclude
+const NON_JOB_SENDERS = [
+  'insideapple.apple.com',
+  'spotify.com',
+  'youtube.com',
+  'netflix.com',
+  'disney',
+  'tokopedia.com',
+  'shopee.co.id',
+  'bukalapak.com',
+  'grab.com',
+  'gojek.com',
+  'bca.co.id',
+  'mandiri.co.id',
+  'bni.co.id',
+  'bri.co.id',
+];
+
+// Keywords to detect job-related emails accurately
 const JOB_KEYWORDS = [
   'lamaran',
-  'application',
   'lowongan',
   'job offer',
+  'job application',
   'interview',
   'wawancara',
   'rekrutmen',
   'recruitment',
   'hiring',
   'shortlisted',
-  'selected',
-  'rejected',
-  'ditolak',
-  'tidak lolos',
-  'lolos',
-  'undangan',
-  'invitation',
-  'screening',
-  'hr',
+  'job vacancy',
+  'karir',
+  'career',
+  'hrd',
   'human resource',
   'talent acquisition',
-  'onboarding',
-  'offering',
-  'salary',
+  'headhunter',
+  'offering letter',
   'gaji',
-  'kontrak',
-  'contract',
-  'bergabung',
-  'join us',
-  'congratulations',
-  'selamat',
-  'kami informasikan',
-  'kami sampaikan',
-  'test online',
-  'assessmen',
-  'assessment',
+  'salary',
+  'psikotes',
+  'user interview',
+  'technical test',
+  'coding test',
+  'take home test',
+  'screening test',
+  'undangan interview',
+  'undangan wawancara',
+  'selamat anda lolos',
+  'diterima bekerja',
 ];
 
 const EMAIL_TYPE_KEYWORDS: Record<string, string[]> = {
@@ -312,11 +324,10 @@ export class GmailService implements OnModuleInit {
 
         const receivedAt = dateStr ? new Date(dateStr) : new Date();
 
-        // Detect if job-related using strict word-boundary matching
+        // Detect if job-related using strict word-boundary matching and non-job sender exclusion
         const searchText = `${subject} ${snippet} ${fromEmail}`.toLowerCase();
-        const isJobRelated = JOB_KEYWORDS.some((k) =>
-          isKeywordMatched(searchText, k),
-        );
+        const isNonJobSender = NON_JOB_SENDERS.some((s) => fromEmail.toLowerCase().includes(s));
+        const isJobRelated = !isNonJobSender && JOB_KEYWORDS.some((k) => isKeywordMatched(searchText, k));
 
         // Detect email type
         let detectedType: string | null = null;
@@ -419,7 +430,8 @@ export class GmailService implements OnModuleInit {
 
     for (const msg of existingMessages) {
       const searchText = `${msg.subject || ''} ${msg.snippet || ''} ${msg.fromEmail || ''}`.toLowerCase();
-      const correctJobRelated = JOB_KEYWORDS.some((k) => isKeywordMatched(searchText, k));
+      const isNonJobSender = NON_JOB_SENDERS.some((s) => (msg.fromEmail || '').toLowerCase().includes(s));
+      const correctJobRelated = !isNonJobSender && JOB_KEYWORDS.some((k) => isKeywordMatched(searchText, k));
       let correctDetectedType: string | null = null;
       if (correctJobRelated) {
         for (const [type, keywords] of Object.entries(EMAIL_TYPE_KEYWORDS)) {
