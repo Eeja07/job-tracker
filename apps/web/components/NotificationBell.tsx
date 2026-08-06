@@ -125,7 +125,7 @@ export default function NotificationBell() {
   const handleMarkAllRead = async () => {
     try {
       await notificationApi.markAllRead();
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setNotifications([]);
     } catch (err) {
       console.error(err);
     }
@@ -135,9 +135,7 @@ export default function NotificationBell() {
     if (e) e.stopPropagation();
     try {
       await notificationApi.markRead(id);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-      );
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
     } catch (err) {
       console.error(err);
     }

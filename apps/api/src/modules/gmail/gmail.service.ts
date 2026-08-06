@@ -641,9 +641,12 @@ export class GmailService implements OnModuleInit {
     });
   }
 
-  async getNotifications(userId: string, limit = 50) {
+  async getNotifications(userId: string, limit = 50, unreadOnly = true) {
     return this.prisma.notification.findMany({
-      where: { userId },
+      where: {
+        userId,
+        ...(unreadOnly ? { isRead: false } : {}),
+      },
       orderBy: { createdAt: 'desc' },
       take: limit,
     });
