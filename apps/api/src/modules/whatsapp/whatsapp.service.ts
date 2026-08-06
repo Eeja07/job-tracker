@@ -9,7 +9,7 @@ export class WhatsappService {
   private readonly apiKey: string;
 
   constructor(private readonly prisma: PrismaService) {
-    this.gatewayUrl = process.env.WA_GATEWAY_URL || 'http://gateway-whatsapp-bot:3001';
+    this.gatewayUrl = process.env.WA_GATEWAY_URL || 'http://172.17.0.1:3001';
     this.apiKey = process.env.WA_GATEWAY_API_KEY || 'eeja_wa_gateway_secret_key_2026';
   }
 

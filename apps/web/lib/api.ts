@@ -69,10 +69,12 @@ const clearToken = () => { localStorage.removeItem("access_token"); localStorage
 export { getToken, setToken, clearToken, request as fetchApi };
 
 const cacheMap = new Map<string, { data: any; timestamp: number }>();
-const CACHE_TTL = 15000; // 15s in-memory cache
+const pendingMap = new Map<string, Promise<any>>();
+const CACHE_TTL = 3000; // 3s in-memory cache
 
 export function clearApiCache() {
   cacheMap.clear();
+  pendingMap.clear();
 }
 
 export async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
@@ -83,8 +85,6 @@ export async function request<T>(path: string, opts: RequestInit = {}): Promise<
   } else if (cacheMap.has(path)) {
     const cached = cacheMap.get(path)!;
     if (Date.now() - cached.timestamp < CACHE_TTL) {
-      // Revalidate silently in background
-      fetchLatest<T>(path, opts);
       return cached.data as T;
     }
   }
@@ -93,23 +93,41 @@ export async function request<T>(path: string, opts: RequestInit = {}): Promise<
 }
 
 async function fetchLatest<T>(path: string, opts: RequestInit = {}): Promise<T> {
-  const token = getToken();
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...opts,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...opts.headers,
-    },
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(json.message ?? `HTTP ${res.status}`);
-  
   const method = (opts.method || "GET").toUpperCase();
-  if (method === "GET") {
-    cacheMap.set(path, { data: json, timestamp: Date.now() });
+  if (method === "GET" && pendingMap.has(path)) {
+    return pendingMap.get(path)! as Promise<T>;
   }
-  return json as T;
+
+  const promise = (async () => {
+    try {
+      const token = getToken();
+      const res = await fetch(`${API_BASE}${path}`, {
+        ...opts,
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...opts.headers,
+        },
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.message ?? `HTTP ${res.status}`);
+      
+      if (method === "GET") {
+        cacheMap.set(path, { data: json, timestamp: Date.now() });
+      }
+      return json as T;
+    } finally {
+      if (method === "GET") {
+        pendingMap.delete(path);
+      }
+    }
+  })();
+
+  if (method === "GET") {
+    pendingMap.set(path, promise);
+  }
+
+  return promise;
 }
 
 // Auth
