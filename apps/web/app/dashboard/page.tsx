@@ -161,7 +161,7 @@ export default function DashboardPage() {
 
         <div className={styles.sectionCard}>
           <div className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>Persentase Diagram Overview</h2>
+            <h2 className={styles.cardTitle}>Diagram Persentase Status Lamaran</h2>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-around", flexWrap: "wrap", gap: "1.25rem" }}>
@@ -244,42 +244,109 @@ export default function DashboardPage() {
 
         <div className={styles.sectionCard}>
           <div className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>Analisis Titik Ditolak (Rejection Stages)</h2>
+            <h2 className={styles.cardTitle}>Diagram Analisis Stage Penolakan</h2>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             {(() => {
               const totalRejected = stats.REJECTED ?? 0;
               const stages = [
-                { key: "APPLIED", label: "Ditolak di Applied (CV Screening)", color: "#ef4444" },
+                { key: "APPLIED", label: "Ditolak di Applied (CV)", color: "#ef4444" },
                 { key: "ASSESSMENT", label: "Ditolak di Assessment / Tes", color: "#a855f7" },
                 { key: "HR_INTERVIEW", label: "Ditolak di HR Interview", color: "#3b82f6" },
                 { key: "USER_INTERVIEW", label: "Ditolak di User Interview", color: "#06b6d4" },
-                { key: "OFFER", label: "Ditolak saat Offering", color: "#eab308" },
+                { key: "OFFER", label: "Ditolak saat Offering", color: "#f59e0b" },
               ];
 
               if (totalRejected === 0) {
                 return (
-                  <div style={{ textAlign: "center", padding: "1.5rem 0", color: "var(--text-muted)", fontSize: "0.85rem" }}>
-                    Belum ada lamaran berstatus ditolak.
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-around", flexWrap: "wrap", gap: "1.25rem", padding: "0.5rem 0" }}>
+                    <div style={{ position: "relative", width: "130px", height: "130px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="130" height="130" viewBox="0 0 100 100" style={{ transform: "rotate(-90deg)" }}>
+                        <circle cx="50" cy="50" r="40" fill="transparent" stroke="var(--bg-subtle)" strokeWidth="12" />
+                      </svg>
+                      <div style={{ position: "absolute", textAlign: "center" }}>
+                        <div style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-muted)" }}>0</div>
+                        <div style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>Ditolak</div>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "center", color: "var(--text-muted)", fontSize: "0.82rem", flex: 1, minWidth: "160px" }}>
+                      Belum ada lamaran berstatus ditolak.
+                    </div>
                   </div>
                 );
               }
 
-              return stages.map(st => {
-                const count = rejectionStats[st.key] ?? 0;
-                const pct = totalRejected > 0 ? Math.round((count / totalRejected) * 100) : 0;
-                return (
-                  <div key={st.key} style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
-                      <span style={{ color: "var(--text)", fontWeight: 500 }}>{st.label}</span>
-                      <span style={{ color: st.color, fontWeight: 700 }}>{count} ({pct}%)</span>
-                    </div>
-                    <div className={styles.progressTrack}>
-                      <div className={styles.progressBar} style={{ width: `${pct}%`, background: st.color }} />
+              let accumulated = 0;
+              const r = 40;
+              const circumference = 2 * Math.PI * r;
+
+              return (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-around", flexWrap: "wrap", gap: "1.25rem" }}>
+                  <div style={{ position: "relative", width: "130px", height: "130px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <svg width="130" height="130" viewBox="0 0 100 100" style={{ transform: "rotate(-90deg)" }}>
+                      <circle cx="50" cy="50" r="40" fill="transparent" stroke="var(--bg-subtle)" strokeWidth="12" />
+                      {stages.map((st) => {
+                        const count = rejectionStats[st.key] ?? 0;
+                        if (!count || totalRejected <= 0) return null;
+                        const pct = (count / totalRejected) * 100;
+                        const dashArray = `${(pct / 100) * circumference} ${circumference}`;
+                        const dashOffset = -((accumulated / 100) * circumference);
+                        accumulated += pct;
+
+                        return (
+                          <circle
+                            key={st.key}
+                            cx="50"
+                            cy="50"
+                            r={r}
+                            fill="transparent"
+                            stroke={st.color}
+                            strokeWidth="12"
+                            strokeDasharray={dashArray}
+                            strokeDashoffset={dashOffset}
+                            style={{ transition: "all 0.4s ease" }}
+                          >
+                            <title>{`${st.label}: ${count} (${pct.toFixed(1)}%)`}</title>
+                          </circle>
+                        );
+                      })}
+                    </svg>
+                    <div style={{ position: "absolute", textAlign: "center" }}>
+                      <div style={{ fontSize: "1.2rem", fontWeight: 700, color: "#ef4444" }}>{totalRejected}</div>
+                      <div style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>Ditolak</div>
                     </div>
                   </div>
-                );
-              });
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", flex: 1, minWidth: "160px" }}>
+                    {stages.map((st) => {
+                      const count = rejectionStats[st.key] ?? 0;
+                      if (!count) return null;
+                      const pct = ((count / totalRejected) * 100).toFixed(1);
+                      return (
+                        <div
+                          key={st.key}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            fontSize: "0.78rem",
+                            padding: "0.3rem 0.5rem",
+                            borderRadius: "var(--radius-sm)",
+                            background: "var(--bg-subtle)",
+                            border: "1px solid var(--border-subtle)",
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: st.color }} />
+                            <span style={{ fontWeight: 500, color: "var(--text)" }}>{st.label}</span>
+                          </div>
+                          <span style={{ fontWeight: 700, color: st.color }}>{pct}% ({count})</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
             })()}
           </div>
         </div>

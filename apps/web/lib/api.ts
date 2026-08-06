@@ -68,7 +68,31 @@ const setToken = (t: string) => localStorage.setItem("access_token", t);
 const clearToken = () => { localStorage.removeItem("access_token"); localStorage.removeItem("refresh_token"); };
 export { getToken, setToken, clearToken };
 
+const cacheMap = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 15000; // 15s in-memory cache
+
+export function clearApiCache() {
+  cacheMap.clear();
+}
+
 async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
+  const method = (opts.method || "GET").toUpperCase();
+  
+  if (method !== "GET") {
+    clearApiCache();
+  } else if (cacheMap.has(path)) {
+    const cached = cacheMap.get(path)!;
+    if (Date.now() - cached.timestamp < CACHE_TTL) {
+      // Revalidate silently in background
+      fetchLatest<T>(path, opts);
+      return cached.data as T;
+    }
+  }
+
+  return fetchLatest<T>(path, opts);
+}
+
+async function fetchLatest<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const token = getToken();
   const res = await fetch(`${API_BASE}${path}`, {
     ...opts,
@@ -80,6 +104,11 @@ async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(json.message ?? `HTTP ${res.status}`);
+  
+  const method = (opts.method || "GET").toUpperCase();
+  if (method === "GET") {
+    cacheMap.set(path, { data: json, timestamp: Date.now() });
+  }
   return json as T;
 }
 

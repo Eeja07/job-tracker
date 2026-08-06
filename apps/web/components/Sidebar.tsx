@@ -105,6 +105,7 @@ export default function Sidebar() {
                   href={href}
                   className={`${styles.navItem} ${active ? styles.navActive : ""}`}
                   onClick={() => setMobileOpen(false)}
+                  onMouseEnter={() => router.prefetch(href)}
                 >
                   <Icon size={16} />
                   <span>{label}</span>
