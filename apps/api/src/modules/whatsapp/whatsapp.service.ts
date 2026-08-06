@@ -202,19 +202,26 @@ _Atau:_ \`!tambah Frontend Engineer | Gojek | INTERVIEWING\`
   }
 
   private async getHrRepliesMessage(): Promise<string> {
-    const messages = await this.prisma.emailMessage.findMany({
+    let messages = await this.prisma.emailMessage.findMany({
       where: { isJobRelated: true },
       orderBy: { receivedAt: 'desc' },
       take: 5,
     });
 
     if (messages.length === 0) {
-      return `📩 *BALASAN EMAIL HRD*\n\nBelum ada balasan email HRD ber-kategori loker yang terdeteksi.`;
+      messages = await this.prisma.emailMessage.findMany({
+        orderBy: { receivedAt: 'desc' },
+        take: 5,
+      });
+    }
+
+    if (messages.length === 0) {
+      return `📩 *BALASAN EMAIL HRD*\n\nBelum ada balasan email yang terdeteksi di inbox Gmail kamu. Hubungkan akun Gmail di dashboard untuk menyinkronkan email secara otomatis!\n\n🔗 _Hubungkan Gmail:_ https://job.eeja.fun/dashboard/gmail`;
     }
 
     let msg = `📩 *5 BALASAN EMAIL HRD TERBARU*\n\n`;
     messages.forEach((m, idx) => {
-      msg += `${idx + 1}. *${m.subject || 'Tanpa Subjek'}*\n   👤 Dari: ${m.fromName || m.fromEmail}\n   🏷️ Tipe: *${m.detectedType || 'EMAIL_JOB'}*\n   📅 Waktu: ${new Date(m.receivedAt).toLocaleString('id-ID')}\n\n`;
+      msg += `${idx + 1}. *${m.subject || 'Tanpa Subjek'}*\n   👤 Dari: ${m.fromName || m.fromEmail}\n   🏷️ Tipe: *${m.detectedType || (m.isJobRelated ? 'HR_REPLY' : 'EMAIL')}*\n   📅 Waktu: ${new Date(m.receivedAt).toLocaleString('id-ID')}\n\n`;
     });
 
     msg += `🔗 _Buka Inbox Gmail:_ https://job.eeja.fun/dashboard/gmail`;
