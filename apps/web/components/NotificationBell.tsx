@@ -213,35 +213,35 @@ export default function NotificationBell() {
                 </div>
               )}
 
-              {notifications.length === 0 ? (
-                <div className={styles.emptyState}>Belum ada notifikasi email loker.</div>
-              ) : (
-                notifications.map((n) => (
+              {(() => {
+                const unreadNotifs = notifications.filter((n) => !n.isRead);
+                if (unreadNotifs.length === 0) {
+                  return <div className={styles.emptyState}>Semua notifikasi sudah dibaca.</div>;
+                }
+                return unreadNotifs.map((n) => (
                   <div
                     key={n.id}
-                    className={`${styles.notifItem} ${!n.isRead ? styles.unread : ""}`}
+                    className={`${styles.notifItem} ${styles.unread}`}
                     onClick={() => handleItemClick(n)}
                     style={{ cursor: "pointer" }}
                     title="Klik untuk membaca isi notifikasi selengkapnya"
                   >
                     <div className={styles.notifHeader}>
                       <div className={styles.titleGroup}>
-                        {!n.isRead && <span className={styles.unreadDot} />}
+                        <span className={styles.unreadDot} />
                         <span className={styles.notifTitle}>{n.title}</span>
                       </div>
                       <div className={styles.timeGroup}>
                         <span className={styles.notifTime}>
                           {new Date(n.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                         </span>
-                        {!n.isRead && (
-                          <button
-                            className={styles.itemReadBtn}
-                            onClick={(e) => handleMarkItemRead(n.id, e)}
-                            title="Tandai sudah dibaca"
-                          >
-                            <Check size={12} />
-                          </button>
-                        )}
+                        <button
+                          className={styles.itemReadBtn}
+                          onClick={(e) => handleMarkItemRead(n.id, e)}
+                          title="Tandai sudah dibaca (hilangkan dari notifikasi)"
+                        >
+                          <Check size={12} />
+                        </button>
                       </div>
                     </div>
                     <p className={styles.notifBody}>{n.body}</p>
@@ -249,8 +249,8 @@ export default function NotificationBell() {
                       Klik untuk baca detail &rarr;
                     </div>
                   </div>
-                ))
-              )}
+                ));
+              })()}
             </div>
           </div>
         )}
