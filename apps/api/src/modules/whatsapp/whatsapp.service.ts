@@ -62,15 +62,22 @@ export class WhatsappService {
   }
 
   private async getUserPhone(userId: string): Promise<string | null> {
-    // Uses environment variable fallback or configured WA notification target phone
-    return process.env.WA_NOTIFICATION_PHONE || null;
+    if (process.env.WA_NOTIFICATION_PHONE) {
+      return process.env.WA_NOTIFICATION_PHONE;
+    }
+    const status = await this.getStatus();
+    return status.connectedUser || null;
   }
 
   async notifyEmailNotification(userId: string, title: string, body: string): Promise<void> {
     const phone = await this.getUserPhone(userId);
-    if (!phone) return;
+    if (!phone) {
+      this.logger.warn(`Cannot send WA email notification: No phone number or connected user found.`);
+      return;
+    }
 
-    const messageText = `🔔 *JOB TRACKER NOTIFIKASI*\n\n📩 *${title}*\n${body}\n\n🔗 _Akses Dashboard:_ https://job.eeja.fun/dashboard/gmail`;
+    const messageText = `🔔 *NOTIFIKASI BALASAN HRD BARU*\n\n📩 *${title}*\n${body}\n\n🔗 _Buka Dashboard Gmail:_ https://job.eeja.fun/dashboard/gmail`;
+    this.logger.log(`Sending instant WA email notification to ${phone}`);
     await this.sendTextMessage(phone, messageText);
   }
 
