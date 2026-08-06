@@ -20,15 +20,15 @@ export class PaginationQueryDto {
   page: number = 1;
 
   @ApiPropertyOptional({
-    description: 'Items per page (max 100)',
+    description: 'Items per page (0 for all, max 10000)',
     default: 20,
     example: 20,
   })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  @Min(1)
-  @Max(100)
+  @Min(0)
+  @Max(10000)
   limit: number = 20;
 
   @ApiPropertyOptional({ description: 'Search term', example: 'Backend' })
