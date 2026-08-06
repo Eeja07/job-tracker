@@ -1,13 +1,27 @@
 import type { ApplicationStatus } from "./api";
 
 export const STATUS_CONFIG: Record<ApplicationStatus, { label: string; color: string; bg: string; border: string }> = {
-  SAVED:        { label: "Saved",        color: "var(--status-saved-color)", bg: "var(--status-saved-bg)", border: "var(--status-saved-border)" },
-  APPLIED:      { label: "Applied",      color: "var(--status-applied-color)", bg: "var(--status-applied-bg)", border: "var(--status-applied-border)" },
-  SCREENING:    { label: "Screening",    color: "var(--status-screening-color)", bg: "var(--status-screening-bg)", border: "var(--status-screening-border)" },
-  INTERVIEWING: { label: "Interviewing", color: "var(--status-interviewing-color)", bg: "var(--status-interviewing-bg)", border: "var(--status-interviewing-border)" },
-  OFFER:        { label: "Offer",        color: "var(--status-offer-color)", bg: "var(--status-offer-bg)", border: "var(--status-offer-border)" },
-  REJECTED:     { label: "Rejected",     color: "var(--status-rejected-color)", bg: "var(--status-rejected-bg)", border: "var(--status-rejected-border)" },
-  WITHDRAWN:    { label: "Withdrawn",    color: "var(--status-withdrawn-color)", bg: "var(--status-withdrawn-bg)", border: "var(--status-withdrawn-border)" },
+  SAVED:          { label: "Saved",            color: "var(--status-saved-color)", bg: "var(--status-saved-bg)", border: "var(--status-saved-border)" },
+  APPLIED:        { label: "Applied",          color: "var(--status-applied-color)", bg: "var(--status-applied-bg)", border: "var(--status-applied-border)" },
+  ASSESSMENT:     { label: "Assessment / Tes", color: "#a855f7", bg: "rgba(168, 85, 247, 0.12)", border: "rgba(168, 85, 247, 0.25)" },
+  HR_INTERVIEW:   { label: "Interview HR",     color: "#3b82f6", bg: "rgba(59, 130, 246, 0.12)", border: "rgba(59, 130, 246, 0.25)" },
+  USER_INTERVIEW: { label: "Interview User",   color: "#06b6d4", bg: "rgba(6, 182, 212, 0.12)", border: "rgba(6, 182, 212, 0.25)" },
+  OFFER:          { label: "Offer",            color: "var(--status-offer-color)", bg: "var(--status-offer-bg)", border: "var(--status-offer-border)" },
+  REJECTED:       { label: "Rejected",         color: "var(--status-rejected-color)", bg: "var(--status-rejected-bg)", border: "var(--status-rejected-border)" },
+  WITHDRAWN:      { label: "Withdrawn",        color: "var(--status-withdrawn-color)", bg: "var(--status-withdrawn-bg)", border: "var(--status-withdrawn-border)" },
+  SCREENING:      { label: "Assessment / Tes", color: "#a855f7", bg: "rgba(168, 85, 247, 0.12)", border: "rgba(168, 85, 247, 0.25)" },
+  INTERVIEWING:   { label: "Interview HR",     color: "#3b82f6", bg: "rgba(59, 130, 246, 0.12)", border: "rgba(59, 130, 246, 0.25)" },
+};
+
+export const REJECTION_STAGE_LABELS: Record<string, string> = {
+  APPLIED: "Ditolak di Applied (CV)",
+  ASSESSMENT: "Ditolak di Assessment / Tes",
+  SCREENING: "Ditolak di Assessment / Tes",
+  HR_INTERVIEW: "Ditolak di HR Interview",
+  INTERVIEWING: "Ditolak di HR Interview",
+  USER_INTERVIEW: "Ditolak di User Interview",
+  OFFER: "Ditolak saat Offering",
+  SAVED: "Ditolak di Tahap Awal",
 };
 
 export const WORK_MODE_LABELS = { REMOTE: "Remote", HYBRID: "Hybrid", ONSITE: "Onsite" };

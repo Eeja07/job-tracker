@@ -56,6 +56,14 @@ export class CreateApplicationDto {
   status?: ApplicationStatus;
 
   @ApiPropertyOptional({
+    description: 'Stage at which application was rejected',
+    example: 'HR_INTERVIEW',
+  })
+  @IsOptional()
+  @IsString()
+  rejectedAtStage?: string;
+
+  @ApiPropertyOptional({
     description: 'Work mode arrangement',
     enum: WorkMode,
     default: WorkMode.REMOTE,

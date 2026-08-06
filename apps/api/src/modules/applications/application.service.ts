@@ -26,33 +26,16 @@ const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const ALLOWED_TRANSITIONS: Record<ApplicationStatus, ApplicationStatus[]> = {
-  [ApplicationStatus.SAVED]: [
-    ApplicationStatus.APPLIED,
-    ApplicationStatus.WITHDRAWN,
-  ],
-  [ApplicationStatus.APPLIED]: [
-    ApplicationStatus.SCREENING,
-    ApplicationStatus.INTERVIEWING,
-    ApplicationStatus.REJECTED,
-    ApplicationStatus.WITHDRAWN,
-  ],
-  [ApplicationStatus.SCREENING]: [
-    ApplicationStatus.INTERVIEWING,
-    ApplicationStatus.OFFER,
-    ApplicationStatus.REJECTED,
-    ApplicationStatus.WITHDRAWN,
-  ],
-  [ApplicationStatus.INTERVIEWING]: [
-    ApplicationStatus.OFFER,
-    ApplicationStatus.REJECTED,
-    ApplicationStatus.WITHDRAWN,
-  ],
-  [ApplicationStatus.OFFER]: [
-    ApplicationStatus.REJECTED,
-    ApplicationStatus.WITHDRAWN,
-  ],
-  [ApplicationStatus.REJECTED]: [ApplicationStatus.APPLIED],
-  [ApplicationStatus.WITHDRAWN]: [ApplicationStatus.APPLIED],
+  [ApplicationStatus.SAVED]: Object.values(ApplicationStatus),
+  [ApplicationStatus.APPLIED]: Object.values(ApplicationStatus),
+  [ApplicationStatus.ASSESSMENT]: Object.values(ApplicationStatus),
+  [ApplicationStatus.HR_INTERVIEW]: Object.values(ApplicationStatus),
+  [ApplicationStatus.USER_INTERVIEW]: Object.values(ApplicationStatus),
+  [ApplicationStatus.OFFER]: Object.values(ApplicationStatus),
+  [ApplicationStatus.REJECTED]: Object.values(ApplicationStatus),
+  [ApplicationStatus.WITHDRAWN]: Object.values(ApplicationStatus),
+  [ApplicationStatus.SCREENING]: Object.values(ApplicationStatus),
+  [ApplicationStatus.INTERVIEWING]: Object.values(ApplicationStatus),
 };
 
 @Injectable()
@@ -104,12 +87,18 @@ export class ApplicationService {
         ? new Date(dto.appliedAt)
         : undefined;
 
+    let rejectedAtStage = dto.rejectedAtStage || undefined;
+    if (dto.status === ApplicationStatus.REJECTED && !rejectedAtStage) {
+      rejectedAtStage = 'APPLIED';
+    }
+
     const result = await this.applicationRepository.create({
       userId,
       companyId: companyId || undefined,
       jobTitle: dto.jobTitle,
       applicationCode: dto.applicationCode || undefined,
       status: dto.status || ApplicationStatus.SAVED,
+      rejectedAtStage,
       workMode: dto.workMode || WorkMode.REMOTE,
       source: dto.source || ApplicationSource.LINKEDIN,
       salaryMin:
@@ -172,7 +161,7 @@ export class ApplicationService {
     userId: string,
     dto: UpdateApplicationDto,
   ): Promise<Application> {
-    await this.findOne(id, userId);
+    const existingApp = await this.findOne(id, userId);
 
     let companyId = dto.companyId;
     if (companyId && !UUID_REGEX.test(companyId)) {
@@ -207,7 +196,13 @@ export class ApplicationService {
     if (companyId !== undefined) updateData.companyId = companyId;
     if (dto.jobTitle !== undefined) updateData.jobTitle = dto.jobTitle;
     if (dto.applicationCode !== undefined) updateData.applicationCode = dto.applicationCode;
-    if (dto.status) updateData.status = dto.status;
+    if (dto.status) {
+      updateData.status = dto.status;
+      if (dto.status === ApplicationStatus.REJECTED) {
+        updateData.rejectedAtStage = dto.rejectedAtStage || (existingApp.status !== ApplicationStatus.REJECTED ? existingApp.status : 'APPLIED');
+      }
+    }
+    if (dto.rejectedAtStage !== undefined) updateData.rejectedAtStage = dto.rejectedAtStage;
     if (dto.workMode !== undefined) updateData.workMode = dto.workMode || null;
     if (dto.source !== undefined) updateData.source = dto.source || null;
     if (dto.salaryMin !== undefined)

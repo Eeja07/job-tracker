@@ -25,6 +25,7 @@ export interface Application {
   location?: string;
   deadline?: string;
   appliedAt: string;
+  rejectedAtStage?: string;
   requirements?: string;
   notes?: string;
   notesContent?: string;
@@ -44,7 +45,7 @@ export interface Application {
 }
 
 export type ApplicationStatus =
-  | "SAVED" | "APPLIED" | "SCREENING" | "INTERVIEWING" | "OFFER" | "REJECTED" | "WITHDRAWN";
+  | "SAVED" | "APPLIED" | "ASSESSMENT" | "HR_INTERVIEW" | "USER_INTERVIEW" | "OFFER" | "REJECTED" | "WITHDRAWN" | "SCREENING" | "INTERVIEWING";
 
 export interface DashboardStats {
   totalApplications: number;

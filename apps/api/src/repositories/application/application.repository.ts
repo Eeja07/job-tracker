@@ -16,6 +16,7 @@ export interface CreateApplicationData {
   jobTitle: string;
   applicationCode?: string;
   status?: ApplicationStatus;
+  rejectedAtStage?: string;
   workMode?: WorkMode;
   source?: ApplicationSource;
   salaryMin?: number;
@@ -54,6 +55,7 @@ export interface UpdateApplicationData {
   deadline?: Date | null;
   appliedAt?: Date;
   lastStatusChangedAt?: Date;
+  rejectedAtStage?: string | null;
   requirements?: string | null;
   notesContent?: string | null;
   notesImages?: string[];

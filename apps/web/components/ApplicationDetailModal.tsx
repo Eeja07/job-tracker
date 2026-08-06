@@ -2,7 +2,7 @@
 import { useState } from "react";
 import type { Application } from "@/lib/api";
 import { applicationsApi } from "@/lib/api";
-import { STATUS_CONFIG, WORK_MODE_LABELS, SOURCE_LABELS, formatCurrency, formatDate, getDaysAgo } from "@/lib/utils";
+import { STATUS_CONFIG, REJECTION_STAGE_LABELS, WORK_MODE_LABELS, SOURCE_LABELS, formatCurrency, formatDate, getDaysAgo } from "@/lib/utils";
 import { X, Edit2, Trash2, ExternalLink, FileText, Image as ImageIcon, Briefcase, Calendar, MapPin, DollarSign, CheckSquare, Download, Eye, RefreshCw, CheckCircle, AlertTriangle, HelpCircle, Copy, Check } from "lucide-react";
 import styles from "./ApplicationDetailModal.module.css";
 
@@ -52,6 +52,14 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
               >
                 {statusCfg.label}
               </span>
+              {app.status === "REJECTED" && (
+                <span
+                  className={styles.statusBadge}
+                  style={{ color: "#f87171", background: "rgba(248,113,113,0.12)", borderColor: "rgba(248,113,113,0.25)" }}
+                >
+                  {REJECTION_STAGE_LABELS[app.rejectedAtStage || "APPLIED"] || "Ditolak di Applied"}
+                </span>
+              )}
             </div>
             <div className={styles.companyRow}>
               <span className={styles.companyName}>{app.company?.name ?? "—"}</span>

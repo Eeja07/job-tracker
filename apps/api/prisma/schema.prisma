@@ -17,11 +17,14 @@ datasource db {
 enum ApplicationStatus {
   SAVED
   APPLIED
-  SCREENING
-  INTERVIEWING
+  ASSESSMENT
+  HR_INTERVIEW
+  USER_INTERVIEW
   OFFER
   REJECTED
   WITHDRAWN
+  SCREENING
+  INTERVIEWING
 }
 
 enum WorkMode {
@@ -139,6 +142,7 @@ model Application {
   deadline            DateTime?          @db.Timestamptz(6)
   appliedAt           DateTime           @default(now()) @map("applied_at") @db.Timestamptz(6)
   lastStatusChangedAt DateTime           @default(now()) @map("last_status_changed_at") @db.Timestamptz(6)
+  rejectedAtStage     String?            @map("rejected_at_stage") @db.VarChar(50)
   requirements        String?            @db.Text
   notesContent        String?            @map("notes_content") @db.Text
   notesImages         String[]           @default([]) @map("notes_images")

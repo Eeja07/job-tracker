@@ -2,13 +2,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { applicationsApi, type Application, type ApplicationStatus } from "@/lib/api";
-import { STATUS_CONFIG, WORK_MODE_LABELS, SOURCE_LABELS, formatCurrency, formatDate, getDaysAgo } from "@/lib/utils";
+import { STATUS_CONFIG, REJECTION_STAGE_LABELS, WORK_MODE_LABELS, SOURCE_LABELS, formatCurrency, formatDate, getDaysAgo } from "@/lib/utils";
 import { Plus, Search, ExternalLink, Trash2, X, Loader2, Edit2, Eye, FileText, Image as ImageIcon, CheckSquare, RefreshCw, CheckCircle, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from "lucide-react";
 import ApplicationModal from "@/components/ApplicationModal";
 import ApplicationDetailModal from "@/components/ApplicationDetailModal";
 import styles from "./page.module.css";
 
-const STATUSES = ["SAVED","APPLIED","SCREENING","INTERVIEWING","OFFER","REJECTED","WITHDRAWN"] as const;
+const STATUSES = ["SAVED","APPLIED","ASSESSMENT","HR_INTERVIEW","USER_INTERVIEW","OFFER","REJECTED","WITHDRAWN"] as const;
 
 type SortCol = "jobTitle" | "status" | "workMode" | "salaryMin" | "appliedAt";
 
@@ -367,16 +367,23 @@ export default function ApplicationsPage() {
                       </div>
                     </td>
                     <td>
-                      <select
-                        className={styles.statusSelect}
-                        value={app.status}
-                        onChange={e => handleStatusChange(app.id, e.target.value as ApplicationStatus)}
-                        style={{ color: cfg.color, background: cfg.bg, borderColor: cfg.border }}
-                      >
-                        {STATUSES.map(s => (
-                          <option key={s} value={s}>{STATUS_CONFIG[s].label}</option>
-                        ))}
-                      </select>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                        <select
+                          className={styles.statusSelect}
+                          value={app.status}
+                          onChange={e => handleStatusChange(app.id, e.target.value as ApplicationStatus)}
+                          style={{ color: cfg.color, background: cfg.bg, borderColor: cfg.border }}
+                        >
+                          {STATUSES.map(s => (
+                            <option key={s} value={s}>{STATUS_CONFIG[s].label}</option>
+                          ))}
+                        </select>
+                        {app.status === "REJECTED" && (
+                          <span style={{ fontSize: "0.68rem", color: "#f87171", fontWeight: 600 }}>
+                            {REJECTION_STAGE_LABELS[app.rejectedAtStage || "APPLIED"] || "Ditolak di Applied"}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td>
                       <span className={styles.textCell}>

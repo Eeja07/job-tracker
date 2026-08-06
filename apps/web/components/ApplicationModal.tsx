@@ -4,7 +4,7 @@ import { companiesApi, applicationsApi, type Application, type ApplicationStatus
 import { X, Loader2, Image as ImageIcon, FileText, CheckSquare, Upload, Link as LinkIcon, Trash2, Plus, FileCode, Briefcase, Download, Sparkles } from "lucide-react";
 import styles from "./ApplicationModal.module.css";
 
-const STATUSES: ApplicationStatus[] = ["SAVED","APPLIED","SCREENING","INTERVIEWING","OFFER","REJECTED","WITHDRAWN"];
+const STATUSES: ApplicationStatus[] = ["SAVED","APPLIED","ASSESSMENT","HR_INTERVIEW","USER_INTERVIEW","OFFER","REJECTED","WITHDRAWN"];
 const WORK_MODES = ["REMOTE","HYBRID","ONSITE"];
 const SOURCES = ["LINKEDIN","JOBSTREET","GLINTS","KALIBRR","EMAIL","WHATSAPP","TELEGRAM","WEBSITE","INSTAGRAM","THREADS","DEALLS","KITALULUS","OTHER"];
 const CURRENCIES = ["IDR","USD","SGD","EUR","GBP","AUD","JPY","MYR","CNY"];
@@ -20,6 +20,7 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
     jobTitle: app?.jobTitle ?? "",
     companyName: app?.company?.name ?? "",
     status: (app?.status ?? "SAVED") as ApplicationStatus,
+    rejectedAtStage: app?.rejectedAtStage ?? "APPLIED",
     workMode: app?.workMode ?? "REMOTE",
     source: app?.source ?? "LINKEDIN",
     location: app?.location ?? "",
@@ -347,6 +348,19 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
                   </select>
                 </div>
               </div>
+
+              {form.status === "REJECTED" && (
+                <div className={styles.field} style={{ marginTop: "0.5rem" }}>
+                  <label className={styles.label} style={{ color: "#f87171", fontWeight: 600 }}>Ditolak di Tahap Mana?</label>
+                  <select className={styles.input} value={form.rejectedAtStage} onChange={set("rejectedAtStage")}>
+                    <option value="APPLIED">Ditolak di Applied (CV Screening)</option>
+                    <option value="ASSESSMENT">Ditolak di Assessment / Tes</option>
+                    <option value="HR_INTERVIEW">Ditolak di HR Interview</option>
+                    <option value="USER_INTERVIEW">Ditolak di User Interview</option>
+                    <option value="OFFER">Ditolak saat Offering</option>
+                  </select>
+                </div>
+              )}
 
               <div className={styles.grid2}>
                 <div className={styles.field}>

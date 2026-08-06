@@ -10,12 +10,13 @@ import ApplicationDetailModal from "@/components/ApplicationDetailModal";
 import ApplicationModal from "@/components/ApplicationModal";
 import styles from "./page.module.css";
 
-const STATUS_ORDER = ["SAVED","APPLIED","SCREENING","INTERVIEWING","OFFER","REJECTED","WITHDRAWN"] as const;
+const STATUS_ORDER = ["SAVED","APPLIED","ASSESSMENT","HR_INTERVIEW","USER_INTERVIEW","OFFER","REJECTED","WITHDRAWN"] as const;
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [stats, setStats] = useState<Record<string,number>>({});
+  const [rejectionStats, setRejectionStats] = useState<Record<string,number>>({});
   const [recent, setRecent] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [detailApp, setDetailApp] = useState<Application | undefined>();
@@ -29,7 +30,10 @@ export default function DashboardPage() {
       ]);
 
       let fetchedStats: Record<string, number> = {
-        SAVED: 0, APPLIED: 0, SCREENING: 0, INTERVIEWING: 0, OFFER: 0, REJECTED: 0, WITHDRAWN: 0
+        SAVED: 0, APPLIED: 0, ASSESSMENT: 0, HR_INTERVIEW: 0, USER_INTERVIEW: 0, OFFER: 0, REJECTED: 0, WITHDRAWN: 0
+      };
+      let fetchedRejections: Record<string, number> = {
+        APPLIED: 0, ASSESSMENT: 0, HR_INTERVIEW: 0, USER_INTERVIEW: 0, OFFER: 0
       };
 
       if (apps.status === "fulfilled") {
@@ -46,6 +50,10 @@ export default function DashboardPage() {
           if (app.status) {
             fetchedStats[app.status] = (fetchedStats[app.status] || 0) + 1;
           }
+          if (app.status === "REJECTED") {
+            const stage = app.rejectedAtStage || "APPLIED";
+            fetchedRejections[stage] = (fetchedRejections[stage] || 0) + 1;
+          }
         });
       }
 
@@ -58,6 +66,7 @@ export default function DashboardPage() {
       }
 
       setStats(fetchedStats);
+      setRejectionStats(fetchedRejections);
     } catch { /* ignore */ } finally {
       setLoading(false);
     }
@@ -230,6 +239,48 @@ export default function DashboardPage() {
                 })}
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className={styles.sectionCard}>
+          <div className={styles.cardHeader}>
+            <h2 className={styles.cardTitle}>Analisis Titik Ditolak (Rejection Stages)</h2>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+            {(() => {
+              const totalRejected = stats.REJECTED ?? 0;
+              const stages = [
+                { key: "APPLIED", label: "Ditolak di Applied (CV Screening)", color: "#ef4444" },
+                { key: "ASSESSMENT", label: "Ditolak di Assessment / Tes", color: "#a855f7" },
+                { key: "HR_INTERVIEW", label: "Ditolak di HR Interview", color: "#3b82f6" },
+                { key: "USER_INTERVIEW", label: "Ditolak di User Interview", color: "#06b6d4" },
+                { key: "OFFER", label: "Ditolak saat Offering", color: "#eab308" },
+              ];
+
+              if (totalRejected === 0) {
+                return (
+                  <div style={{ textAlign: "center", padding: "1.5rem 0", color: "var(--text-muted)", fontSize: "0.85rem" }}>
+                    Belum ada lamaran berstatus ditolak.
+                  </div>
+                );
+              }
+
+              return stages.map(st => {
+                const count = rejectionStats[st.key] ?? 0;
+                const pct = totalRejected > 0 ? Math.round((count / totalRejected) * 100) : 0;
+                return (
+                  <div key={st.key} style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
+                      <span style={{ color: "var(--text)", fontWeight: 500 }}>{st.label}</span>
+                      <span style={{ color: st.color, fontWeight: 700 }}>{count} ({pct}%)</span>
+                    </div>
+                    <div className={styles.progressTrack}>
+                      <div className={styles.progressBar} style={{ width: `${pct}%`, background: st.color }} />
+                    </div>
+                  </div>
+                );
+              });
+            })()}
           </div>
         </div>
 
