@@ -31,6 +31,10 @@ const NON_JOB_SENDERS = [
   'mandiri.co.id',
   'bni.co.id',
   'bri.co.id',
+  'invitations@linkedin.com',
+  'messages-noreply@linkedin.com',
+  'updates-noreply@linkedin.com',
+  'em.linkedin.com',
 ];
 
 // Keywords to detect job-related emails accurately (Indonesian & English)
@@ -62,6 +66,11 @@ const JOB_KEYWORDS = [
   'tes potensi akademik',
   'loker',
   'karir',
+  'pekerjaan',
+  'pemberitahuan pekerjaan',
+  'peringatan pekerjaan',
+  'rekomendasi pekerjaan',
+  'pencarian kerja',
 
   // English Keywords
   'job application',
@@ -95,6 +104,11 @@ const JOB_KEYWORDS = [
   'unsuccessful application',
   'we decided to move forward with another',
   'position has been filled',
+  'jobalert',
+  'jobalerts',
+  'job alert',
+  'job notification',
+  'jobnotification',
 
   // Platforms & ATS system signatures
   'greenhouse.io',
