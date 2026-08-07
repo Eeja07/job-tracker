@@ -183,6 +183,10 @@ export class ApplicationService {
     return application;
   }
 
+  async findImageById(id: string): Promise<{ imageUrl?: string | null } | null> {
+    return this.applicationRepository.findImageById(id);
+  }
+
   async update(
     id: string,
     userId: string,

@@ -309,4 +309,11 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
       where: { id },
     });
   }
+
+  async findImageById(id: string): Promise<{ imageUrl?: string | null } | null> {
+    return this.prisma.application.findUnique({
+      where: { id },
+      select: { imageUrl: true },
+    });
+  }
 }

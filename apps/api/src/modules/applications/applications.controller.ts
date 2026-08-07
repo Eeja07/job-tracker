@@ -33,6 +33,7 @@ import {
 
 import { ApiVersion } from '../../core/versioning/decorators/api-version.decorator';
 import { DeprecatedEndpoint } from '../../core/versioning/decorators/deprecated-endpoint.decorator';
+import { Public } from '../../core/decorators/public.decorator';
 import { scrapeJobUrl } from './job-scraper.util';
 import { JobStatusCheckerService } from './job-status-checker.service';
 
@@ -135,15 +136,14 @@ export class ApplicationsController {
     return this.applicationService.findOne(id, authReq.user.sub);
   }
 
+  @Public()
   @Get(':id/image')
   @ApiOperation({ summary: 'Get application poster image' })
   async getImage(
-    @NestRequest() req: any,
     @Param('id') id: string,
     @Res() res: any,
   ) {
-    const authReq = req as AuthenticatedRequest;
-    const app = await this.applicationService.findOne(id, authReq.user.sub);
+    const app = await this.applicationService.findImageById(id);
     if (!app || !app.imageUrl) {
       return res.status(404).send('Image not found');
     }
