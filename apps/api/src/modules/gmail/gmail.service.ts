@@ -65,6 +65,7 @@ const JOB_KEYWORDS = [
 
   // English Keywords
   'job application',
+  'application for',
   'application received',
   'thank you for applying',
   'thanks for applying',
@@ -161,6 +162,7 @@ const EMAIL_TYPE_KEYWORDS: Record<string, string[]> = {
   APPLIED_CONFIRM: [
     'received',
     'application received',
+    'application for',
     'lamaran diterima',
     'thank you for applying',
     'thanks for applying',
@@ -392,7 +394,18 @@ export class GmailService implements OnModuleInit {
         // Detect if job-related using strict word-boundary matching and non-job sender exclusion
         const searchText = `${subject} ${snippet} ${fromEmail}`.toLowerCase();
         const isNonJobSender = NON_JOB_SENDERS.some((s) => fromEmail.toLowerCase().includes(s));
-        const isJobRelated = !isNonJobSender && JOB_KEYWORDS.some((k) => isKeywordMatched(searchText, k));
+        let isJobRelated = !isNonJobSender && JOB_KEYWORDS.some((k) => isKeywordMatched(searchText, k));
+
+        // Smart fallback: If subject starts with "RE:" or "Fwd:" and contains "application", "lamaran", "staff", etc.
+        const lowerSub = subject.toLowerCase();
+        if (!isJobRelated && !isNonJobSender) {
+          if (
+            (lowerSub.startsWith('re:') || lowerSub.startsWith('fwd:')) &&
+            (lowerSub.includes('application') || lowerSub.includes('lamaran') || lowerSub.includes('candidate') || lowerSub.includes('applicant'))
+          ) {
+            isJobRelated = true;
+          }
+        }
 
         // Detect email type
         let detectedType: string | null = null;
@@ -402,6 +415,9 @@ export class GmailService implements OnModuleInit {
               detectedType = type;
               break;
             }
+          }
+          if (!detectedType && (lowerSub.startsWith('re:') || lowerSub.startsWith('fwd:'))) {
+            detectedType = 'APPLIED_CONFIRM';
           }
         }
 
