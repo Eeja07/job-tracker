@@ -168,6 +168,9 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
           cvName: true,
           portfolioName: true,
           coverLetterName: true,
+          imageUrl: true,
+          requirements: true,
+          notes: true,
           company: {
             select: { id: true, name: true },
           },

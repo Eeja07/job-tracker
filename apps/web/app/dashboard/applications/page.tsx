@@ -132,6 +132,23 @@ export default function ApplicationsPage() {
     finally { setDeletingId(null); }
   };
 
+  const handleOpenDetail = async (app: Application) => {
+    setDetailApp(app);
+    try {
+      const full = await applicationsApi.get(app.id);
+      setDetailApp(full);
+    } catch { /* fallback to app */ }
+  };
+
+  const handleOpenEdit = async (app: Application) => {
+    setEditApp(app);
+    setShowModal(true);
+    try {
+      const full = await applicationsApi.get(app.id);
+      setEditApp(full);
+    } catch { /* fallback to app */ }
+  };
+
   const handleStatusChange = async (id: string, status: ApplicationStatus) => {
     const existing = apps.find(a => a.id === id);
     const rejectedAtStage = status === "REJECTED" ? (existing?.rejectedAtStage || (existing?.status !== "REJECTED" ? existing?.status : "APPLIED")) : undefined;
@@ -409,7 +426,7 @@ export default function ApplicationsPage() {
                     </td>
                     <td style={{ textAlign: "right" }}>
                       <div className={styles.actionBtns}>
-                        <button className={styles.iconBtn} onClick={() => setDetailApp(app)} title="Lihat Detail Full">
+                        <button className={styles.iconBtn} onClick={() => handleOpenDetail(app)} title="Lihat Detail Full">
                           <Eye size={13} />
                         </button>
                         {app.sourceUrl && (
@@ -417,7 +434,7 @@ export default function ApplicationsPage() {
                             <ExternalLink size={13} />
                           </a>
                         )}
-                        <button className={styles.iconBtn} onClick={() => { setEditApp(app); setShowModal(true); }} title="Edit">
+                        <button className={styles.iconBtn} onClick={() => handleOpenEdit(app)} title="Edit">
                           <Edit2 size={13} />
                         </button>
                         <button

@@ -169,11 +169,11 @@ _Atau:_ \`!tambah Frontend Engineer | Gojek | INTERVIEWING\`
     };
 
     const rejectionCounts: Record<string, number> = {
-      CV: 0,
+      APPLIED: 0,
       ASSESSMENT: 0,
-      HR: 0,
-      USER: 0,
-      OFFERING: 0,
+      HR_INTERVIEW: 0,
+      USER_INTERVIEW: 0,
+      OFFER: 0,
     };
 
     apps.forEach((app) => {
@@ -182,7 +182,11 @@ _Atau:_ \`!tambah Frontend Engineer | Gojek | INTERVIEWING\`
         statusCounts[st]++;
       }
       if (st === 'REJECTED') {
-        const stage = app.rejectedAtStage || 'CV';
+        let stage = app.rejectedAtStage || 'APPLIED';
+        if (stage === 'CV') stage = 'APPLIED';
+        if (stage === 'HR') stage = 'HR_INTERVIEW';
+        if (stage === 'USER') stage = 'USER_INTERVIEW';
+        if (stage === 'OFFERING') stage = 'OFFER';
         rejectionCounts[stage] = (rejectionCounts[stage] || 0) + 1;
       }
     });
@@ -202,11 +206,11 @@ _Atau:_ \`!tambah Frontend Engineer | Gojek | INTERVIEWING\`
 • Withdrawn: ${statusCounts.WITHDRAWN}
 
 ❌ *Analisis Stage Penolakan (${statusCounts.REJECTED} Total):*
-• CV Screening: ${rejectionCounts.CV}
+• CV Screening (Applied): ${rejectionCounts.APPLIED}
 • Assessment / Tes: ${rejectionCounts.ASSESSMENT}
-• HR Interview: ${rejectionCounts.HR}
-• User Interview: ${rejectionCounts.USER}
-• Offering: ${rejectionCounts.OFFERING}
+• HR Interview: ${rejectionCounts.HR_INTERVIEW}
+• User Interview: ${rejectionCounts.USER_INTERVIEW}
+• Offering: ${rejectionCounts.OFFER}
 
 🔗 _Dashboard Web:_ https://job.eeja.fun/dashboard`;
   }
@@ -215,7 +219,10 @@ _Atau:_ \`!tambah Frontend Engineer | Gojek | INTERVIEWING\`
     const userId = await this.getPrimaryUserId();
     const apps = await this.prisma.application.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [
+        { appliedAt: 'desc' },
+        { createdAt: 'desc' },
+      ],
       take: 5,
       include: { company: true },
     });
