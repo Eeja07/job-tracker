@@ -215,7 +215,7 @@ _Atau:_ \`!tambah Frontend Engineer | Gojek | INTERVIEWING\`
     const userId = await this.getPrimaryUserId();
     const apps = await this.prisma.application.findMany({
       where: { userId },
-      orderBy: { appliedAt: 'desc' },
+      orderBy: { createdAt: 'desc' },
       take: 5,
       include: { company: true },
     });

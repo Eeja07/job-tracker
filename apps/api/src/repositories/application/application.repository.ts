@@ -145,7 +145,29 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
     const [data, total] = await Promise.all([
       delegate.findMany({
         where,
-        include: {
+        select: {
+          id: true,
+          userId: true,
+          companyId: true,
+          jobTitle: true,
+          applicationCode: true,
+          status: true,
+          rejectedAtStage: true,
+          workMode: true,
+          source: true,
+          salaryMin: true,
+          salaryMax: true,
+          currency: true,
+          sourceUrl: true,
+          location: true,
+          deadline: true,
+          appliedAt: true,
+          lastStatusChangedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          cvName: true,
+          portfolioName: true,
+          coverLetterName: true,
           company: {
             select: { id: true, name: true },
           },
@@ -157,7 +179,7 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
       delegate.count({ where }),
     ]);
 
-    return { data, total };
+    return { data: data as any, total };
   }
 
   async findWithFilters(

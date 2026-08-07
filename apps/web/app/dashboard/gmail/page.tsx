@@ -19,7 +19,7 @@ export default function GmailSyncPage() {
     try {
       const [st, em] = await Promise.all([
         gmailApi.getStatus(),
-        gmailApi.getEmails(true, 200),
+        gmailApi.getEmails(true, 500),
       ]);
       setStatus(st);
       setEmails(Array.isArray(em) ? em : []);
@@ -156,14 +156,14 @@ export default function GmailSyncPage() {
         <div style={{ display: "flex", gap: "0.5rem", borderBottom: "1px solid var(--border)", paddingBottom: "0.5rem", flexWrap: "wrap" }}>
           <button
             className={`${styles.filterBtn} ${activeCategory === "HR_REPLY" ? styles.filterActive : ""}`}
-            onClick={() => setActiveCategory("HR_REPLY")}
+            onClick={() => { setActiveCategory("HR_REPLY"); setTypeFilter(""); }}
             style={{ fontSize: "0.85rem", padding: "0.5rem 1rem", fontWeight: 600 }}
           >
             Balasan Lamaran (HR) <span style={{ opacity: 0.8, fontSize: "0.75rem", marginLeft: "4px" }}>({hrRepliesCount})</span>
           </button>
           <button
             className={`${styles.filterBtn} ${activeCategory === "JOB_INFO" ? styles.filterActive : ""}`}
-            onClick={() => setActiveCategory("JOB_INFO")}
+            onClick={() => { setActiveCategory("JOB_INFO"); setTypeFilter(""); }}
             style={{ fontSize: "0.85rem", padding: "0.5rem 1rem", fontWeight: 600 }}
           >
             Info Loker & Peluang <span style={{ opacity: 0.8, fontSize: "0.75rem", marginLeft: "4px" }}>({jobInfoCount})</span>
