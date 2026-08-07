@@ -405,10 +405,28 @@ export class GmailService implements OnModuleInit {
 
         const receivedAt = dateStr ? new Date(dateStr) : new Date();
 
-        // Detect if job-related using strict word-boundary matching and non-job sender exclusion
-        const searchText = `${subject} ${snippet} ${fromEmail}`.toLowerCase();
+        // System Auth & OTP Exclusions (e.g. OTP, email confirmation, password resets)
+        const SYSTEM_AUTH_KEYWORDS = [
+          'otp',
+          'kode otp',
+          'konfirmasi email',
+          'confirm email',
+          'verifikasi email',
+          'email verification',
+          'reset kata sandi',
+          'reset password',
+          'kode verifikasi',
+          'verification code',
+          'security code',
+          'login attempt',
+        ];
+
+        const isSystemAuth =
+          SYSTEM_AUTH_KEYWORDS.some((k) => isKeywordMatched(searchText, k)) ||
+          fromEmail.toLowerCase().includes('otp');
+
         const isNonJobSender = NON_JOB_SENDERS.some((s) => fromEmail.toLowerCase().includes(s));
-        let isJobRelated = !isNonJobSender && JOB_KEYWORDS.some((k) => isKeywordMatched(searchText, k));
+        let isJobRelated = !isNonJobSender && !isSystemAuth && JOB_KEYWORDS.some((k) => isKeywordMatched(searchText, k));
 
         // Smart fallback: If subject starts with "RE:" or "Fwd:" and contains "application", "lamaran", "staff", etc.
         const lowerSub = subject.toLowerCase();
