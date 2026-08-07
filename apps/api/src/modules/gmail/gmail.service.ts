@@ -50,9 +50,6 @@ const JOB_ALERT_SENDERS = [
   'job-alert',
   'jobalert',
   'karir-otp@kawanlamagroup.com',
-  'notification.dealls.com',
-  'dealls.com',
-  'dealls',
 ];
 
 // Mass job alert / notification subject keywords
