@@ -50,6 +50,9 @@ const JOB_ALERT_SENDERS = [
   'job-alert',
   'jobalert',
   'karir-otp@kawanlamagroup.com',
+  'notification.dealls.com',
+  'dealls.com',
+  'dealls',
 ];
 
 // Mass job alert / notification subject keywords
@@ -66,6 +69,11 @@ const JOB_ALERT_SUBJECT_KEYWORDS = [
   'job alert matched',
   'matched the following jobs',
   'konfirmasi email anda',
+  'exclusive job offers',
+  'get exclusive job offers',
+  'verify your deall account',
+  'verify your account',
+  'verify your email',
 ];
 
 // Keywords to detect job-related emails accurately (Indonesian & English)
