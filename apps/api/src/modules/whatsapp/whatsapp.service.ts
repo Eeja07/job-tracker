@@ -86,11 +86,15 @@ export class WhatsappService {
     const text = (body || '').trim();
     if (!text || !from) return;
 
+    // CRITICAL: Only respond to explicit bot commands (starting with !)
+    // This prevents the bot from replying to every message in groups or regular DMs
+    if (!text.startsWith('!')) return;
+
     this.logger.log(`Processing WA Bot Command from ${from} (${pushName}): ${text}`);
     const lower = text.toLowerCase();
     let reply = '';
 
-    if (lower.startsWith('!help') || lower.startsWith('!bantuan') || lower === 'help' || lower === 'menu') {
+    if (lower.startsWith('!help') || lower.startsWith('!bantuan')) {
       reply = this.getHelpMessage(pushName);
     } else if (lower.startsWith('!overview') || lower.startsWith('!dashboard') || lower.startsWith('!stats')) {
       reply = await this.getOverviewMessage();
@@ -100,9 +104,8 @@ export class WhatsappService {
       reply = await this.getHrRepliesMessage();
     } else if (lower.startsWith('!tambah')) {
       reply = await this.createApplicationFromWa(text);
-    } else {
-      reply = `🤖 *JOB TRACKER BOT*\n\nHalo ${pushName || 'User'}! Ketik *!help* untuk melihat daftar perintah WhatsApp Bot Job Tracker.`;
     }
+    // Unknown commands: silently ignore (no reply) to avoid spam
 
     if (reply) {
       await this.sendTextMessage(from, reply);
