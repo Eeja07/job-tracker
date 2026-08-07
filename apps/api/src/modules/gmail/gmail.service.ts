@@ -405,6 +405,8 @@ export class GmailService implements OnModuleInit {
 
         const receivedAt = dateStr ? new Date(dateStr) : new Date();
 
+        const searchText = `${subject} ${snippet} ${fromEmail}`.toLowerCase();
+
         // System Auth & OTP Exclusions (e.g. OTP, email confirmation, password resets)
         const SYSTEM_AUTH_KEYWORDS = [
           'otp',
