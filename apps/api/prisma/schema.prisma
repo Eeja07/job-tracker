@@ -170,6 +170,7 @@ model Application {
   @@index([companyId])
   @@index([deadline])
   @@index([userId, appliedAt])
+  @@index([userId, createdAt])
   @@index([lastStatusChangedAt])
   @@index([userId, lastStatusChangedAt])
   @@map("applications")

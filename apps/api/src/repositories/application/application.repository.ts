@@ -182,7 +182,18 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
       delegate.count({ where }),
     ]);
 
-    return { data: data as any, total };
+    const mappedData = data.map((app: any) => {
+      let imageUrl = app.imageUrl;
+      if (imageUrl && imageUrl.startsWith('data:image/')) {
+        imageUrl = `/api/v1/applications/${app.id}/image`;
+      }
+      return {
+        ...app,
+        imageUrl,
+      };
+    });
+
+    return { data: mappedData as any, total };
   }
 
   async findWithFilters(

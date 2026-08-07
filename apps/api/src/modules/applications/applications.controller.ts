@@ -11,7 +11,9 @@ import {
   Request as NestRequest,
   HttpCode,
   HttpStatus,
+  Res,
 } from '@nestjs/common';
+import type { Response as ExpressResponse } from 'express';
 import {
   ApiTags,
   ApiOperation,
@@ -131,6 +133,31 @@ export class ApplicationsController {
   ): Promise<ApplicationResponseDto> {
     const authReq = req as AuthenticatedRequest;
     return this.applicationService.findOne(id, authReq.user.sub);
+  }
+
+  @Get(':id/image')
+  @ApiOperation({ summary: 'Get application poster image' })
+  async getImage(
+    @NestRequest() req: any,
+    @Param('id') id: string,
+    @Res() res: any,
+  ) {
+    const authReq = req as AuthenticatedRequest;
+    const app = await this.applicationService.findOne(id, authReq.user.sub);
+    if (!app || !app.imageUrl) {
+      return res.status(404).send('Image not found');
+    }
+    if (app.imageUrl.startsWith('data:')) {
+      const parts = app.imageUrl.split(',');
+      const mimeMatch = parts[0].match(/:(.*?);/);
+      const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+      const imgBuffer = Buffer.from(parts[1], 'base64');
+      res.setHeader('Content-Type', mime);
+      res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
+      return res.send(imgBuffer);
+    } else {
+      return res.redirect(app.imageUrl);
+    }
   }
 
   @Patch(':id')
