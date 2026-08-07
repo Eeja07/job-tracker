@@ -37,6 +37,37 @@ const NON_JOB_SENDERS = [
   'em.linkedin.com',
 ];
 
+// Mass job alert / portal recommendation senders to categorize under INFO_LOKER (NOT Balasan HR)
+const JOB_ALERT_SENDERS = [
+  'jobs-noreply@linkedin.com',
+  'jobalerts-noreply@linkedin.com',
+  'noreply@e.jobstreet.com',
+  'noreply@jobstreet.com',
+  'jobs2web.com',
+  'jobnotification',
+  'newsletter@glints.com',
+  'no-reply@glints.com',
+  'job-alert',
+  'jobalert',
+  'karir-otp@kawanlamagroup.com',
+];
+
+// Mass job alert / notification subject keywords
+const JOB_ALERT_SUBJECT_KEYWORDS = [
+  'pekerjaan baru yang serupa',
+  'lihat kecocokan pekerjaan',
+  'pemberitahuan pekerjaan',
+  'peringatan pekerjaan',
+  'rekomendasi lowongan',
+  'rekomendasi pekerjaan',
+  'lowongan kerja baru',
+  'new jobs posted',
+  'your job alert',
+  'job alert matched',
+  'matched the following jobs',
+  'konfirmasi email anda',
+];
+
 // Keywords to detect job-related emails accurately (Indonesian & English)
 const JOB_KEYWORDS = [
   // Indonesian Keywords
@@ -441,9 +472,14 @@ export class GmailService implements OnModuleInit {
           }
         }
 
-        // Detect email type
+        const isJobAlertOrNewsletter =
+          JOB_ALERT_SENDERS.some((s) => fromEmail.toLowerCase().includes(s)) ||
+          JOB_ALERT_SUBJECT_KEYWORDS.some((k) => lowerSub.includes(k)) ||
+          isSystemAuth;
+
+        // Detect email type (only for direct HR communications, NOT mass job alerts/digests)
         let detectedType: string | null = null;
-        if (isJobRelated) {
+        if (isJobRelated && !isJobAlertOrNewsletter) {
           for (const [type, keywords] of Object.entries(EMAIL_TYPE_KEYWORDS)) {
             if (keywords.some((k) => isKeywordMatched(searchText, k))) {
               detectedType = type;
@@ -549,11 +585,22 @@ export class GmailService implements OnModuleInit {
     });
 
     for (const msg of existingMessages) {
-      const searchText = `${msg.subject || ''} ${msg.snippet || ''} ${msg.fromEmail || ''}`.toLowerCase();
-      const isNonJobSender = NON_JOB_SENDERS.some((s) => (msg.fromEmail || '').toLowerCase().includes(s));
+      const fromEmail = (msg.fromEmail || '').toLowerCase();
+      const subject = (msg.subject || '').toLowerCase();
+      const searchText = `${subject} ${msg.snippet || ''} ${fromEmail}`.toLowerCase();
+
+      const isNonJobSender = NON_JOB_SENDERS.some((s) => fromEmail.includes(s));
+      const isJobAlertOrNewsletter =
+        JOB_ALERT_SENDERS.some((s) => fromEmail.includes(s)) ||
+        JOB_ALERT_SUBJECT_KEYWORDS.some((k) => subject.includes(k)) ||
+        fromEmail.includes('otp') ||
+        subject.includes('otp') ||
+        subject.includes('konfirmasi email');
+
       const correctJobRelated = !isNonJobSender && JOB_KEYWORDS.some((k) => isKeywordMatched(searchText, k));
       let correctDetectedType: string | null = null;
-      if (correctJobRelated) {
+
+      if (correctJobRelated && !isJobAlertOrNewsletter) {
         for (const [type, keywords] of Object.entries(EMAIL_TYPE_KEYWORDS)) {
           if (keywords.some((k) => isKeywordMatched(searchText, k))) {
             correctDetectedType = type;
@@ -561,6 +608,7 @@ export class GmailService implements OnModuleInit {
           }
         }
       }
+
       if (msg.isJobRelated !== correctJobRelated || msg.detectedType !== correctDetectedType) {
         await this.prisma.emailMessage.update({
           where: { id: msg.id },
@@ -658,38 +706,58 @@ export class GmailService implements OnModuleInit {
     });
 
     return messages.map((msg) => {
-      const fullSearch = `${msg.subject || ''} ${msg.fromName || ''} ${msg.fromEmail || ''} ${msg.snippet || ''}`.toLowerCase();
+      const fromEmailLower = (msg.fromEmail || '').toLowerCase();
+      const subjectLower = (msg.subject || '').toLowerCase();
+      const snippetLower = (msg.snippet || '').toLowerCase();
+      const fullSearch = `${subjectLower} ${msg.fromName?.toLowerCase() || ''} ${fromEmailLower} ${snippetLower}`;
+
+      const isJobAlertOrNewsletter =
+        JOB_ALERT_SENDERS.some((s) => fromEmailLower.includes(s)) ||
+        JOB_ALERT_SUBJECT_KEYWORDS.some((k) => subjectLower.includes(k)) ||
+        fromEmailLower.includes('otp') ||
+        subjectLower.includes('otp') ||
+        subjectLower.includes('konfirmasi email');
 
       let matchedApp: { id: string; jobTitle: string; companyName: string } | null = null;
-      for (const app of userApps) {
-        const companyName = app.company?.name?.toLowerCase().trim();
-        const jobTitle = app.jobTitle?.toLowerCase().trim();
 
-        let isMatch = false;
-        if (companyName && companyName.length > 2 && fullSearch.includes(companyName)) {
-          isMatch = true;
-        } else if (jobTitle && jobTitle.length > 3 && fullSearch.includes(jobTitle)) {
-          isMatch = true;
-        }
+      // Mass job alerts, recommendations, and system OTP emails are NOT HR replies to individual applications
+      if (!isJobAlertOrNewsletter) {
+        for (const app of userApps) {
+          const companyName = app.company?.name?.toLowerCase().trim();
+          const jobTitle = app.jobTitle?.toLowerCase().trim();
 
-        if (isMatch) {
-          matchedApp = {
-            id: app.id,
-            jobTitle: app.jobTitle,
-            companyName: app.company?.name || 'Perusahaan',
-          };
-          break;
+          let isMatch = false;
+          if (companyName && companyName.length > 2 && fullSearch.includes(companyName)) {
+            isMatch = true;
+          } else if (
+            jobTitle &&
+            jobTitle.length > 3 &&
+            (subjectLower.includes(jobTitle) || snippetLower.includes(jobTitle)) &&
+            (subjectLower.startsWith('re:') || subjectLower.startsWith('fwd:') || subjectLower.includes('application') || subjectLower.includes('lamaran'))
+          ) {
+            isMatch = true;
+          }
+
+          if (isMatch) {
+            matchedApp = {
+              id: app.id,
+              jobTitle: app.jobTitle,
+              companyName: app.company?.name || 'Perusahaan',
+            };
+            break;
+          }
         }
       }
 
       const isHrReply =
-        matchedApp !== null ||
-        Boolean(
-          msg.detectedType &&
-            ['INTERVIEW', 'OFFER', 'REJECTED', 'SCREENING', 'APPLIED_CONFIRM'].includes(
-              msg.detectedType,
-            ),
-        );
+        !isJobAlertOrNewsletter &&
+        (matchedApp !== null ||
+          Boolean(
+            msg.detectedType &&
+              ['INTERVIEW', 'OFFER', 'REJECTED', 'SCREENING', 'APPLIED_CONFIRM'].includes(
+                msg.detectedType,
+              ),
+          ));
 
       return {
         ...msg,
