@@ -1,0 +1,324 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.75rem 1.5rem 2.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.titleIcon {
+  color: var(--text);
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.refreshBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius, 6px);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.refreshBtn:hover {
+  background-color: var(--bg-card-hover);
+  border-color: var(--border-focus);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 6px);
+  padding: 1.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.cardHeader {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 1.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.iconMonochrome {
+  color: var(--text);
+}
+
+.badgeConnected {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--bg-subtle);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.badgeDisconnected {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--bg-subtle);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.connectedDetails {
+  width: 100%;
+  background-color: var(--bg-subtle);
+  border-radius: var(--radius, 6px);
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.detailRow code {
+  background-color: var(--bg-card);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-family: monospace;
+}
+
+.activeText {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.inactiveText {
+  color: var(--text-muted);
+}
+
+.formGroup {
+  margin-bottom: 1rem;
+  width: 100%;
+  text-align: left;
+}
+
+.label {
+  display: block;
+  color: var(--text);
+  font-size: 0.85rem;
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: var(--radius, 6px);
+  background-color: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text);
+  outline: none;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.input:focus {
+  border-color: var(--border-focus);
+}
+
+.hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+  display: block;
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: var(--radius, 6px);
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.submitBtn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.testBtn {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: var(--radius, 6px);
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  margin-top: 0.5rem;
+}
+
+.testBtn:hover:not(:disabled) {
+  background-color: var(--bg-card-hover);
+  border-color: var(--border-focus);
+}
+
+.alertSuccess {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius, 6px);
+  background-color: var(--bg-subtle);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-size: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.alertError {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius, 6px);
+  background-color: var(--bg-subtle);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  font-size: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.cheatGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+.cheatCard {
+  background-color: var(--bg-subtle);
+  padding: 1rem;
+  border-radius: var(--radius, 6px);
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+.cmdTag {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  font-family: monospace;
+  font-weight: 600;
+  font-size: 0.85rem;
+  background-color: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.cheatDesc {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+}
+
+.guideList {
+  padding-left: 1.25rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.guideList code {
+  background-color: var(--bg-subtle);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-family: monospace;
+}

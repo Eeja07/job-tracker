@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useTheme } from "@/lib/theme-context";
-import { LayoutDashboard, FileText, LogOut, User, Sun, Moon, Sparkles, KeyRound, Mail, Menu, X, MessageSquare } from "lucide-react";
+import { LayoutDashboard, FileText, LogOut, User, Sun, Moon, Sparkles, KeyRound, Mail, Menu, X, MessageSquare, Bot } from "lucide-react";
 import NotificationBell from "./NotificationBell";
 import styles from "./Sidebar.module.css";
 
@@ -12,6 +12,7 @@ const nav = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
   { href: "/dashboard/applications", icon: FileText, label: "Applications" },
   { href: "/dashboard/gmail", icon: Mail, label: "Gmail Message" },
+  { href: "/dashboard/telegram", icon: Bot, label: "Telegram Bot" },
   { href: "/dashboard/whatsapp", icon: MessageSquare, label: "WhatsApp Bot" },
   { href: "/dashboard/cv-reviewer", icon: Sparkles, label: "CV & AI Reviewer" },
   { href: "/dashboard/api-keys", icon: KeyRound, label: "API Keys Vault" },

@@ -153,12 +153,14 @@ export const authApi = {
 
 // Applications
 export const applicationsApi = {
-  list: async (params?: { page?: number; limit?: number; status?: string; search?: string }): Promise<PaginatedResponse<Application>> => {
+  list: async (params?: { page?: number; limit?: number; status?: string; search?: string; sortBy?: string; sortOrder?: string }): Promise<PaginatedResponse<Application>> => {
     const q = new URLSearchParams();
     if (params?.page !== undefined) q.set("page", String(params.page));
     if (params?.limit !== undefined) q.set("limit", String(params.limit));
     if (params?.status) q.set("status", params.status);
     if (params?.search) q.set("search", params.search);
+    if (params?.sortBy) q.set("sortBy", params.sortBy);
+    if (params?.sortOrder) q.set("sortOrder", params.sortOrder);
     const res = await request<any>(`/api/v1/applications?${q}`);
     if (Array.isArray(res)) {
       return { data: res, total: res.length, page: params?.page ?? 1, limit: params?.limit ?? 15, totalPages: 1 };

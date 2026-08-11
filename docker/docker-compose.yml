@@ -51,6 +51,9 @@ services:
       REDIS_PORT: "6379"
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-local-dev-access-secret-key-1234567890}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-local-dev-refresh-secret-key-0987654321}
+      WA_GATEWAY_URL: ${WA_GATEWAY_URL:-http://host.docker.internal:3001}
+      WA_GATEWAY_API_KEY: ${WA_GATEWAY_API_KEY:-eeja_wa_gateway_secret_key_2026}
+      WA_NOTIFICATION_PHONES: ${WA_NOTIFICATION_PHONES:-6281288092766}
     depends_on:
       postgres:
         condition: service_healthy

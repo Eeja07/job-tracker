@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { MessageSquare, QrCode, CheckCircle2, AlertCircle, RefreshCw, Send, LogOut, ShieldCheck, Terminal, Smartphone } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 import styles from "./page.module.css";
@@ -25,27 +25,33 @@ export default function WhatsAppPage() {
   const [sendingMsg, setSendingMsg] = useState(false);
   const [msgResult, setMsgResult] = useState<{ success: boolean; message: string } | null>(null);
 
-  const fetchStatus = async () => {
+  const isFetchingRef = useRef(false);
+
+  const fetchStatus = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     try {
       const data = await fetchApi<WaStatusResponse>("/api/v1/whatsapp/status");
       setWaState(data);
     } catch (err: any) {
       console.error("Failed to load WhatsApp status:", err);
     } finally {
+      isFetchingRef.current = false;
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchStatus();
-    // Auto refresh status every 3 seconds to poll for QR Code updates or connection state changes
+    // Poll every 5s if disconnected (waiting for QR), or 15s if connected
+    const intervalTime = waState.status === "connected" ? 15000 : 5000;
     const timer = setInterval(() => {
       fetchStatus();
-    }, 3000);
+    }, intervalTime);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [fetchStatus, waState.status]);
 
   const handleManualRefresh = () => {
     setRefreshing(true);

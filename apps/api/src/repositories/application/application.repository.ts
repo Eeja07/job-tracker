@@ -109,7 +109,7 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
       search,
       page = 1,
       limit = 20,
-      sortBy = 'createdAt',
+      sortBy = 'appliedAt',
       sortOrder = 'desc',
     } = params;
 
@@ -177,7 +177,9 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
         },
         ...(skip !== undefined && { skip }),
         ...(take !== undefined && { take }),
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: sortBy === 'appliedAt'
+          ? [{ appliedAt: sortOrder as Prisma.SortOrder }, { createdAt: sortOrder as Prisma.SortOrder }]
+          : { [sortBy]: sortOrder },
       }),
       delegate.count({ where }),
     ]);

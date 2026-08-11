@@ -73,13 +73,72 @@ const JOB_ALERT_SUBJECT_KEYWORDS = [
   'verify your email',
 ];
 
+// Specific phrases indicating an actual job application submitted by the user (overrides mass alert senders)
+const APPLIED_CONFIRM_KEYWORDS = [
+  'lamaranmu berhasil dikirim',
+  'lamaran anda sudah dikirim',
+  'lamaran anda telah dikirim',
+  'lamaran berhasil dikirim',
+  'lamaran anda dikirim',
+  'sudah dikirim ke',
+  'berhasil dikirimkan ke',
+  'application received',
+  'application for',
+  'application submitted',
+  'application was sent',
+  'your application has been submitted',
+  'your application was sent',
+  'thank you for applying',
+  'thanks for applying',
+  'terima kasih telah melamar',
+  'konfirmasi lamaran',
+  'aplikasi anda telah kami terima',
+];
+
+// System Auth, account creation, activation & OTP keywords to be excluded from HR replies
+const SYSTEM_AUTH_KEYWORDS = [
+  'otp',
+  'kode otp',
+  'konfirmasi email',
+  'confirm email',
+  'verifikasi email',
+  'email verification',
+  'reset kata sandi',
+  'reset password',
+  'kode verifikasi',
+  'verification code',
+  'security code',
+  'login attempt',
+  'activate your account',
+  'activate account',
+  'aktifkan akun',
+  'verifikasi akun',
+  'activate my account',
+  'account activation',
+  'thank you for register',
+  'register to',
+  'mendaftar di',
+];
+
 // Keywords to detect job-related emails accurately (Indonesian & English)
 const JOB_KEYWORDS = [
-  // Indonesian Keywords
+  // Standalone Core Recruitment Terms
+  'screening',
+  'interview',
+  'assessment',
+  'shortlisted',
+  'recruitment',
+  'rekrutmen',
+  'applicant',
+  'candidate',
   'lamaran',
   'lowongan',
-  'rekrutmen',
   'wawancara',
+  'psikotes',
+  'loker',
+  'karir',
+
+  // Indonesian Keywords
   'panggilan tes',
   'tahap seleksi',
   'proses seleksi',
@@ -98,15 +157,16 @@ const JOB_KEYWORDS = [
   'tim hrd',
   'tim rekruter',
   'tim talent',
-  'psikotes',
   'tes potensi akademik',
-  'loker',
-  'karir',
   'pekerjaan',
   'pemberitahuan pekerjaan',
   'peringatan pekerjaan',
   'rekomendasi pekerjaan',
   'pencarian kerja',
+  'seleksi berkas',
+  'seleksi administrasi',
+  'tes online',
+  'tes teknikal',
 
   // English Keywords
   'job application',
@@ -117,29 +177,43 @@ const JOB_KEYWORDS = [
   'job offer',
   'offer letter',
   'interview invitation',
+  'invitation to interview',
+  'invitation for interview',
+  'invitation from',
   'schedule an interview',
   'interview schedule',
-  'recruitment',
   'talent acquisition',
   'human resources',
   'hiring team',
+  'hiring manager',
   'hr team',
   'job vacancy',
   'career opportunity',
-  'shortlisted',
-  'candidate',
-  'applicant',
   'technical assessment',
   'coding assessment',
+  'online assessment',
   'take home test',
   'screening call',
   'screening interview',
   'phone screening',
   'user interview',
+  'ta interview',
+  'it screening',
+  'screening test',
   'regret to inform',
   'unsuccessful application',
   'we decided to move forward with another',
   'position has been filled',
+  'company review',
+  'job description',
+  'task and responsibility',
+  'on cam',
+  'meet date',
+  'meet time',
+  'meeting id',
+  'teams.microsoft.com',
+  'meet.google.com',
+  'zoom.us',
   'jobalert',
   'jobalerts',
   'job alert',
@@ -163,16 +237,20 @@ const EMAIL_TYPE_KEYWORDS: Record<string, string[]> = {
   INTERVIEW: [
     'interview',
     'wawancara',
-    'undangan wawancara',
     'invitation for interview',
     'invitation to interview',
     'schedule an interview',
     'interview schedule',
     'panggilan wawancara',
+    'undangan wawancara',
     'user interview',
     'hr interview',
     'tech interview',
     'technical interview',
+    'ta interview',
+    'teams.microsoft.com',
+    'meet.google.com',
+    'zoom.us',
   ],
   OFFER: [
     'job offer',
@@ -183,6 +261,7 @@ const EMAIL_TYPE_KEYWORDS: Record<string, string[]> = {
     'congratulations on your offer',
     'pleased to offer',
     'bergabung bersama kami',
+    'offer',
   ],
   REJECTED: [
     'rejected',
@@ -196,18 +275,27 @@ const EMAIL_TYPE_KEYWORDS: Record<string, string[]> = {
     'unsuccessful',
     'decided not to proceed',
     'pursuing other candidates',
+    'tidak meneruskan proses lamaran',
+    'tidak akan meneruskan proses lamaran',
+    'tidak melanjutkan proses lamaran',
   ],
   SCREENING: [
     'screening',
+    'it screening',
     'shortlisted',
     'lolos seleksi',
     'test online',
+    'tes online',
     'assessment',
     'psikotes',
     'coding test',
+    'technical test',
     'take home test',
     'tahap berikutnya',
     'next step',
+    'proses seleksi',
+    'tahap seleksi',
+    'company review',
   ],
   APPLIED_CONFIRM: [
     'received',
@@ -219,10 +307,22 @@ const EMAIL_TYPE_KEYWORDS: Record<string, string[]> = {
     'terima kasih telah melamar',
     'konfirmasi lamaran',
     'aplikasi anda telah kami terima',
+    'lamaranmu berhasil dikirim',
+    'lamaran anda sudah dikirim',
+    'lamaran anda telah dikirim',
+    'lamaran berhasil dikirim',
+    'lamaran anda dikirim',
+    'sudah dikirim ke',
+    'berhasil dikirimkan ke',
+    'application submitted',
+    'application was sent',
+    'your application has been submitted',
+    'your application was sent',
   ],
 };
 
 import { WhatsappService } from '../whatsapp/whatsapp.service';
+import { TelegramService } from '../telegram/telegram.service';
 
 @Injectable()
 export class GmailService implements OnModuleInit {
@@ -233,6 +333,7 @@ export class GmailService implements OnModuleInit {
     private readonly prisma: PrismaService,
     private readonly realtime: RealtimePublisher,
     private readonly whatsapp: WhatsappService,
+    private readonly telegram: TelegramService,
   ) {}
 
   onModuleInit() {
@@ -247,6 +348,7 @@ export class GmailService implements OnModuleInit {
   async syncAllUsersInBackground(): Promise<void> {
     try {
       const tokens = await this.prisma.gmailToken.findMany({
+        where: { isActive: true },
         select: { userId: true },
       });
       for (const t of tokens) {
@@ -394,12 +496,32 @@ export class GmailService implements OnModuleInit {
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-    // Fetch last 200 messages in INBOX
-    const listRes = await gmail.users.messages.list({
-      userId: 'me',
-      labelIds: ['INBOX'],
-      maxResults: 200,
-    });
+    let listRes;
+    try {
+      // Fetch last 200 messages in INBOX
+      listRes = await gmail.users.messages.list({
+        userId: 'me',
+        labelIds: ['INBOX'],
+        maxResults: 200,
+      });
+    } catch (err: any) {
+      const errMsg = err.message || '';
+      if (
+        errMsg.includes('invalid_grant') ||
+        errMsg.includes('invalid_request') ||
+        errMsg.includes('Token has been expired or revoked') ||
+        err.code === 401 ||
+        err.status === 401
+      ) {
+        this.logger.warn(`Gmail OAuth token expired or revoked for userId=${userId}. Deactivating token: ${errMsg}`);
+        await this.prisma.gmailToken.update({
+          where: { userId },
+          data: { isActive: false },
+        });
+        throw new Error('Koneksi Gmail Anda telah kadaluarsa atau dibatalkan. Silakan hubungkan kembali akun Gmail Anda.');
+      }
+      throw err;
+    }
 
     const messages = listRes.data.messages || [];
     let newMessages = 0;
@@ -443,22 +565,6 @@ export class GmailService implements OnModuleInit {
 
         const searchText = `${subject} ${snippet} ${fromEmail}`.toLowerCase();
 
-        // System Auth & OTP Exclusions (e.g. OTP, email confirmation, password resets)
-        const SYSTEM_AUTH_KEYWORDS = [
-          'otp',
-          'kode otp',
-          'konfirmasi email',
-          'confirm email',
-          'verifikasi email',
-          'email verification',
-          'reset kata sandi',
-          'reset password',
-          'kode verifikasi',
-          'verification code',
-          'security code',
-          'login attempt',
-        ];
-
         const isSystemAuth =
           SYSTEM_AUTH_KEYWORDS.some((k) => isKeywordMatched(searchText, k)) ||
           fromEmail.toLowerCase().includes('otp');
@@ -477,23 +583,28 @@ export class GmailService implements OnModuleInit {
           }
         }
 
-        const isJobAlertOrNewsletter =
-          JOB_ALERT_SENDERS.some((s) => fromEmail.toLowerCase().includes(s)) ||
-          JOB_ALERT_SUBJECT_KEYWORDS.some((k) => lowerSub.includes(k)) ||
-          isSystemAuth;
+        const isAppConfirmation = APPLIED_CONFIRM_KEYWORDS.some((k) => searchText.includes(k));
 
-        // Detect email type (only for direct HR communications, NOT mass job alerts/digests)
         let detectedType: string | null = null;
-        if (isJobRelated && !isJobAlertOrNewsletter) {
-          for (const [type, keywords] of Object.entries(EMAIL_TYPE_KEYWORDS)) {
-            if (keywords.some((k) => isKeywordMatched(searchText, k))) {
-              detectedType = type;
-              break;
-            }
+        for (const [type, keywords] of Object.entries(EMAIL_TYPE_KEYWORDS)) {
+          if (keywords.some((k) => isKeywordMatched(searchText, k))) {
+            detectedType = type;
+            break;
           }
-          if (!detectedType && (lowerSub.startsWith('re:') || lowerSub.startsWith('fwd:'))) {
-            detectedType = 'APPLIED_CONFIRM';
-          }
+        }
+        if (!detectedType && (isAppConfirmation || lowerSub.startsWith('re:') || lowerSub.startsWith('fwd:'))) {
+          detectedType = 'APPLIED_CONFIRM';
+        }
+
+        const isJobAlertOrNewsletter =
+          !isAppConfirmation &&
+          !detectedType &&
+          (JOB_ALERT_SENDERS.some((s) => fromEmail.toLowerCase().includes(s)) ||
+            JOB_ALERT_SUBJECT_KEYWORDS.some((k) => lowerSub.includes(k)) ||
+            isSystemAuth);
+
+        if (isJobAlertOrNewsletter) {
+          detectedType = null;
         }
 
         const labelIds = detail.data.labelIds || [];
@@ -565,6 +676,11 @@ export class GmailService implements OnModuleInit {
             this.logger.warn(`Failed to send WhatsApp notification to user ${userId}: ${err.message}`);
           });
 
+          // Push instant notification to Telegram Bot
+          this.telegram.notifyEmailNotification(userId, notifTitle, notifBody).catch((err) => {
+            this.logger.warn(`Failed to send Telegram notification to user ${userId}: ${err.message}`);
+          });
+
           // Auto-update application status if email matches an application
           if (detectedType) {
             await this.autoUpdateApplicationStatus(
@@ -595,24 +711,34 @@ export class GmailService implements OnModuleInit {
       const searchText = `${subject} ${msg.snippet || ''} ${fromEmail}`.toLowerCase();
 
       const isNonJobSender = NON_JOB_SENDERS.some((s) => fromEmail.includes(s));
-      const isJobAlertOrNewsletter =
-        JOB_ALERT_SENDERS.some((s) => fromEmail.includes(s)) ||
-        JOB_ALERT_SUBJECT_KEYWORDS.some((k) => subject.includes(k)) ||
-        fromEmail.includes('otp') ||
-        subject.includes('otp') ||
-        subject.includes('konfirmasi email');
+      const isAppConfirmation = APPLIED_CONFIRM_KEYWORDS.some((k) => searchText.includes(k));
+      const isSystemAuth =
+        SYSTEM_AUTH_KEYWORDS.some((k) => isKeywordMatched(searchText, k)) ||
+        fromEmail.includes('otp');
 
-      const correctJobRelated = !isNonJobSender && JOB_KEYWORDS.some((k) => isKeywordMatched(searchText, k));
       let correctDetectedType: string | null = null;
-
-      if (correctJobRelated && !isJobAlertOrNewsletter) {
-        for (const [type, keywords] of Object.entries(EMAIL_TYPE_KEYWORDS)) {
-          if (keywords.some((k) => isKeywordMatched(searchText, k))) {
-            correctDetectedType = type;
-            break;
-          }
+      for (const [type, keywords] of Object.entries(EMAIL_TYPE_KEYWORDS)) {
+        if (keywords.some((k) => isKeywordMatched(searchText, k))) {
+          correctDetectedType = type;
+          break;
         }
       }
+      if (!correctDetectedType && isAppConfirmation) {
+        correctDetectedType = 'APPLIED_CONFIRM';
+      }
+
+      const isJobAlertOrNewsletter =
+        !isAppConfirmation &&
+        !correctDetectedType &&
+        (isSystemAuth ||
+          JOB_ALERT_SENDERS.some((s) => fromEmail.includes(s)) ||
+          JOB_ALERT_SUBJECT_KEYWORDS.some((k) => subject.includes(k)));
+
+      if (isJobAlertOrNewsletter) {
+        correctDetectedType = null;
+      }
+
+      const correctJobRelated = !isNonJobSender && !isSystemAuth && (JOB_KEYWORDS.some((k) => isKeywordMatched(searchText, k)) || !!correctDetectedType);
 
       if (msg.isJobRelated !== correctJobRelated || msg.detectedType !== correctDetectedType) {
         await this.prisma.emailMessage.update({
@@ -716,12 +842,14 @@ export class GmailService implements OnModuleInit {
       const snippetLower = (msg.snippet || '').toLowerCase();
       const fullSearch = `${subjectLower} ${msg.fromName?.toLowerCase() || ''} ${fromEmailLower} ${snippetLower}`;
 
+      const isAppConfirmation = APPLIED_CONFIRM_KEYWORDS.some((k) => fullSearch.includes(k));
+      const isSystemAuth = SYSTEM_AUTH_KEYWORDS.some((k) => isKeywordMatched(fullSearch, k)) || fromEmailLower.includes('otp');
+
       const isJobAlertOrNewsletter =
-        JOB_ALERT_SENDERS.some((s) => fromEmailLower.includes(s)) ||
-        JOB_ALERT_SUBJECT_KEYWORDS.some((k) => subjectLower.includes(k)) ||
-        fromEmailLower.includes('otp') ||
-        subjectLower.includes('otp') ||
-        subjectLower.includes('konfirmasi email');
+        !isAppConfirmation &&
+        (isSystemAuth ||
+          JOB_ALERT_SENDERS.some((s) => fromEmailLower.includes(s)) ||
+          JOB_ALERT_SUBJECT_KEYWORDS.some((k) => subjectLower.includes(k)));
 
       let matchedApp: { id: string; jobTitle: string; companyName: string } | null = null;
 
@@ -756,12 +884,27 @@ export class GmailService implements OnModuleInit {
 
       const isHrReply =
         !isJobAlertOrNewsletter &&
+        !isSystemAuth &&
         (matchedApp !== null ||
           Boolean(
             msg.detectedType &&
               ['INTERVIEW', 'OFFER', 'REJECTED', 'SCREENING', 'APPLIED_CONFIRM'].includes(
                 msg.detectedType,
               ),
+          ) ||
+          Boolean(
+            msg.isJobRelated &&
+              (subjectLower.startsWith('re:') ||
+                subjectLower.startsWith('fwd:') ||
+                subjectLower.includes('invitation') ||
+                subjectLower.includes('screening') ||
+                subjectLower.includes('interview') ||
+                subjectLower.includes('test') ||
+                fromEmailLower.includes('adm') ||
+                fromEmailLower.includes('hr') ||
+                fromEmailLower.includes('recruitment') ||
+                fromEmailLower.includes('talent') ||
+                fromEmailLower.includes('careers'))
           ));
 
       return {

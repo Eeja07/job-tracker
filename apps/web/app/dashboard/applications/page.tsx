@@ -33,8 +33,8 @@ export default function ApplicationsPage() {
   const [checkAllResults, setCheckAllResults] = useState<Array<{ applicationId: string; jobTitle: string; listingStatus: string; detail?: string }> | null>(null);
   const [showCheckResults, setShowCheckResults] = useState(false);
 
-  const [sortCol, setSortCol] = useState<SortCol | null>(null);
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [sortCol, setSortCol] = useState<SortCol | null>("appliedAt");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   // Synchronize status query param from URL (e.g. from Dashboard Overview Status Breakdown link)
   useEffect(() => {
@@ -49,19 +49,11 @@ export default function ApplicationsPage() {
       setSortDir(prev => (prev === "asc" ? "desc" : "asc"));
     } else {
       setSortCol(col);
-      setSortDir("asc");
+      setSortDir(col === "appliedAt" ? "desc" : "asc");
     }
   };
 
   const sortedApps = [...apps].sort((a, b) => {
-    if (!sortCol) {
-      // If statusFilter is active, prioritize those matching status Filter to top
-      if (statusFilter) {
-        if (a.status === statusFilter && b.status !== statusFilter) return -1;
-        if (a.status !== statusFilter && b.status === statusFilter) return 1;
-      }
-      return 0;
-    }
     let valA: any = "";
     let valB: any = "";
 
@@ -77,9 +69,13 @@ export default function ApplicationsPage() {
     } else if (sortCol === "salaryMin") {
       valA = a.salaryMin || 0;
       valB = b.salaryMin || 0;
-    } else if (sortCol === "appliedAt") {
-      valA = new Date(a.appliedAt || 0).getTime();
-      valB = new Date(b.appliedAt || 0).getTime();
+    } else if (sortCol === "appliedAt" || !sortCol) {
+      valA = new Date(a.appliedAt || a.createdAt || 0).getTime();
+      valB = new Date(b.appliedAt || b.createdAt || 0).getTime();
+      if (valA === valB) {
+        valA = new Date(a.createdAt || 0).getTime();
+        valB = new Date(b.createdAt || 0).getTime();
+      }
     }
 
     if (valA < valB) return sortDir === "asc" ? -1 : 1;
@@ -90,7 +86,14 @@ export default function ApplicationsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await applicationsApi.list({ page, limit, status: statusFilter || undefined, search: search || undefined });
+      const res = await applicationsApi.list({
+        page,
+        limit,
+        status: statusFilter || undefined,
+        search: search || undefined,
+        sortBy: sortCol || "appliedAt",
+        sortOrder: sortDir || "desc",
+      });
       setApps(Array.isArray(res?.data) ? res.data : []);
       setTotal(res?.total ?? 0);
     } catch {
@@ -99,7 +102,7 @@ export default function ApplicationsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, statusFilter, search]);
+  }, [page, limit, statusFilter, search, sortCol, sortDir]);
 
   useEffect(() => { load(); }, [load]);
 

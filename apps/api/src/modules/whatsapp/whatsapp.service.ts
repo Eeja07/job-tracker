@@ -9,19 +9,40 @@ export class WhatsappService {
   private readonly apiKey: string;
 
   constructor(private readonly prisma: PrismaService) {
-    this.gatewayUrl = process.env.WA_GATEWAY_URL || 'http://172.17.0.1:3001';
+    this.gatewayUrl = process.env.WA_GATEWAY_URL || 'http://gateway-whatsapp-bot:3001';
     this.apiKey = process.env.WA_GATEWAY_API_KEY || 'eeja_wa_gateway_secret_key_2026';
+  }
+
+  private normalizePhone(phone: string): string {
+    if (!phone) return '';
+    const cleaned = phone.split('@')[0].replace(/\D/g, '');
+    if (!cleaned) return '';
+    if (cleaned.startsWith('0')) return `62${cleaned.slice(1)}`;
+    return cleaned;
+  }
+
+  private parsePhoneList(raw?: string | null): string[] {
+    if (!raw) return [];
+    return Array.from(
+      new Set(
+        raw
+          .split(',')
+          .map((item) => this.normalizePhone(item))
+          .filter(Boolean),
+      ),
+    );
   }
 
   async sendTextMessage(to: string, message: string): Promise<boolean> {
     try {
+      const normalizedTo = this.normalizePhone(to);
       const response = await fetch(`${this.gatewayUrl}/api/v1/messages/send`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-API-KEY': this.apiKey,
         },
-        body: JSON.stringify({ to, message }),
+        body: JSON.stringify({ to: normalizedTo || to, message }),
       });
       const data = (await response.json()) as { success?: boolean };
       return data.success === true;
@@ -33,7 +54,9 @@ export class WhatsappService {
 
   async getStatus(): Promise<{ status: string; connectedUser: string | null; hasQr: boolean; qrDataUrl?: string }> {
     try {
-      const response = await fetch(`${this.gatewayUrl}/health`);
+      const response = await fetch(`${this.gatewayUrl}/health`, {
+        signal: AbortSignal.timeout(3000),
+      });
       const data = (await response.json()) as any;
       return {
         status: data.status || 'disconnected',
@@ -61,24 +84,28 @@ export class WhatsappService {
     }
   }
 
-  private async getUserPhone(userId: string): Promise<string | null> {
-    if (process.env.WA_NOTIFICATION_PHONE) {
-      return process.env.WA_NOTIFICATION_PHONE;
+  private async getNotificationPhones(userId: string): Promise<string[]> {
+    const configuredPhones = this.parsePhoneList(
+      process.env.WA_NOTIFICATION_PHONES || process.env.WA_NOTIFICATION_PHONE,
+    );
+    if (configuredPhones.length > 0) {
+      return configuredPhones;
     }
-    const status = await this.getStatus();
-    return status.connectedUser || null;
+
+    // Default to user's personal number for HR email notifications
+    return ['6281288092766'];
   }
 
   async notifyEmailNotification(userId: string, title: string, body: string): Promise<void> {
-    const phone = await this.getUserPhone(userId);
-    if (!phone) {
+    const phones = await this.getNotificationPhones(userId);
+    if (phones.length === 0) {
       this.logger.warn(`Cannot send WA email notification: No phone number or connected user found.`);
       return;
     }
 
     const messageText = `🔔 *NOTIFIKASI BALASAN HRD BARU*\n\n📩 *${title}*\n${body}\n\n🔗 _Buka Dashboard Gmail:_ https://job.eeja.fun/dashboard/gmail`;
-    this.logger.log(`Sending instant WA email notification to ${phone}`);
-    await this.sendTextMessage(phone, messageText);
+    this.logger.log(`Sending instant WA email notification to ${phones.join(', ')}`);
+    await Promise.allSettled(phones.map((phone) => this.sendTextMessage(phone, messageText)));
   }
 
   async handleIncomingWebhook(payload: { from: string; body: string; pushName?: string }): Promise<void> {
@@ -86,24 +113,34 @@ export class WhatsappService {
     const text = (body || '').trim();
     if (!text || !from) return;
 
-    // CRITICAL: Only respond to explicit bot commands (starting with !)
-    // This prevents the bot from replying to every message in groups or regular DMs
-    if (!text.startsWith('!')) return;
+    // Must start with ! or /
+    if (!text.startsWith('!') && !text.startsWith('/')) return;
 
-    this.logger.log(`Processing WA Bot Command from ${from} (${pushName}): ${text}`);
+    const normalizedFrom = this.normalizePhone(from);
+    const adminPhones = this.parsePhoneList(
+      process.env.WA_NOTIFICATION_PHONES || process.env.WA_NOTIFICATION_PHONE || '6281288092766',
+    );
+    const isAdmin = adminPhones.includes(normalizedFrom);
+    if (!isAdmin) {
+      this.logger.warn(`Ignoring Job Tracker WA command from non-admin user: ${from} (normalized: ${normalizedFrom})`);
+      return;
+    }
+
     const lower = text.toLowerCase();
+    // Ignore finance commands explicitly
+    if (lower.startsWith('!cicilan') || lower.startsWith('/cicilan') || lower.startsWith('!hariini') || lower.startsWith('/hariini') || lower.startsWith('!saldo') || lower.startsWith('/saldo') || lower.startsWith('!pengeluaran') || lower.startsWith('/pengeluaran') || lower.startsWith('!fin') || lower.startsWith('/fin')) {
+      return;
+    }
+
+    this.logger.log(`Processing WA Job Tracker Command from ${from} (${pushName}): ${text}`);
     let reply = '';
 
-    if (lower.startsWith('!help') || lower.startsWith('!bantuan')) {
-      reply = this.getHelpMessage(pushName);
-    } else if (lower.startsWith('!overview') || lower.startsWith('!dashboard') || lower.startsWith('!stats')) {
-      reply = await this.getOverviewMessage();
-    } else if (lower.startsWith('!loker') || lower.startsWith('!lamaran')) {
+    if (lower.startsWith('!loker') || lower.startsWith('/loker')) {
       reply = await this.getApplicationsMessage();
-    } else if (lower.startsWith('!email') || lower.startsWith('!balasan')) {
+    } else if (lower.startsWith('!email') || lower.startsWith('/email')) {
       reply = await this.getHrRepliesMessage();
-    } else if (lower.startsWith('!tambah')) {
-      reply = await this.createApplicationFromWa(text);
+    } else if (lower.startsWith('!job') || lower.startsWith('/job')) {
+      reply = await this.getOverviewMessage();
     }
     // Unknown commands: silently ignore (no reply) to avoid spam
 
