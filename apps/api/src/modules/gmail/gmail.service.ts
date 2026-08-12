@@ -93,6 +93,35 @@ const NON_JOB_SENDERS = [
   'messages-noreply@linkedin.com',
   'updates-noreply@linkedin.com',
   'em.linkedin.com',
+  'coursera.org',
+  'udemy.com',
+  'duolingo.com',
+  'dicoding.com',
+  'skillshare.com',
+  'edx.org',
+  'adobe.com',
+  'openai.com',
+  'chatgpt.com',
+  'anthropic.com',
+  'claude.ai',
+  'canva.com',
+  'figma.com',
+  'notion.so',
+  'grammarly.com',
+  'github.com',
+  'gitlab.com',
+  'docker.com',
+  'atlassian.com',
+  'trello.com',
+  'slack.com',
+  'vercel.com',
+  'netlify.com',
+  'render.com',
+  'railway.app',
+  'cloudflare.com',
+  'digitalocean.com',
+  'googleplay',
+  'payments-noreply@google.com',
 ];
 
 // Mass job alert / portal recommendation senders to categorize under INFO_LOKER (NOT Balasan HR)
@@ -319,7 +348,8 @@ const EMAIL_TYPE_KEYWORDS: Record<string, string[]> = {
     'congratulations on your offer',
     'pleased to offer',
     'bergabung bersama kami',
-    'offer',
+    'offered the position',
+    'job offer letter',
   ],
   REJECTED: [
     'rejected',
@@ -375,7 +405,6 @@ const EMAIL_TYPE_KEYWORDS: Record<string, string[]> = {
     'company review',
   ],
   APPLIED_CONFIRM: [
-    'received',
     'application received',
     'application for',
     'lamaran diterima',
@@ -827,10 +856,11 @@ export class GmailService implements OnModuleInit {
         !isAppConfirmation &&
         !correctDetectedType &&
         (isSystemAuth ||
+          isNonJobSender ||
           JOB_ALERT_SENDERS.some((s) => fromEmail.includes(s)) ||
           JOB_ALERT_SUBJECT_KEYWORDS.some((k) => subject.includes(k)));
 
-      if (isJobAlertOrNewsletter) {
+      if (isJobAlertOrNewsletter || isNonJobSender || isSystemAuth) {
         correctDetectedType = null;
       }
 
