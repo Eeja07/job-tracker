@@ -15,6 +15,64 @@ function isKeywordMatched(text: string, keyword: string): boolean {
   return text.toLowerCase().includes(cleanKeyword);
 }
 
+// Helper function to extract email body (text/plain or cleaned html) from Gmail API payload
+function extractBodyFromPayload(payload: any): string {
+  if (!payload) return '';
+
+  function decodeBase64(data: string): string {
+    try {
+      const base64 = data.replace(/-/g, '+').replace(/_/g, '/');
+      return Buffer.from(base64, 'base64').toString('utf-8');
+    } catch {
+      return '';
+    }
+  }
+
+  let plainText = '';
+  let htmlText = '';
+
+  function walkParts(parts: any[]) {
+    for (const part of parts) {
+      if (part.mimeType === 'text/plain' && part.body?.data) {
+        plainText += decodeBase64(part.body.data) + '\n';
+      } else if (part.mimeType === 'text/html' && part.body?.data) {
+        htmlText += decodeBase64(part.body.data) + '\n';
+      } else if (part.parts && Array.isArray(part.parts)) {
+        walkParts(part.parts);
+      }
+    }
+  }
+
+  if (payload.body?.data) {
+    const text = decodeBase64(payload.body.data);
+    if (payload.mimeType === 'text/html') {
+      htmlText = text;
+    } else {
+      plainText = text;
+    }
+  }
+
+  if (payload.parts && Array.isArray(payload.parts)) {
+    walkParts(payload.parts);
+  }
+
+  if (plainText.trim()) {
+    return plainText.trim();
+  }
+
+  if (htmlText.trim()) {
+    return htmlText
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  return '';
+}
+
 // Non-job system/marketing senders to exclude
 const NON_JOB_SENDERS = [
   'insideapple.apple.com',
@@ -278,6 +336,25 @@ const EMAIL_TYPE_KEYWORDS: Record<string, string[]> = {
     'tidak meneruskan proses lamaran',
     'tidak akan meneruskan proses lamaran',
     'tidak melanjutkan proses lamaran',
+    'belum dapat dilanjutkan',
+    'belum dapat kami lanjutkan',
+    'belum dapat diproses',
+    'belum sesuai',
+    'belum memenuhi kualifikasi',
+    'belum bisa melanjutkan',
+    'tidak sesuai dengan profil',
+    'tidak sesuai dengan kebutuhan',
+    'profil anda masih belum',
+    'profil anda belum',
+    'posisi yang anda lamar',
+    'we will not be moving forward',
+    'we have decided not to proceed',
+    'will not be proceeding',
+    'not moving forward',
+    'other candidates',
+    'another candidate',
+    'high volume of applicants',
+    'not selected for',
   ],
   SCREENING: [
     'screening',
@@ -312,6 +389,7 @@ const EMAIL_TYPE_KEYWORDS: Record<string, string[]> = {
     'lamaran anda telah dikirim',
     'lamaran berhasil dikirim',
     'lamaran anda dikirim',
+    'lamaran anda untuk',
     'sudah dikirim ke',
     'berhasil dikirimkan ke',
     'application submitted',
@@ -540,8 +618,7 @@ export class GmailService implements OnModuleInit {
         const detail = await gmail.users.messages.get({
           userId: 'me',
           id: msg.id,
-          format: 'metadata',
-          metadataHeaders: ['Subject', 'From', 'To', 'Date'],
+          format: 'full',
         });
 
         const headers = detail.data.payload?.headers || [];
@@ -555,6 +632,7 @@ export class GmailService implements OnModuleInit {
         const dateStr = getHeader('Date');
         const snippet = detail.data.snippet || '';
         const threadId = detail.data.threadId || msg.id;
+        const bodyText = extractBodyFromPayload(detail.data.payload);
 
         // Parse from email/name
         const fromMatch = fromRaw.match(/^(?:"?(.+?)"?\s)?<?([^>]+)>?$/);
@@ -563,7 +641,7 @@ export class GmailService implements OnModuleInit {
 
         const receivedAt = dateStr ? new Date(dateStr) : new Date();
 
-        const searchText = `${subject} ${snippet} ${fromEmail}`.toLowerCase();
+        const searchText = `${subject} ${snippet} ${bodyText} ${fromEmail}`.toLowerCase();
 
         const isSystemAuth =
           SYSTEM_AUTH_KEYWORDS.some((k) => isKeywordMatched(searchText, k)) ||
@@ -620,6 +698,7 @@ export class GmailService implements OnModuleInit {
             fromName,
             toEmail: toRaw,
             snippet,
+            bodyText,
             receivedAt,
             isJobRelated,
             detectedType,
@@ -690,6 +769,7 @@ export class GmailService implements OnModuleInit {
               fromEmail,
               fromName,
               snippet,
+              bodyText,
             ).catch((err) => {
               this.logger.warn(`Auto status update failed for user ${userId}: ${err.message}`);
             });
@@ -700,15 +780,31 @@ export class GmailService implements OnModuleInit {
       }
     }
 
-    // Re-evaluate existing stored messages to fix false-positive job-related flags
+    // Re-evaluate existing stored messages to fix false-positive / false-negative flags and populate missing bodyText
     const existingMessages = await this.prisma.emailMessage.findMany({
       where: { userId },
     });
 
     for (const msg of existingMessages) {
+      let bodyText = msg.bodyText || '';
+
+      // If bodyText is missing, fetch full email detail from Gmail API
+      if (!bodyText && msg.gmailMessageId) {
+        try {
+          const detail = await gmail.users.messages.get({
+            userId: 'me',
+            id: msg.gmailMessageId,
+            format: 'full',
+          });
+          bodyText = extractBodyFromPayload(detail.data.payload);
+        } catch (err: any) {
+          // Ignore if message fails to fetch
+        }
+      }
+
       const fromEmail = (msg.fromEmail || '').toLowerCase();
       const subject = (msg.subject || '').toLowerCase();
-      const searchText = `${subject} ${msg.snippet || ''} ${fromEmail}`.toLowerCase();
+      const searchText = `${subject} ${msg.snippet || ''} ${bodyText} ${fromEmail}`.toLowerCase();
 
       const isNonJobSender = NON_JOB_SENDERS.some((s) => fromEmail.includes(s));
       const isAppConfirmation = APPLIED_CONFIRM_KEYWORDS.some((k) => searchText.includes(k));
@@ -740,11 +836,34 @@ export class GmailService implements OnModuleInit {
 
       const correctJobRelated = !isNonJobSender && !isSystemAuth && (JOB_KEYWORDS.some((k) => isKeywordMatched(searchText, k)) || !!correctDetectedType);
 
-      if (msg.isJobRelated !== correctJobRelated || msg.detectedType !== correctDetectedType) {
+      if (
+        msg.isJobRelated !== correctJobRelated ||
+        msg.detectedType !== correctDetectedType ||
+        (bodyText && !msg.bodyText)
+      ) {
         await this.prisma.emailMessage.update({
           where: { id: msg.id },
-          data: { isJobRelated: correctJobRelated, detectedType: correctDetectedType },
+          data: {
+            isJobRelated: correctJobRelated,
+            detectedType: correctDetectedType,
+            ...(bodyText ? { bodyText } : {}),
+          },
         });
+
+        // Trigger auto application status update if a type (e.g. REJECTED) is detected
+        if (correctDetectedType) {
+          await this.autoUpdateApplicationStatus(
+            userId,
+            correctDetectedType,
+            msg.subject,
+            msg.fromEmail,
+            msg.fromName,
+            msg.snippet,
+            bodyText,
+          ).catch((err) => {
+            this.logger.warn(`Auto status update during re-eval failed for user ${userId}: ${err.message}`);
+          });
+        }
       }
     }
 
@@ -767,6 +886,7 @@ export class GmailService implements OnModuleInit {
     fromEmail: string,
     fromName: string | null,
     snippet: string,
+    bodyText?: string,
   ): Promise<void> {
     const statusMap: Record<string, string> = {
       REJECTED: 'REJECTED',
@@ -787,7 +907,7 @@ export class GmailService implements OnModuleInit {
       include: { company: true },
     });
 
-    const fullSearch = `${subject} ${fromName || ''} ${fromEmail} ${snippet}`.toLowerCase();
+    const fullSearch = `${subject} ${fromName || ''} ${fromEmail} ${snippet} ${bodyText || ''}`.toLowerCase();
 
     for (const app of apps) {
       const companyName = app.company?.name?.toLowerCase().trim();
