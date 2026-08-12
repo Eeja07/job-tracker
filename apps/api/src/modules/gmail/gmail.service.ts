@@ -147,6 +147,8 @@ const JOB_ALERT_SENDERS = [
   'jobalerts-noreply@linkedin.com',
   'noreply@e.jobstreet.com',
   'noreply@jobstreet.com',
+  'email.jobstreet.com',
+  'e.jobstreet.com',
   'jobs2web.com',
   'jobnotification',
   'newsletter@glints.com',
@@ -154,6 +156,11 @@ const JOB_ALERT_SENDERS = [
   'job-alert',
   'jobalert',
   'karir-otp@kawanlamagroup.com',
+  'notification.dealls.com',
+  'dealls.com',
+  'glints.com',
+  'kalibrr.com',
+  'kitalulus.com',
 ];
 
 // Mass job alert / notification subject keywords
@@ -726,10 +733,10 @@ export class GmailService implements OnModuleInit {
 
         const isJobAlertOrNewsletter =
           !isAppConfirmation &&
-          !detectedType &&
           (JOB_ALERT_SENDERS.some((s) => fromEmail.toLowerCase().includes(s)) ||
             JOB_ALERT_SUBJECT_KEYWORDS.some((k) => lowerSub.includes(k)) ||
-            isSystemAuth);
+            isSystemAuth ||
+            isNonJobSender);
 
         if (isJobAlertOrNewsletter) {
           detectedType = null;
