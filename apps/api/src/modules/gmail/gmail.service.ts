@@ -1013,19 +1013,21 @@ export class GmailService implements OnModuleInit {
       const snippetLower = (msg.snippet || '').toLowerCase();
       const fullSearch = `${subjectLower} ${msg.fromName?.toLowerCase() || ''} ${fromEmailLower} ${snippetLower}`;
 
+      const isNonJobSender = NON_JOB_SENDERS.some((s) => fromEmailLower.includes(s));
       const isAppConfirmation = APPLIED_CONFIRM_KEYWORDS.some((k) => fullSearch.includes(k));
       const isSystemAuth = SYSTEM_AUTH_KEYWORDS.some((k) => isKeywordMatched(fullSearch, k)) || fromEmailLower.includes('otp');
 
       const isJobAlertOrNewsletter =
         !isAppConfirmation &&
         (isSystemAuth ||
+          isNonJobSender ||
           JOB_ALERT_SENDERS.some((s) => fromEmailLower.includes(s)) ||
           JOB_ALERT_SUBJECT_KEYWORDS.some((k) => subjectLower.includes(k)));
 
       let matchedApp: { id: string; jobTitle: string; companyName: string } | null = null;
 
-      // Mass job alerts, recommendations, and system OTP emails are NOT HR replies to individual applications
-      if (!isJobAlertOrNewsletter) {
+      // Mass job alerts, recommendations, and non-job senders are NOT HR replies to individual applications
+      if (!isJobAlertOrNewsletter && !isNonJobSender && msg.isJobRelated) {
         for (const app of userApps) {
           const companyName = app.company?.name?.toLowerCase().trim();
           const jobTitle = app.jobTitle?.toLowerCase().trim();
@@ -1055,7 +1057,9 @@ export class GmailService implements OnModuleInit {
 
       const isHrReply =
         !isJobAlertOrNewsletter &&
+        !isNonJobSender &&
         !isSystemAuth &&
+        Boolean(msg.isJobRelated) &&
         (matchedApp !== null ||
           Boolean(
             msg.detectedType &&
@@ -1064,18 +1068,17 @@ export class GmailService implements OnModuleInit {
               ),
           ) ||
           Boolean(
-            msg.isJobRelated &&
-              (subjectLower.startsWith('re:') ||
-                subjectLower.startsWith('fwd:') ||
-                subjectLower.includes('invitation') ||
-                subjectLower.includes('screening') ||
-                subjectLower.includes('interview') ||
-                subjectLower.includes('test') ||
-                fromEmailLower.includes('adm') ||
-                fromEmailLower.includes('hr') ||
-                fromEmailLower.includes('recruitment') ||
-                fromEmailLower.includes('talent') ||
-                fromEmailLower.includes('careers'))
+            subjectLower.startsWith('re:') ||
+              subjectLower.startsWith('fwd:') ||
+              subjectLower.includes('invitation') ||
+              subjectLower.includes('screening') ||
+              subjectLower.includes('interview') ||
+              subjectLower.includes('test') ||
+              fromEmailLower.includes('adm') ||
+              fromEmailLower.includes('hr') ||
+              fromEmailLower.includes('recruitment') ||
+              fromEmailLower.includes('talent') ||
+              fromEmailLower.includes('careers')
           ));
 
       return {
