@@ -141,6 +141,10 @@ export class WhatsappService {
       reply = await this.getHrRepliesMessage();
     } else if (lower.startsWith('!job') || lower.startsWith('/job')) {
       reply = await this.getOverviewMessage();
+    } else if (lower.startsWith('!tambah') || lower.startsWith('/tambah')) {
+      if (text.includes('|') && !/\d+/.test(text.split('|')[0])) {
+        reply = await this.createApplicationFromWa(text);
+      }
     }
     // Unknown commands: silently ignore (no reply) to avoid spam
 
