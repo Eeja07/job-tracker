@@ -92,6 +92,33 @@ export async function request<T>(path: string, opts: RequestInit = {}): Promise<
   return fetchLatest<T>(path, opts);
 }
 
+export function buildUrl(path: string): string {
+  let base = process.env.NEXT_PUBLIC_API_URL || "";
+
+  if (typeof window !== "undefined") {
+    if (!base || base.includes("localhost")) {
+      const origin = window.location.origin;
+      if (origin.includes(":3001")) {
+        base = `${window.location.protocol}//${window.location.hostname}:3000`;
+      } else {
+        base = origin;
+      }
+    }
+  }
+
+  base = base.replace(/\/+$/, "");
+  let cleanPath = path;
+  if (!cleanPath.startsWith("/")) cleanPath = "/" + cleanPath;
+
+  if (base.endsWith("/api/v1") && cleanPath.startsWith("/api/v1/")) {
+    cleanPath = cleanPath.substring(7);
+  } else if (base.endsWith("/api") && cleanPath.startsWith("/api/")) {
+    cleanPath = cleanPath.substring(4);
+  }
+
+  return `${base}${cleanPath}`;
+}
+
 async function fetchLatest<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const method = (opts.method || "GET").toUpperCase();
   if (method === "GET" && pendingMap.has(path)) {
@@ -101,7 +128,8 @@ async function fetchLatest<T>(path: string, opts: RequestInit = {}): Promise<T> 
   const promise = (async () => {
     try {
       const token = getToken();
-      const res = await fetch(`${API_BASE}${path}`, {
+      const url = buildUrl(path);
+      const res = await fetch(url, {
         ...opts,
         headers: {
           "Content-Type": "application/json",
