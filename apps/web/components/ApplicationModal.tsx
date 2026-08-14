@@ -248,7 +248,7 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
         salaryMin: form.salaryMin ? parseInt(form.salaryMin) : (null as any),
         salaryMax: form.salaryMax ? parseInt(form.salaryMax) : (null as any),
         currency: form.currency || undefined,
-        appliedAt: form.appliedAt ? new Date(form.appliedAt).toISOString() : undefined,
+        appliedAt: form.status === "SAVED" ? undefined : (form.appliedAt ? new Date(form.appliedAt).toISOString() : undefined),
         deadline: form.deadline ? new Date(form.deadline).toISOString() : (null as any),
         requirements: form.requirements ?? "",
         notesContent: form.notesContent ?? "",

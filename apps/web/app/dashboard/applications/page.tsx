@@ -36,11 +36,16 @@ export default function ApplicationsPage() {
   const [sortCol, setSortCol] = useState<SortCol | null>("appliedAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
-  // Synchronize status query param from URL (e.g. from Dashboard Overview Status Breakdown link)
   useEffect(() => {
     const paramStatus = searchParams.get("status");
-    if (paramStatus && STATUSES.includes(paramStatus as any)) {
-      setStatusFilter(paramStatus as ApplicationStatus);
+    if (paramStatus) {
+      if (STATUSES.includes(paramStatus as any)) {
+        setStatusFilter(paramStatus as ApplicationStatus);
+      } else if (paramStatus === "SCREENING") {
+        setStatusFilter("ASSESSMENT" as ApplicationStatus);
+      } else if (paramStatus === "INTERVIEWING") {
+        setStatusFilter("HR_INTERVIEW" as ApplicationStatus);
+      }
     }
   }, [searchParams]);
 

@@ -115,7 +115,14 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
 
     const where: Prisma.ApplicationWhereInput = {
       userId,
-      ...(status && { status }),
+      ...(status && {
+        status:
+          status === ApplicationStatus.ASSESSMENT || status === ApplicationStatus.SCREENING
+            ? { in: [ApplicationStatus.ASSESSMENT, ApplicationStatus.SCREENING] }
+            : status === ApplicationStatus.HR_INTERVIEW || status === ApplicationStatus.INTERVIEWING
+              ? { in: [ApplicationStatus.HR_INTERVIEW, ApplicationStatus.INTERVIEWING] }
+              : status,
+      }),
       ...(companyId && { companyId }),
       ...(source && { source }),
       ...(deadlineBefore || deadlineAfter
