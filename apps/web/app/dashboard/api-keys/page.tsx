@@ -36,6 +36,15 @@ export default function ApiKeysVaultPage() {
     setKeys(updatedKeys);
     if (userId) {
       localStorage.setItem(`api_vault_${userId}`, JSON.stringify(updatedKeys));
+
+      // Sync active provider keys to ai_api_keys_${userId}
+      const activeKeys: Record<string, string> = { groq: "", openrouter: "", gemini: "" };
+      updatedKeys.forEach((entry) => {
+        if (entry.isActive && entry.key && entry.provider in activeKeys) {
+          activeKeys[entry.provider] = entry.key;
+        }
+      });
+      localStorage.setItem(`ai_api_keys_${userId}`, JSON.stringify(activeKeys));
     }
   };
 

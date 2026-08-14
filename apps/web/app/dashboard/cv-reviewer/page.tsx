@@ -100,13 +100,33 @@ export default function CvReviewerPage() {
     const savedFileName = localStorage.getItem(`master_cv_filename_${userId}`);
     const savedAiMode = localStorage.getItem(`ai_mode_${userId}`) as AiMode;
 
-    const savedKeysRaw = localStorage.getItem(`ai_api_keys_${userId}`);
     let loadedKeys: UserApiKeys = { groq: "", openrouter: "", gemini: "" };
+
+    const savedVaultRaw = localStorage.getItem(`api_vault_${userId}`);
+    if (savedVaultRaw) {
+      try {
+        const vaultEntries = JSON.parse(savedVaultRaw);
+        if (Array.isArray(vaultEntries)) {
+          vaultEntries.forEach((entry: any) => {
+            if (entry.isActive && entry.key && entry.provider in loadedKeys) {
+              loadedKeys[entry.provider as keyof UserApiKeys] = entry.key;
+            }
+          });
+        }
+      } catch {}
+    }
+
+    const savedKeysRaw = localStorage.getItem(`ai_api_keys_${userId}`);
     if (savedKeysRaw) {
-      try { loadedKeys = { ...loadedKeys, ...JSON.parse(savedKeysRaw) }; } catch { }
+      try {
+        const legacyKeys = JSON.parse(savedKeysRaw);
+        if (!loadedKeys.groq && legacyKeys.groq) loadedKeys.groq = legacyKeys.groq;
+        if (!loadedKeys.openrouter && legacyKeys.openrouter) loadedKeys.openrouter = legacyKeys.openrouter;
+        if (!loadedKeys.gemini && legacyKeys.gemini) loadedKeys.gemini = legacyKeys.gemini;
+      } catch {}
     } else {
       const oldKey = localStorage.getItem(`ai_api_key_${userId}`);
-      if (oldKey) loadedKeys.groq = oldKey;
+      if (oldKey && !loadedKeys.groq) loadedKeys.groq = oldKey;
     }
 
     setApiKeys(loadedKeys);
@@ -146,6 +166,27 @@ export default function CvReviewerPage() {
     setApiKeys(updated);
     if (userId) {
       localStorage.setItem(`ai_api_keys_${userId}`, JSON.stringify(updated));
+
+      // Sync into api_vault_${userId}
+      const savedVaultRaw = localStorage.getItem(`api_vault_${userId}`);
+      let vaultEntries: any[] = [];
+      if (savedVaultRaw) {
+        try { vaultEntries = JSON.parse(savedVaultRaw); } catch {}
+      }
+      const existingIdx = vaultEntries.findIndex((e: any) => e.provider === provider && e.isActive);
+      if (existingIdx !== -1) {
+        vaultEntries[existingIdx].key = keyVal;
+      } else if (keyVal.trim()) {
+        vaultEntries.unshift({
+          id: "key_" + Date.now(),
+          name: `${provider.toUpperCase()} Key`,
+          provider,
+          key: keyVal.trim(),
+          isActive: true,
+          createdAt: new Date().toISOString()
+        });
+      }
+      localStorage.setItem(`api_vault_${userId}`, JSON.stringify(vaultEntries));
     }
   };
 

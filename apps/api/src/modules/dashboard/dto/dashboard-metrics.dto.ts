@@ -7,6 +7,15 @@ export class PipelineDistributionDto {
   @ApiProperty({ example: 10 })
   APPLIED!: number;
 
+  @ApiProperty({ example: 2 })
+  ASSESSMENT!: number;
+
+  @ApiProperty({ example: 2 })
+  HR_INTERVIEW!: number;
+
+  @ApiProperty({ example: 2 })
+  USER_INTERVIEW!: number;
+
   @ApiProperty({ example: 3 })
   SCREENING!: number;
 

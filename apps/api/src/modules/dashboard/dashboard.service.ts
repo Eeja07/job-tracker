@@ -70,6 +70,9 @@ export class DashboardService {
     const pipelineDistribution: PipelineDistributionDto = {
       SAVED: 0,
       APPLIED: 0,
+      ASSESSMENT: 0,
+      HR_INTERVIEW: 0,
+      USER_INTERVIEW: 0,
       SCREENING: 0,
       INTERVIEWING: 0,
       OFFER: 0,
@@ -94,7 +97,12 @@ export class DashboardService {
         : 0;
 
     const interviewCount =
-      pipelineDistribution.INTERVIEWING + pipelineDistribution.OFFER;
+      pipelineDistribution.INTERVIEWING +
+      pipelineDistribution.HR_INTERVIEW +
+      pipelineDistribution.USER_INTERVIEW +
+      pipelineDistribution.ASSESSMENT +
+      pipelineDistribution.SCREENING +
+      pipelineDistribution.OFFER;
     const interviewRate =
       totalApplications > 0
         ? Number(((interviewCount / totalApplications) * 100).toFixed(2))

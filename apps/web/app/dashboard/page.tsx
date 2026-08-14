@@ -96,7 +96,13 @@ export default function DashboardPage() {
   };
 
   const total = Object.values(stats).reduce((s, n) => s + n, 0);
-  const active = (stats["APPLIED"] ?? 0) + (stats["SCREENING"] ?? 0) + (stats["INTERVIEWING"] ?? 0);
+  const active =
+    (stats["APPLIED"] ?? 0) +
+    (stats["SCREENING"] ?? 0) +
+    (stats["ASSESSMENT"] ?? 0) +
+    (stats["HR_INTERVIEW"] ?? 0) +
+    (stats["INTERVIEWING"] ?? 0) +
+    (stats["USER_INTERVIEW"] ?? 0);
   const offers = stats["OFFER"] ?? 0;
   const rejected = stats["REJECTED"] ?? 0;
 
