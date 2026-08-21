@@ -1,0 +1,89 @@
+name: Job Tracker CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  lint-and-build:
+    name: Test, Lint & Build Verification
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js 22 with pnpm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm --filter api exec prisma generate
+
+      - name: Code Quality & Lint Check
+        run: pnpm lint
+
+      - name: Production Build Verification
+        run: pnpm build
+
+  deploy-homelab:
+    name: Deploy to Homelab Containers
+    needs: [lint-and-build]
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy Docker Services & Reload Master Nginx
+        run: |
+          echo "🚀 [CI/CD] Starting Job Tracker Deployment on Homelab..."
+
+          # 1. Ensure homelab directory hierarchy exists
+          mkdir -p /opt/apps/job-tracker
+          mkdir -p /opt/homelab/compose/job-tracker
+          mkdir -p /opt/homelab/compose/nginx/conf.d
+
+          # 2. Sync latest source code to /opt/apps/job-tracker
+          echo "📦 Syncing source code to /opt/apps/job-tracker..."
+          rsync -a --delete \
+            --exclude '.git' \
+            --exclude 'node_modules' \
+            --exclude '.next' \
+            --exclude 'dist' \
+            --exclude '.turbo' \
+            ./ /opt/apps/job-tracker/
+
+          # 3. Sync Compose & Nginx configuration
+          echo "⚙️ Syncing Compose and Nginx configs..."
+          cp docker/homelab-compose.yml /opt/homelab/compose/job-tracker/compose.yml
+          cp docker/nginx-job-tracker.conf /opt/homelab/compose/nginx/conf.d/job-tracker.conf
+
+          # 4. Build and restart Docker containers
+          echo "🐳 Building and updating containers..."
+          cd /opt/homelab/compose/job-tracker
+          docker compose up -d --build --remove-orphans
+
+          # 5. Reload master Nginx reverse proxy
+          echo "🌐 Reloading Master Nginx Proxy..."
+          docker exec nginx nginx -s reload || true
+
+          # 6. Verify container status
+          echo "🔍 Checking container status..."
+          docker ps --filter "name=job-tracker" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+          echo "✅ [CI/CD] Job Tracker Deployed Successfully on Homelab!"
