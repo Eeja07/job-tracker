@@ -36,10 +36,10 @@ ENV NODE_ENV=production
 
 RUN apk add --no-cache wget
 
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps ./apps
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/pnpm-workspace.yaml ./
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
+COPY --from=builder --chown=node:node /app/apps ./apps
+COPY --from=builder --chown=node:node /app/package.json ./
+COPY --from=builder --chown=node:node /app/pnpm-workspace.yaml ./
 
 WORKDIR /app/apps/api
 
@@ -47,4 +47,4 @@ USER node
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma db push --skip-generate && node dist/prisma/seed-rbac.js && node dist/src/main.js"]
+CMD ["sh", "-c", "npx prisma db push --skip-generate --accept-data-loss || true; node dist/prisma/seed-rbac.js || true; exec node dist/src/main.js"]
