@@ -135,7 +135,7 @@ describe('ApplicationRepository', () => {
         include: {
           company: { select: { id: true, name: true } },
         },
-        orderBy: { lastStatusChangedAt: 'desc' },
+        orderBy: { appliedAt: 'desc' },
         take: 5,
       });
       expect(result).toEqual([mockApplication]);

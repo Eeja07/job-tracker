@@ -6,6 +6,7 @@ describe('JwtStrategy', () => {
 
   beforeEach(() => {
     const mockConfig = {
+      get: jest.fn().mockReturnValue('test-access-secret'),
       getOrThrow: jest.fn().mockReturnValue('test-access-secret'),
     } as unknown as ConfigService;
 

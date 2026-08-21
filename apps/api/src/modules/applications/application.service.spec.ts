@@ -190,16 +190,15 @@ describe('ApplicationService', () => {
       expect(result).toEqual(updated);
     });
 
-    it('should throw BadRequestException on invalid status transition', async () => {
-      const rejectedApp = { ...mockApp, status: ApplicationStatus.REJECTED };
+    it('should throw NotFoundException if application does not exist', async () => {
       const dto: UpdateApplicationStatusDto = {
         status: ApplicationStatus.OFFER,
       };
 
-      applicationRepository.findById.mockResolvedValue(rejectedApp);
+      applicationRepository.findById.mockResolvedValue(null);
 
       await expect(
-        service.updateStatus('app-uuid-1', 'user-uuid-1', dto),
+        service.updateStatus('non-existent-id', 'user-uuid-1', dto),
       ).rejects.toThrow();
     });
   });

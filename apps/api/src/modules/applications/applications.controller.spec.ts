@@ -31,6 +31,7 @@ describe('ApplicationsController', () => {
     const mockService = {
       create: jest.fn(),
       findAll: jest.fn(),
+      findAllPaginated: jest.fn(),
       findOne: jest.fn(),
       update: jest.fn(),
       updateStatus: jest.fn(),
@@ -66,14 +67,15 @@ describe('ApplicationsController', () => {
   });
 
   describe('findAll', () => {
-    it('should call service.findAll with userId and query', async () => {
+    it('should call service.findAllPaginated with userId and query', async () => {
       const query: ApplicationQueryDto = { page: 1, limit: 10 };
-      service.findAll.mockResolvedValue([mockApp]);
+      const paginatedResult = { data: [mockApp], total: 1, page: 1, limit: 10, totalPages: 1 };
+      service.findAllPaginated.mockResolvedValue(paginatedResult);
 
       const result = await controller.findAll(mockReq as any, query);
 
-      expect(service.findAll).toHaveBeenCalledWith('user-uuid-1', query);
-      expect(result).toEqual([mockApp]);
+      expect(service.findAllPaginated).toHaveBeenCalledWith('user-uuid-1', query);
+      expect(result).toEqual(paginatedResult);
     });
   });
 

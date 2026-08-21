@@ -23,13 +23,13 @@ services:
     environment:
       NODE_ENV: production
       PORT: "3000"
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://eeja:eejamakkutujuh@postgres:5432/job-tracker?schema=public}
       REDIS_HOST: job-tracker-redis
       REDIS_PORT: "6379"
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-job-tracker-access-secret-key-2026-secure}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-job-tracker-refresh-secret-key-2026-secure}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-https://job.eeja.fun/api/v1/gmail/callback}
       FRONTEND_URL: ${FRONTEND_URL:-https://job.eeja.fun}
       WA_GATEWAY_URL: ${WA_GATEWAY_URL:-http://gateway-whatsapp-bot:3001}
@@ -52,7 +52,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: "3001"
-      NEXT_PUBLIC_API_URL: "http://job.eeja.fun/api"
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://job.eeja.fun/api}
     depends_on:
       - job-tracker-api
     networks:

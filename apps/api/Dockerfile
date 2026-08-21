@@ -47,4 +47,4 @@ USER node
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "node dist/prisma/seed-rbac.js && node dist/src/main.js"]
+CMD ["sh", "-c", "npx prisma db push --skip-generate && node dist/prisma/seed-rbac.js && node dist/src/main.js"]

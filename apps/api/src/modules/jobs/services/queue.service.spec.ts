@@ -38,6 +38,7 @@ describe('QueueService', () => {
     mockNotificationQueue = createMockQueue();
     mockSystemQueue = createMockQueue();
     mockDeadLetterQueue = createMockQueue();
+    const mockAuditQueue = createMockQueue();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -58,6 +59,10 @@ describe('QueueService', () => {
         {
           provide: getQueueToken(QUEUE_NAMES.DEAD_LETTER),
           useValue: mockDeadLetterQueue,
+        },
+        {
+          provide: getQueueToken(QUEUE_NAMES.AUDIT),
+          useValue: mockAuditQueue,
         },
       ],
     }).compile();

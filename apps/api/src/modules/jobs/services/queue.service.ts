@@ -44,6 +44,7 @@ export class QueueService implements OnModuleDestroy {
     @InjectQueue(QUEUE_NAMES.SYSTEM) private readonly systemQueue: Queue,
     @InjectQueue(QUEUE_NAMES.DEAD_LETTER)
     private readonly deadLetterQueue: Queue,
+    @InjectQueue(QUEUE_NAMES.AUDIT) private readonly auditQueue: Queue,
   ) {
     this.queues = new Map<string, Queue>([
       [QUEUE_NAMES.EMAIL, this.emailQueue],
@@ -51,6 +52,7 @@ export class QueueService implements OnModuleDestroy {
       [QUEUE_NAMES.NOTIFICATION, this.notificationQueue],
       [QUEUE_NAMES.SYSTEM, this.systemQueue],
       [QUEUE_NAMES.DEAD_LETTER, this.deadLetterQueue],
+      [QUEUE_NAMES.AUDIT, this.auditQueue],
     ]);
   }
 

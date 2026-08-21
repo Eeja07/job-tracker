@@ -300,14 +300,11 @@ export class ApplicationService {
         rejectedAtStage = fromStatus !== ApplicationStatus.REJECTED ? fromStatus : 'APPLIED';
       }
 
-      const updatedApp = await tx.application.update({
-        where: { id },
-        data: {
-          status: dto.status,
-          lastStatusChangedAt: new Date(),
-          ...(dto.status === ApplicationStatus.REJECTED || rejectedAtStage ? { rejectedAtStage } : {}),
-        },
-      });
+      const updatedApp = await this.applicationRepository.updateStatus(
+        id,
+        dto.status,
+        tx,
+      );
 
       await this.statusHistoryRepository.append(
         {

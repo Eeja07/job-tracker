@@ -58,6 +58,11 @@ describe('AuthService', () => {
     };
 
     const mockConfig = {
+      get: jest.fn((key: string) => {
+        if (key === 'JWT_ACCESS_SECRET') return 'test-access-secret';
+        if (key === 'JWT_REFRESH_SECRET') return 'test-refresh-secret';
+        return undefined;
+      }),
       getOrThrow: jest.fn((key: string) => {
         if (key === 'JWT_ACCESS_SECRET') return 'test-access-secret';
         if (key === 'JWT_REFRESH_SECRET') return 'test-refresh-secret';
