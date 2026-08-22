@@ -139,6 +139,20 @@ const NON_JOB_SENDERS = [
   'steampowered.com',
   'epicgames.com',
   'playstation.com',
+  // AI/Dev tool providers — NOT job recruiters
+  'groq.com',
+  'groq.co',
+  'email.groq.com',
+  'developer@groq.com',
+  'developer@groq.co',
+  'mistral.ai',
+  'huggingface.co',
+  'cohere.com',
+  'together.ai',
+  'replicate.com',
+  'perplexity.ai',
+  'elevenlabs.io',
+  'stability.ai',
 ];
 
 // Mass job alert / portal recommendation senders to categorize under INFO_LOKER (NOT Balasan HR)
@@ -962,8 +976,9 @@ export class GmailService implements OnModuleInit {
     const statusMap: Record<string, string> = {
       REJECTED: 'REJECTED',
       OFFER: 'OFFER',
-      INTERVIEW: 'INTERVIEWING',
-      SCREENING: 'SCREENING',
+      INTERVIEW: 'HR_INTERVIEW',
+      SCREENING: 'ASSESSMENT',
+      APPLIED_CONFIRM: 'APPLIED',
     };
 
     const targetStatus = statusMap[detectedType];
@@ -1075,37 +1090,47 @@ export class GmailService implements OnModuleInit {
         }
       }
 
+      // isHrReply: strict — must have a matched application OR an explicitly confirmed type
+      // Loose subject keywords alone (screening/interview/test) are NOT enough — they produce false positives
+      // from AI tools, developer newsletters, etc.
+      const hasConfirmedType = Boolean(
+        msg.detectedType &&
+          ['INTERVIEW', 'OFFER', 'REJECTED', 'SCREENING', 'APPLIED_CONFIRM'].includes(
+            msg.detectedType,
+          ),
+      );
+
+      const hasTrustedSenderSignal =
+        fromEmailLower.includes('recruitment') ||
+        fromEmailLower.includes('talent') ||
+        fromEmailLower.includes('careers') ||
+        fromEmailLower.includes('hr@') ||
+        fromEmailLower.includes('hrd@') ||
+        fromEmailLower.includes('@hrd.') ||
+        fromEmailLower.includes('rekrutmen') ||
+        fromEmailLower.includes('talentics') ||
+        fromEmailLower.includes('kalibrr') ||
+        fromEmailLower.includes('dealls');
+
       const isHrReply =
         !isJobAlertOrNewsletter &&
         !isNonJobSender &&
         !isSystemAuth &&
         Boolean(msg.isJobRelated) &&
-        (matchedApp !== null ||
-          Boolean(
-            msg.detectedType &&
-              ['INTERVIEW', 'OFFER', 'REJECTED', 'SCREENING', 'APPLIED_CONFIRM'].includes(
-                msg.detectedType,
-              ),
-          ) ||
-          Boolean(
-            subjectLower.startsWith('re:') ||
-              subjectLower.startsWith('fwd:') ||
-              subjectLower.includes('invitation') ||
-              subjectLower.includes('screening') ||
-              subjectLower.includes('interview') ||
-              subjectLower.includes('test') ||
-              fromEmailLower.includes('adm') ||
-              fromEmailLower.includes('hr') ||
-              fromEmailLower.includes('recruitment') ||
-              fromEmailLower.includes('talent') ||
-              fromEmailLower.includes('careers')
-          ));
+        // Must have at least ONE strong signal:
+        (matchedApp !== null || hasConfirmedType || hasTrustedSenderSignal);
 
       return {
         ...msg,
         isHrReply,
         matchedApp,
       };
+    });
+  }
+
+  async removeEmailMessage(userId: string, emailId: string): Promise<void> {
+    await this.prisma.emailMessage.deleteMany({
+      where: { id: emailId, userId },
     });
   }
 

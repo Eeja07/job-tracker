@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Query,
   Param,
   Redirect,
@@ -110,6 +111,16 @@ export class GmailController {
       jobOnly === 'true',
       limit ? Number(limit) : 30,
     );
+  }
+
+  @Delete('emails/:id')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Remove an email message from the inbox view' })
+  async removeEmail(@NestRequest() req: any, @Param('id') id: string) {
+    const userId = (req as AuthenticatedRequest).user.sub;
+    await this.gmailService.removeEmailMessage(userId, id);
+    return { success: true };
   }
 
   @Get('notifications')

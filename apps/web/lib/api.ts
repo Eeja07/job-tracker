@@ -300,6 +300,7 @@ export const gmailApi = {
   disconnect: () => request<{ message: string }>("/api/v1/gmail/disconnect", { method: "POST" }),
   sync: () => request<{ success: boolean; newMessages: number; jobRelated: number }>("/api/v1/gmail/sync", { method: "POST" }),
   getEmails: (jobOnly = false, limit = 200) => request<EmailMessage[]>(`/api/v1/gmail/emails?jobOnly=${jobOnly}&limit=${limit}`),
+  removeEmail: (id: string) => request<{ success: boolean }>(`/api/v1/gmail/emails/${id}`, { method: "DELETE" }),
 };
 
 export const notificationApi = {

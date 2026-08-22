@@ -4,6 +4,15 @@ import { Mail, RefreshCw, CheckCircle, AlertTriangle, Trash2, ExternalLink, X, C
 import { gmailApi, type GmailStatus, type EmailMessage } from "@/lib/api";
 import styles from "./page.module.css";
 
+// Human-readable label + badge color for each detected email type
+const TYPE_LABEL: Record<string, { label: string; className: string }> = {
+  INTERVIEW:      { label: "Interview",    className: (styles as any).type_INTERVIEW || "" },
+  OFFER:          { label: "Offer",         className: (styles as any).type_OFFER || "" },
+  REJECTED:       { label: "Ditolak",       className: (styles as any).type_REJECTED || "" },
+  SCREENING:      { label: "Screening",     className: (styles as any).type_SCREENING || "" },
+  APPLIED_CONFIRM:{ label: "Applied ✓",    className: (styles as any).type_APPLIED_CONFIRM || "" },
+};
+
 export default function GmailSyncPage() {
   const [status, setStatus] = useState<GmailStatus | null>(null);
   const [emails, setEmails] = useState<EmailMessage[]>([]);
@@ -81,6 +90,17 @@ export default function GmailSyncPage() {
       alert("Gagal melakukan sinkronisasi: " + (err.message || "Error"));
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const handleRemoveEmail = async (e: React.MouseEvent, emailId: string) => {
+    e.stopPropagation();
+    try {
+      await gmailApi.removeEmail(emailId);
+      setEmails((prev) => prev.filter((m) => m.id !== emailId));
+      if (selectedEmail?.id === emailId) setSelectedEmail(null);
+    } catch (err: any) {
+      alert("Gagal menghapus pesan: " + (err.message || "Error"));
     }
   };
 
@@ -233,8 +253,10 @@ export default function GmailSyncPage() {
             )}
           </div>
         ) : (
-          <div className={styles.emailList}>
-            {filteredEmails.map((m) => (
+        <div className={styles.emailList}>
+            {filteredEmails.map((m) => {
+              const typeInfo = m.detectedType ? TYPE_LABEL[m.detectedType] : null;
+              return (
               <div
                 key={m.id}
                 className={styles.emailCard}
@@ -246,20 +268,30 @@ export default function GmailSyncPage() {
                     <span className={styles.senderName}>{m.fromName || m.fromEmail}</span>
                     <span className={styles.senderEmail}>&lt;{m.fromEmail}&gt;</span>
                   </div>
-                  <span className={styles.emailDate}>
-                    {new Date(m.receivedAt).toLocaleDateString("id-ID", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <span className={styles.emailDate}>
+                      {new Date(m.receivedAt).toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                    <button
+                      className={styles.removeBtn}
+                      onClick={(e) => handleRemoveEmail(e, m.id)}
+                      title="Hapus dari daftar"
+                      type="button"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                 </div>
                 <div className={styles.subjectRow}>
-                  {m.detectedType && (
-                    <span className={`${styles.typeTag} ${styles[`type_${m.detectedType}`] || ""}`}>
-                      {m.detectedType}
+                  {typeInfo && (
+                    <span className={`${styles.typeTag} ${typeInfo.className}`}>
+                      {typeInfo.label}
                     </span>
                   )}
                   <h3 className={styles.emailSubject}>{m.subject}</h3>
@@ -278,7 +310,8 @@ export default function GmailSyncPage() {
                   <ArrowRight size={12} />
                 </button>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -291,12 +324,15 @@ export default function GmailSyncPage() {
         >
           <div className={styles.modalCard}>
             <div className={styles.modalHeader}>
-              <div className={styles.modalTitleBox}>
-                {selectedEmail.detectedType && (
-                  <span className={`${styles.typeTag} ${styles[`type_${selectedEmail.detectedType}`] || ""}`}>
-                    {selectedEmail.detectedType}
-                  </span>
-                )}
+            <div className={styles.modalTitleBox}>
+                {selectedEmail.detectedType && (() => {
+                  const ti = TYPE_LABEL[selectedEmail.detectedType];
+                  return (
+                    <span className={`${styles.typeTag} ${ti ? ti.className : ""}`}>
+                      {ti ? ti.label : selectedEmail.detectedType}
+                    </span>
+                  );
+                })()}
                 <h2 className={styles.modalSubject}>{selectedEmail.subject}</h2>
               </div>
               <button className={styles.closeBtn} onClick={() => setSelectedEmail(null)}>
