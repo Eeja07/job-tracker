@@ -817,7 +817,17 @@ export class GmailService implements OnModuleInit {
 
         newMessages++;
 
-        // Create notification ONLY if job-related AND message is UNREAD in Gmail
+        // In-app WebSocket notification: semua email job-related yang unread
+        // WA/Telegram: HANYA email yang punya detectedType (INTERVIEW, OFFER, REJECTED, dll.)
+        // dan bukan job alert/newsletter
+        const isHrConfirmed =
+          isJobRelated &&
+          !isJobAlertOrNewsletter &&
+          !isNonJobSender &&
+          !isSystemAuth &&
+          detectedType !== null &&
+          ['INTERVIEW', 'OFFER', 'REJECTED', 'SCREENING', 'APPLIED_CONFIRM'].includes(detectedType);
+
         if (isJobRelated && isUnreadInGmail) {
           jobRelated++;
 
@@ -825,7 +835,7 @@ export class GmailService implements OnModuleInit {
             INTERVIEW: 'Undangan Interview',
             OFFER: 'Job Offer Diterima',
             REJECTED: 'Lamaran Ditolak',
-            SCREENING: 'Lolos Screening',
+            SCREENING: 'Lolos Screening / Assessment',
             APPLIED_CONFIRM: 'Lamaran Dikonfirmasi',
           };
 
@@ -834,6 +844,7 @@ export class GmailService implements OnModuleInit {
             : 'Email Loker Baru';
           const notifBody = `Dari: ${fromName || fromEmail}\nSubjek: ${subject}\n${snippet.substring(0, 200)}`;
 
+          // Simpan notif in-app untuk semua email job-related
           const notif = await this.prisma.notification.create({
             data: {
               userId,
@@ -850,7 +861,7 @@ export class GmailService implements OnModuleInit {
             },
           });
 
-          // Push real-time notification via WebSocket to user's personal room
+          // Push real-time WebSocket ke browser (semua job-related)
           this.realtime.emitToRoom(`user:${userId}`, 'notification:new', {
             id: notif.id,
             type: notif.type,
@@ -860,17 +871,18 @@ export class GmailService implements OnModuleInit {
             createdAt: notif.createdAt,
           });
 
-          // Push instant notification to WhatsApp Bot
-          this.whatsapp.notifyEmailNotification(userId, notifTitle, notifBody).catch((err) => {
-            this.logger.warn(`Failed to send WhatsApp notification to user ${userId}: ${err.message}`);
-          });
+          // WA & Telegram: HANYA untuk email HR confirmed (ada detectedType, bukan job alert)
+          if (isHrConfirmed) {
+            this.whatsapp.notifyEmailNotification(userId, notifTitle, notifBody).catch((err) => {
+              this.logger.warn(`Failed to send WhatsApp notification to user ${userId}: ${err.message}`);
+            });
 
-          // Push instant notification to Telegram Bot
-          this.telegram.notifyEmailNotification(userId, notifTitle, notifBody).catch((err) => {
-            this.logger.warn(`Failed to send Telegram notification to user ${userId}: ${err.message}`);
-          });
+            this.telegram.notifyEmailNotification(userId, notifTitle, notifBody).catch((err) => {
+              this.logger.warn(`Failed to send Telegram notification to user ${userId}: ${err.message}`);
+            });
+          }
 
-          // Auto-update application status if email matches an application
+          // Auto-update application status jika ada detectedType
           if (detectedType) {
             await this.autoUpdateApplicationStatus(
               userId,
@@ -885,6 +897,7 @@ export class GmailService implements OnModuleInit {
             });
           }
         }
+
       } catch (err: any) {
         this.logger.warn(`Failed to process message ${msg.id}: ${err.message}`);
       }
