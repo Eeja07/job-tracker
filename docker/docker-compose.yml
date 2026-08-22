@@ -44,7 +44,7 @@ services:
     ports:
       - "${API_PORT:-3001}:3000"
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: "3000"
       DATABASE_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-job_tracker}?schema=public"
       REDIS_HOST: redis
@@ -54,6 +54,10 @@ services:
       WA_GATEWAY_URL: ${WA_GATEWAY_URL:-http://host.docker.internal:3001}
       WA_GATEWAY_API_KEY: ${WA_GATEWAY_API_KEY:-eeja_wa_gateway_secret_key_2026}
       WA_NOTIFICATION_PHONES: ${WA_NOTIFICATION_PHONES:-6281288092766}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-https://job.eeja.fun/api/v1/gmail/callback}
+      FRONTEND_URL: ${FRONTEND_URL:-https://job.eeja.fun}
     depends_on:
       postgres:
         condition: service_healthy
