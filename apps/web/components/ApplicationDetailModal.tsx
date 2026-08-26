@@ -1,9 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Application } from "@/lib/api";
 import { applicationsApi } from "@/lib/api";
 import { STATUS_CONFIG, REJECTION_STAGE_LABELS, WORK_MODE_LABELS, SOURCE_LABELS, formatCurrency, formatDate, getDaysAgo } from "@/lib/utils";
-import { X, Edit2, Trash2, ExternalLink, FileText, Image as ImageIcon, Briefcase, Calendar, MapPin, DollarSign, CheckSquare, Download, Eye, RefreshCw, CheckCircle, AlertTriangle, HelpCircle, Copy, Check } from "lucide-react";
+import { X, Edit2, Trash2, ExternalLink, FileText, Image as ImageIcon, Briefcase, Calendar, MapPin, DollarSign, CheckSquare, Download, Eye, RefreshCw, CheckCircle, AlertTriangle, HelpCircle, Copy, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import styles from "./ApplicationDetailModal.module.css";
 
 interface Props {
@@ -14,12 +14,28 @@ interface Props {
 }
 
 export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose }: Props) {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [lightboxImages, setLightboxImages] = useState<string[] | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number>(0);
   const [previewDoc, setPreviewDoc] = useState<{ name: string; url: string } | null>(null);
   const [copiedCoverLetter, setCopiedCoverLetter] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(false);
   const [listingStatus, setListingStatus] = useState<"ACTIVE" | "CLOSED" | "UNKNOWN" | "ERROR" | null>(null);
   const [listingDetail, setListingDetail] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (!lightboxImages) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setLightboxImages(null);
+      } else if (e.key === "ArrowLeft" && lightboxImages.length > 1) {
+        setLightboxIndex(prev => (prev > 0 ? prev - 1 : lightboxImages.length - 1));
+      } else if (e.key === "ArrowRight" && lightboxImages.length > 1) {
+        setLightboxIndex(prev => (prev < lightboxImages.length - 1 ? prev + 1 : 0));
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [lightboxImages]);
 
   const handleCheckListingStatus = async () => {
     setCheckingStatus(true);
@@ -82,7 +98,14 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
               <h3 className={styles.sectionTitle}>
                 <ImageIcon size={15} /> Poster / Tangkapan Layar Lowongan (Klik untuk Layar Penuh)
               </h3>
-              <div className={styles.heroImageContainer} onClick={() => setSelectedImage(app.imageUrl!)} title="Klik untuk perbesar poster">
+              <div
+                className={styles.heroImageContainer}
+                onClick={() => {
+                  setLightboxImages([app.imageUrl!]);
+                  setLightboxIndex(0);
+                }}
+                title="Klik untuk perbesar poster"
+              >
                 <img src={app.imageUrl} alt="Foto/Screenshot Lamaran" className={styles.heroImage} />
               </div>
             </div>
@@ -341,13 +364,26 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
             <div className={styles.section}>
               <h3 className={styles.sectionTitle}>
                 <ImageIcon size={15} /> Catatan & Tangkapan Layar (Notes)
+                {app.notesImages && app.notesImages.length > 0 && (
+                  <span style={{ fontSize: "0.78rem", fontWeight: 500, color: "var(--text-muted)", marginLeft: "4px" }}>
+                    ({app.notesImages.length} gambar)
+                  </span>
+                )}
               </h3>
               {app.notesContent && <div className={styles.contentBox}>{app.notesContent}</div>}
 
               {app.notesImages && app.notesImages.length > 0 && (
                 <div className={styles.imageGallery}>
                   {app.notesImages.map((img, idx) => (
-                    <div key={idx} className={styles.galleryThumb} onClick={() => setSelectedImage(img)}>
+                    <div
+                      key={idx}
+                      className={styles.galleryThumb}
+                      onClick={() => {
+                        setLightboxImages(app.notesImages!);
+                        setLightboxIndex(idx);
+                      }}
+                      title={`Lihat gambar catatan ${idx + 1} (Klik untuk pratinjau penuh)`}
+                    >
                       <img src={img} alt={`Catatan Gambar ${idx + 1}`} />
                     </div>
                   ))}
@@ -469,39 +505,94 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
         </div>
       )}
 
-      {/* Lightbox / Zoom Image Overlay */}
-      {selectedImage && (
+      {/* Multi-image Lightbox Modal */}
+      {lightboxImages && lightboxImages.length > 0 && lightboxImages[lightboxIndex] && (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.9)",
-            zIndex: 1100,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "2rem",
-          }}
-          onClick={() => setSelectedImage(null)}
+          className={styles.lightboxOverlay}
+          onClick={(e) => e.target === e.currentTarget && setLightboxImages(null)}
         >
-          <img src={selectedImage} alt="Expanded Preview" style={{ maxWidth: "90vw", maxHeight: "90vh", borderRadius: 8, objectFit: "contain" }} />
-          <button
-            onClick={() => setSelectedImage(null)}
-            style={{
-              position: "absolute",
-              top: 20,
-              right: 20,
-              background: "rgba(255,255,255,0.2)",
-              color: "#fff",
-              border: "none",
-              borderRadius: "50%",
-              width: 36,
-              height: 36,
-              cursor: "pointer",
-            }}
-          >
-            <X size={20} />
-          </button>
+          {/* Top Bar with Counter & Actions */}
+          <div className={styles.lightboxTopBar}>
+            <div className={styles.lightboxCounter}>
+              {lightboxImages.length > 1 ? (
+                <span>Gambar {lightboxIndex + 1} dari {lightboxImages.length}</span>
+              ) : (
+                <span>Pratinjau Gambar</span>
+              )}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+              <a
+                href={lightboxImages[lightboxIndex]}
+                target="_blank"
+                rel="noopener noreferrer"
+                download={`catatan_gambar_${lightboxIndex + 1}`}
+                className={styles.lightboxActionBtn}
+                title="Buka Gambar Asli / Download"
+              >
+                <ExternalLink size={16} />
+              </a>
+              <button
+                onClick={() => setLightboxImages(null)}
+                className={styles.lightboxCloseBtn}
+                title="Tutup (Esc)"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+
+          {/* Center Main Area with Prev / Image / Next */}
+          <div className={styles.lightboxMainArea}>
+            {lightboxImages.length > 1 && (
+              <button
+                className={`${styles.lightboxNavBtn} ${styles.lightboxNavPrev}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightboxIndex(prev => (prev > 0 ? prev - 1 : lightboxImages.length - 1));
+                }}
+                title="Gambar Sebelumnya (Panah Kiri)"
+              >
+                <ChevronLeft size={28} />
+              </button>
+            )}
+
+            <div className={styles.lightboxImageContainer}>
+              <img
+                src={lightboxImages[lightboxIndex]}
+                alt={`Catatan Gambar ${lightboxIndex + 1}`}
+                className={styles.lightboxImage}
+              />
+            </div>
+
+            {lightboxImages.length > 1 && (
+              <button
+                className={`${styles.lightboxNavBtn} ${styles.lightboxNavNext}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightboxIndex(prev => (prev < lightboxImages.length - 1 ? prev + 1 : 0));
+                }}
+                title="Gambar Selanjutnya (Panah Kanan)"
+              >
+                <ChevronRight size={28} />
+              </button>
+            )}
+          </div>
+
+          {/* Bottom Thumbnail Strip */}
+          {lightboxImages.length > 1 && (
+            <div className={styles.lightboxThumbStrip} onClick={e => e.stopPropagation()}>
+              {lightboxImages.map((img, idx) => (
+                <div
+                  key={idx}
+                  className={`${styles.lightboxThumbWrap} ${idx === lightboxIndex ? styles.lightboxThumbActive : ""}`}
+                  onClick={() => setLightboxIndex(idx)}
+                  title={`Buka gambar ${idx + 1}`}
+                >
+                  <img src={img} alt={`Thumb ${idx + 1}`} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { companiesApi, applicationsApi, type Application, type ApplicationStatus } from "@/lib/api";
-import { X, Loader2, Image as ImageIcon, FileText, CheckSquare, Upload, Link as LinkIcon, Trash2, Plus, FileCode, Briefcase, Download, Sparkles } from "lucide-react";
+import { X, Loader2, Image as ImageIcon, FileText, CheckSquare, Upload, Link as LinkIcon, Trash2, Plus, FileCode, Briefcase, Download, Sparkles, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import styles from "./ApplicationModal.module.css";
 
 const STATUSES: ApplicationStatus[] = ["SAVED","APPLIED","ASSESSMENT","HR_INTERVIEW","USER_INTERVIEW","OFFER","REJECTED","WITHDRAWN"];
@@ -42,6 +42,7 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
     coverLetterText: (app as any)?.coverLetterText ?? (app as any)?.coverLetter ?? "",
   });
   const [notesImages, setNotesImages] = useState<string[]>((app as any)?.notesImages ?? []);
+  const [previewNoteIndex, setPreviewNoteIndex] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"general" | "requirements" | "documents" | "notes" | "image">("general");
   const [saving, setSaving] = useState(false);
   const [scrapingUrl, setScrapingUrl] = useState(false);
@@ -169,10 +170,12 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
     }
   };
 
-  const handleNoteImageFile = async (file: File) => {
+  const handleNoteImageFiles = async (files: FileList | File[]) => {
     try {
-      const dataUrl = await readFileAsDataUrl(file);
-      setNotesImages(prev => [...prev, dataUrl]);
+      const fileArr = Array.from(files).filter(f => f.type.startsWith("image/"));
+      if (fileArr.length === 0) return;
+      const dataUrls = await Promise.all(fileArr.map(readFileAsDataUrl));
+      setNotesImages(prev => [...prev, ...dataUrls]);
       setError("");
     } catch (err: any) {
       setError(String(err));
@@ -182,19 +185,20 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
   const handlePaste = async (e: React.ClipboardEvent) => {
     const items = e.clipboardData?.items;
     if (!items) return;
+    const pastedImageFiles: File[] = [];
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       if (item && item.type.startsWith("image/")) {
         const file = item.getAsFile();
-        if (file) {
-          e.preventDefault();
-          if (activeTab === "notes") {
-            await handleNoteImageFile(file);
-          } else {
-            await handleMainImageFile(file);
-          }
-          break;
-        }
+        if (file) pastedImageFiles.push(file);
+      }
+    }
+    if (pastedImageFiles.length > 0) {
+      e.preventDefault();
+      if (activeTab === "notes") {
+        await handleNoteImageFiles(pastedImageFiles);
+      } else if (pastedImageFiles[0]) {
+        await handleMainImageFile(pastedImageFiles[0]);
       }
     }
   };
@@ -209,11 +213,8 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
   const handleDropNotes = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    const files = Array.from(e.dataTransfer.files);
-    for (const file of files) {
-      if (file.type.startsWith("image/")) {
-        await handleNoteImageFile(file);
-      }
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      await handleNoteImageFiles(e.dataTransfer.files);
     }
   };
 
@@ -642,9 +643,12 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
                   ref={notesFileInputRef}
                   style={{ display: "none" }}
                   accept="image/*"
+                  multiple
                   onChange={e => {
-                    const f = e.target.files?.[0];
-                    if (f) handleNoteImageFile(f);
+                    if (e.target.files && e.target.files.length > 0) {
+                      handleNoteImageFiles(e.target.files);
+                    }
+                    e.target.value = "";
                   }}
                 />
 
@@ -656,18 +660,28 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
                   onClick={() => notesFileInputRef.current?.click()}
                 >
                   <Upload size={18} className={styles.dropIcon} />
-                  <span>Tekan <strong>Ctrl + V (Cmd + V)</strong> untuk Paste Gambar dari Clipboard, atau Drag & Drop / Klik di sini untuk memilih gambar.</span>
+                  <span>Tekan <strong>Ctrl + V (Cmd + V)</strong> untuk Paste Gambar dari Clipboard, atau Drag & Drop / Klik di sini untuk memilih gambar (bisa lebih dari 1).</span>
                 </div>
 
                 {notesImages.length > 0 && (
                   <div className={styles.notesGallery}>
                     {notesImages.map((img, idx) => (
-                      <div key={idx} className={styles.noteThumbWrap}>
+                      <div
+                        key={idx}
+                        className={styles.noteThumbWrap}
+                        onClick={() => setPreviewNoteIndex(idx)}
+                        title="Klik untuk melihat pratinjau penuh"
+                      >
                         <img src={img} alt={`Catatan ${idx + 1}`} className={styles.noteThumb} />
                         <button
                           type="button"
                           className={styles.removeNoteImgBtn}
-                          onClick={() => setNotesImages(prev => prev.filter((_, i) => i !== idx))}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setNotesImages(prev => prev.filter((_, i) => i !== idx));
+                            if (previewNoteIndex === idx) setPreviewNoteIndex(null);
+                            else if (previewNoteIndex !== null && previewNoteIndex > idx) setPreviewNoteIndex(previewNoteIndex - 1);
+                          }}
                           title="Hapus gambar catatan"
                         >
                           <Trash2 size={12} />
@@ -756,6 +770,80 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
           </div>
         </form>
       </div>
+
+      {/* Lightbox Preview for Note Images */}
+      {previewNoteIndex !== null && notesImages[previewNoteIndex] && (
+        <div
+          className={styles.lightboxOverlay}
+          onClick={(e) => e.target === e.currentTarget && setPreviewNoteIndex(null)}
+        >
+          <div className={styles.lightboxTopBar}>
+            <span className={styles.lightboxCounter}>
+              Gambar {previewNoteIndex + 1} dari {notesImages.length}
+            </span>
+            <button
+              type="button"
+              className={styles.lightboxCloseBtn}
+              onClick={() => setPreviewNoteIndex(null)}
+              title="Tutup Preview (Esc)"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className={styles.lightboxMainArea}>
+            {notesImages.length > 1 && (
+              <button
+                type="button"
+                className={`${styles.lightboxNavBtn} ${styles.lightboxNavPrev}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPreviewNoteIndex(prev => (prev !== null && prev > 0 ? prev - 1 : notesImages.length - 1));
+                }}
+                title="Gambar Sebelumnya"
+              >
+                <ChevronLeft size={24} />
+              </button>
+            )}
+
+            <div className={styles.lightboxImageWrap}>
+              <img
+                src={notesImages[previewNoteIndex]}
+                alt={`Preview Catatan ${previewNoteIndex + 1}`}
+                className={styles.lightboxImage}
+              />
+            </div>
+
+            {notesImages.length > 1 && (
+              <button
+                type="button"
+                className={`${styles.lightboxNavBtn} ${styles.lightboxNavNext}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPreviewNoteIndex(prev => (prev !== null && prev < notesImages.length - 1 ? prev + 1 : 0));
+                }}
+                title="Gambar Selanjutnya"
+              >
+                <ChevronRight size={24} />
+              </button>
+            )}
+          </div>
+
+          {notesImages.length > 1 && (
+            <div className={styles.lightboxThumbStrip} onClick={e => e.stopPropagation()}>
+              {notesImages.map((img, idx) => (
+                <div
+                  key={idx}
+                  className={`${styles.lightboxThumbItem} ${idx === previewNoteIndex ? styles.lightboxThumbActive : ""}`}
+                  onClick={() => setPreviewNoteIndex(idx)}
+                >
+                  <img src={img} alt={`Thumb ${idx + 1}`} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

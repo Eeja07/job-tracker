@@ -384,8 +384,11 @@ export default function ApplicationsPage() {
                                 </span>
                               )}
                               {(app.notesContent || (app.notesImages && app.notesImages.length > 0)) && (
-                                <span className={styles.miniBadge} title="Catatan/Foto terisi">
-                                  <ImageIcon size={10} /> Catatan
+                                <span
+                                  className={styles.miniBadge}
+                                  title={`Catatan: ${app.notesContent ? 'Teks catatan' : ''}${app.notesImages && app.notesImages.length > 0 ? ` • ${app.notesImages.length} gambar` : ''}`}
+                                >
+                                  <ImageIcon size={10} /> Catatan{app.notesImages && app.notesImages.length > 0 ? ` (${app.notesImages.length})` : ''}
                                 </span>
                               )}
                             </div>
