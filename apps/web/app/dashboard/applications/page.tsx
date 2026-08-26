@@ -149,12 +149,13 @@ export default function ApplicationsPage() {
   };
 
   const handleOpenEdit = async (app: Application) => {
-    setEditApp(app);
-    setShowModal(true);
     try {
       const full = await applicationsApi.get(app.id);
       setEditApp(full);
-    } catch { /* fallback to app */ }
+    } catch {
+      setEditApp(app);
+    }
+    setShowModal(true);
   };
 
   const handleStatusChange = async (id: string, status: ApplicationStatus) => {

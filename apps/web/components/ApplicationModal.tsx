@@ -91,6 +91,37 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
   };
 
   useEffect(() => {
+    if (app) {
+      setForm({
+        jobTitle: app.jobTitle ?? "",
+        companyName: app.company?.name ?? "",
+        status: (app.status ?? "SAVED") as ApplicationStatus,
+        rejectedAtStage: app.rejectedAtStage ?? "APPLIED",
+        workMode: app.workMode ?? "REMOTE",
+        source: app.source ?? "LINKEDIN",
+        location: app.location ?? "",
+        sourceUrl: app.sourceUrl ?? "",
+        salaryMin: app.salaryMin ? String(app.salaryMin) : "",
+        salaryMax: app.salaryMax ? String(app.salaryMax) : "",
+        currency: app.currency ?? "IDR",
+        appliedAt: app.appliedAt ? app.appliedAt.split("T")[0] : new Date().toISOString().split("T")[0],
+        deadline: app.deadline ? app.deadline.split("T")[0] : "",
+        requirements: (app as any).requirements ?? "",
+        notesContent: (app as any).notesContent ?? (app as any).notes ?? "",
+        imageUrl: (app as any).imageUrl ?? "",
+        cvName: (app as any).cvName ?? "",
+        cvUrl: (app as any).cvUrl ?? "",
+        portfolioName: (app as any).portfolioName ?? "",
+        portfolioUrl: (app as any).portfolioUrl ?? "",
+        coverLetterName: (app as any).coverLetterName ?? "",
+        coverLetterUrl: (app as any).coverLetterUrl ?? "",
+        coverLetterText: (app as any).coverLetterText ?? (app as any).coverLetter ?? "",
+      });
+      setNotesImages((app as any).notesImages ?? []);
+    }
+  }, [app]);
+
+  useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
@@ -436,7 +467,19 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
 
           {activeTab === "requirements" && (
             <div className={styles.field}>
-              <label className={styles.label}>Kualifikasi & Job Requirements</label>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
+                <label className={styles.label}>Kualifikasi & Job Requirements</label>
+                {form.requirements && (
+                  <button
+                    type="button"
+                    className={styles.clearFieldBtn}
+                    onClick={() => setForm(f => ({ ...f, requirements: "" }))}
+                    title="Kosongkan kualifikasi"
+                  >
+                    <Trash2 size={12} /> Hapus Teks
+                  </button>
+                )}
+              </div>
               <textarea
                 className={styles.textarea}
                 rows={8}
@@ -451,7 +494,22 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
               {/* CV Attachment */}
               <div className={styles.field}>
-                <label className={styles.label}>CV / Resume Terlampir untuk Lowongan Ini</label>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
+                  <label className={styles.label}>CV / Resume Terlampir untuk Lowongan Ini</label>
+                  {(form.cvUrl || form.cvName) && (
+                    <button
+                      type="button"
+                      className={styles.clearFieldBtn}
+                      onClick={() => {
+                        setForm(f => ({ ...f, cvUrl: "", cvName: "" }));
+                        if (cvFileInputRef.current) cvFileInputRef.current.value = "";
+                      }}
+                      title="Hapus file dan link CV"
+                    >
+                      <Trash2 size={12} /> Hapus CV
+                    </button>
+                  )}
+                </div>
                 <input
                   type="file"
                   ref={cvFileInputRef}
@@ -487,11 +545,19 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
                     placeholder="Atau Paste Link CV (Google Drive, Dropbox, dll)"
                   />
                 </div>
-                {form.cvUrl && (
+                {(form.cvUrl || form.cvName) && (
                   <div className={styles.docBadge}>
                     <FileCode size={14} />
-                    <span>File/Link CV Terlampir</span>
-                    <button type="button" className={styles.removeNoteImgBtn} onClick={() => setForm(f => ({ ...f, cvUrl: "", cvName: "" }))}>
+                    <span>File/Link CV: {form.cvName || "Terlampir"}</span>
+                    <button
+                      type="button"
+                      className={styles.removeNoteImgBtn}
+                      onClick={() => {
+                        setForm(f => ({ ...f, cvUrl: "", cvName: "" }));
+                        if (cvFileInputRef.current) cvFileInputRef.current.value = "";
+                      }}
+                      title="Hapus CV"
+                    >
                       <Trash2 size={12} />
                     </button>
                   </div>
@@ -500,7 +566,22 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
 
               {/* Portfolio Attachment */}
               <div className={styles.field}>
-                <label className={styles.label}>Portfolio / Project Portfolio Terlampir</label>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
+                  <label className={styles.label}>Portfolio / Project Portfolio Terlampir</label>
+                  {(form.portfolioUrl || form.portfolioName) && (
+                    <button
+                      type="button"
+                      className={styles.clearFieldBtn}
+                      onClick={() => {
+                        setForm(f => ({ ...f, portfolioUrl: "", portfolioName: "" }));
+                        if (portfolioFileInputRef.current) portfolioFileInputRef.current.value = "";
+                      }}
+                      title="Hapus file dan link portfolio"
+                    >
+                      <Trash2 size={12} /> Hapus Portfolio
+                    </button>
+                  )}
+                </div>
                 <input
                   type="file"
                   ref={portfolioFileInputRef}
@@ -536,11 +617,19 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
                     placeholder="Atau Paste Link Portfolio (GitHub, Behance, Personal Web)"
                   />
                 </div>
-                {form.portfolioUrl && (
+                {(form.portfolioUrl || form.portfolioName) && (
                   <div className={styles.docBadge}>
                     <Briefcase size={14} />
-                    <span>Link/File Portfolio Terlampir</span>
-                    <button type="button" className={styles.removeNoteImgBtn} onClick={() => setForm(f => ({ ...f, portfolioUrl: "", portfolioName: "" }))}>
+                    <span>Link/File Portfolio: {form.portfolioName || "Terlampir"}</span>
+                    <button
+                      type="button"
+                      className={styles.removeNoteImgBtn}
+                      onClick={() => {
+                        setForm(f => ({ ...f, portfolioUrl: "", portfolioName: "" }));
+                        if (portfolioFileInputRef.current) portfolioFileInputRef.current.value = "";
+                      }}
+                      title="Hapus Portfolio"
+                    >
                       <Trash2 size={12} />
                     </button>
                   </div>
@@ -549,7 +638,22 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
 
               {/* Cover Letter (Surat Lamaran) Attachment */}
               <div className={styles.field}>
-                <label className={styles.label}>Cover Letter / Surat Lamaran Terlampir</label>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
+                  <label className={styles.label}>Cover Letter / Surat Lamaran Terlampir</label>
+                  {(form.coverLetterUrl || form.coverLetterName) && (
+                    <button
+                      type="button"
+                      className={styles.clearFieldBtn}
+                      onClick={() => {
+                        setForm(f => ({ ...f, coverLetterUrl: "", coverLetterName: "" }));
+                        if (coverLetterFileInputRef.current) coverLetterFileInputRef.current.value = "";
+                      }}
+                      title="Hapus file/link cover letter"
+                    >
+                      <Trash2 size={12} /> Hapus Dokumen
+                    </button>
+                  )}
+                </div>
                 <input
                   type="file"
                   ref={coverLetterFileInputRef}
@@ -587,10 +691,22 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
                 </div>
                 
                 {/* Textarea for writing or copy-pasting Cover Letter text */}
-                <div style={{ marginTop: "0.5rem" }}>
-                  <label className={styles.label} style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
-                    Atau Tulis / Paste Isi Teks Surat Lamaran (Cover Letter):
-                  </label>
+                <div style={{ marginTop: "0.75rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.3rem" }}>
+                    <label className={styles.label} style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
+                      Atau Tulis / Paste Isi Teks Surat Lamaran (Cover Letter):
+                    </label>
+                    {form.coverLetterText && (
+                      <button
+                        type="button"
+                        className={styles.clearFieldBtn}
+                        onClick={() => setForm(f => ({ ...f, coverLetterText: "" }))}
+                        title="Kosongkan teks cover letter"
+                      >
+                        <Trash2 size={12} /> Hapus Teks
+                      </button>
+                    )}
+                  </div>
                   <textarea
                     className={styles.textarea}
                     rows={6}
@@ -600,13 +716,18 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
                   />
                 </div>
 
-                {(form.coverLetterUrl || form.coverLetterText) && (
+                {(form.coverLetterUrl || form.coverLetterName || form.coverLetterText) && (
                   <div className={styles.docBadge}>
                     <FileText size={14} />
                     <span>
-                      {form.coverLetterText ? "Isi Teks Cover Letter Terisi" : "Link/File Cover Letter Terlampir"}
+                      {form.coverLetterText ? "Isi Teks Cover Letter Terisi" : `File/Link: ${form.coverLetterName || "Terlampir"}`}
                     </span>
-                    <button type="button" className={styles.removeNoteImgBtn} onClick={() => setForm(f => ({ ...f, coverLetterUrl: "", coverLetterName: "", coverLetterText: "" }))}>
+                    <button
+                      type="button"
+                      className={styles.removeNoteImgBtn}
+                      onClick={() => setForm(f => ({ ...f, coverLetterUrl: "", coverLetterName: "", coverLetterText: "" }))}
+                      title="Hapus semua data Cover Letter"
+                    >
                       <Trash2 size={12} />
                     </button>
                   </div>
@@ -617,7 +738,19 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
 
           {activeTab === "notes" && (
             <div className={styles.field}>
-              <label className={styles.label}>Catatan Pribadi & Interview Notes</label>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
+                <label className={styles.label}>Catatan Pribadi & Interview Notes</label>
+                {form.notesContent && (
+                  <button
+                    type="button"
+                    className={styles.clearFieldBtn}
+                    onClick={() => setForm(f => ({ ...f, notesContent: "" }))}
+                    title="Kosongkan teks catatan"
+                  >
+                    <Trash2 size={12} /> Hapus Teks
+                  </button>
+                )}
+              </div>
               <textarea
                 className={styles.textarea}
                 rows={6}
@@ -629,13 +762,28 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
               <div style={{ marginTop: "1rem" }}>
                 <div className={styles.notesImageHeader}>
                   <label className={styles.label}>Gambar / Lampiran Catatan ({notesImages.length})</label>
-                  <button
-                    type="button"
-                    className={styles.addNoteImgBtn}
-                    onClick={() => notesFileInputRef.current?.click()}
-                  >
-                    <Plus size={13} /> Upload Gambar Komputer
-                  </button>
+                  <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                    {notesImages.length > 0 && (
+                      <button
+                        type="button"
+                        className={styles.clearAllImagesBtn}
+                        onClick={() => {
+                          setNotesImages([]);
+                          setPreviewNoteIndex(null);
+                        }}
+                        title="Hapus semua gambar catatan"
+                      >
+                        <Trash2 size={12} /> Hapus Semua Gambar
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className={styles.addNoteImgBtn}
+                      onClick={() => notesFileInputRef.current?.click()}
+                    >
+                      <Plus size={13} /> Upload Gambar Komputer
+                    </button>
+                  </div>
                 </div>
 
                 <input
@@ -781,14 +929,32 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
             <span className={styles.lightboxCounter}>
               Gambar {previewNoteIndex + 1} dari {notesImages.length}
             </span>
-            <button
-              type="button"
-              className={styles.lightboxCloseBtn}
-              onClick={() => setPreviewNoteIndex(null)}
-              title="Tutup Preview (Esc)"
-            >
-              <X size={18} />
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <button
+                type="button"
+                className={styles.lightboxDeleteBtn}
+                onClick={() => {
+                  const curIdx = previewNoteIndex!;
+                  setNotesImages(prev => prev.filter((_, i) => i !== curIdx));
+                  if (notesImages.length <= 1) {
+                    setPreviewNoteIndex(null);
+                  } else if (curIdx >= notesImages.length - 1) {
+                    setPreviewNoteIndex(curIdx - 1);
+                  }
+                }}
+                title="Hapus gambar ini dari catatan"
+              >
+                <Trash2 size={16} />
+              </button>
+              <button
+                type="button"
+                className={styles.lightboxCloseBtn}
+                onClick={() => setPreviewNoteIndex(null)}
+                title="Tutup Preview (Esc)"
+              >
+                <X size={18} />
+              </button>
+            </div>
           </div>
 
           <div className={styles.lightboxMainArea}>
