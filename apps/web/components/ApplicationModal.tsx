@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { companiesApi, applicationsApi, type Application, type ApplicationStatus } from "@/lib/api";
+import { companiesApi, applicationsApi, resolveImageUrl, type Application, type ApplicationStatus } from "@/lib/api";
 import { X, Loader2, Image as ImageIcon, FileText, CheckSquare, Upload, Link as LinkIcon, Trash2, Plus, FileCode, Briefcase, Download, Sparkles, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import styles from "./ApplicationModal.module.css";
 
@@ -882,7 +882,7 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
                 <input
                   className={styles.input}
                   style={{ paddingLeft: "2.2rem" }}
-                  value={form.imageUrl}
+                  value={form.imageUrl && !form.imageUrl.startsWith("data:") && !form.imageUrl.startsWith("/api/") ? form.imageUrl : ""}
                   onChange={set("imageUrl")}
                   placeholder="https://example.com/screenshot-poster.png"
                 />
@@ -901,7 +901,7 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
                     </button>
                   </div>
                   <div className={styles.imagePreviewWrap}>
-                    <img src={form.imageUrl} alt="Poster Lowongan" className={styles.imagePreview} />
+                    <img src={resolveImageUrl(form.imageUrl)} alt="Poster Lowongan" className={styles.imagePreview} />
                   </div>
                 </div>
               )}

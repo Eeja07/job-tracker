@@ -119,6 +119,21 @@ export function buildUrl(path: string): string {
   return `${base}${cleanPath}`;
 }
 
+export function resolveImageUrl(url?: string | null): string {
+  if (!url) return "";
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  if (
+    trimmed.startsWith("data:") ||
+    trimmed.startsWith("blob:") ||
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://")
+  ) {
+    return trimmed;
+  }
+  return buildUrl(trimmed);
+}
+
 async function fetchLatest<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const method = (opts.method || "GET").toUpperCase();
   if (method === "GET" && pendingMap.has(path)) {

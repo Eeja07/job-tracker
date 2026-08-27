@@ -153,6 +153,58 @@ describe('ApplicationService', () => {
       );
       expect(result).toEqual(updated);
     });
+
+    it('should not overwrite imageUrl when updated with internal endpoint URL', async () => {
+      const dto: UpdateApplicationDto = {
+        jobTitle: 'Lead Backend Engineer',
+        imageUrl: '/api/v1/applications/app-uuid-1/image',
+      };
+      const updated = { ...mockApp, jobTitle: 'Lead Backend Engineer' };
+
+      applicationRepository.findById.mockResolvedValue(mockApp);
+      applicationRepository.update.mockResolvedValue(updated);
+
+      await service.update('app-uuid-1', 'user-uuid-1', dto);
+
+      expect(applicationRepository.update).toHaveBeenCalledWith(
+        'app-uuid-1',
+        expect.not.objectContaining({ imageUrl: '/api/v1/applications/app-uuid-1/image' }),
+      );
+    });
+
+    it('should update imageUrl when a new data URL is provided', async () => {
+      const dto: UpdateApplicationDto = {
+        imageUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA',
+      };
+      const updated = { ...mockApp, imageUrl: dto.imageUrl };
+
+      applicationRepository.findById.mockResolvedValue(mockApp);
+      applicationRepository.update.mockResolvedValue(updated);
+
+      await service.update('app-uuid-1', 'user-uuid-1', dto);
+
+      expect(applicationRepository.update).toHaveBeenCalledWith(
+        'app-uuid-1',
+        expect.objectContaining({ imageUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA' }),
+      );
+    });
+
+    it('should clear imageUrl when an empty string is provided', async () => {
+      const dto: UpdateApplicationDto = {
+        imageUrl: '',
+      };
+      const updated = { ...mockApp, imageUrl: null };
+
+      applicationRepository.findById.mockResolvedValue(mockApp);
+      applicationRepository.update.mockResolvedValue(updated);
+
+      await service.update('app-uuid-1', 'user-uuid-1', dto);
+
+      expect(applicationRepository.update).toHaveBeenCalledWith(
+        'app-uuid-1',
+        expect.objectContaining({ imageUrl: null }),
+      );
+    });
   });
 
   describe('updateStatus', () => {

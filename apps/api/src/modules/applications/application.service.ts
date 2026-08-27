@@ -251,7 +251,17 @@ export class ApplicationService {
     if (dto.notesContent !== undefined || dto.notes !== undefined)
       updateData.notesContent = dto.notesContent ?? dto.notes ?? '';
     if (dto.notesImages !== undefined) updateData.notesImages = dto.notesImages;
-    if (dto.imageUrl !== undefined) updateData.imageUrl = dto.imageUrl;
+    if (dto.imageUrl !== undefined) {
+      const isInternalEndpoint =
+        typeof dto.imageUrl === 'string' &&
+        (dto.imageUrl.startsWith('/api/v1/applications/') ||
+          dto.imageUrl.startsWith('/applications/') ||
+          dto.imageUrl.includes(`/applications/${id}/image`));
+
+      if (!isInternalEndpoint) {
+        updateData.imageUrl = dto.imageUrl ? dto.imageUrl : null;
+      }
+    }
     if (dto.cvName !== undefined) updateData.cvName = dto.cvName;
     if (dto.cvUrl !== undefined) updateData.cvUrl = dto.cvUrl;
     if (dto.cvText !== undefined) updateData.cvText = dto.cvText;

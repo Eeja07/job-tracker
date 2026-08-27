@@ -155,8 +155,13 @@ export class ApplicationsController {
       res.setHeader('Content-Type', mime);
       res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
       return res.send(imgBuffer);
-    } else {
+    } else if (
+      app.imageUrl.startsWith('http://') ||
+      app.imageUrl.startsWith('https://')
+    ) {
       return res.redirect(app.imageUrl);
+    } else {
+      return res.status(404).send('Image not found');
     }
   }
 

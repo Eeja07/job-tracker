@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { applicationsApi, type Application, type ApplicationStatus } from "@/lib/api";
+import { applicationsApi, resolveImageUrl, type Application, type ApplicationStatus } from "@/lib/api";
 import { STATUS_CONFIG, REJECTION_STAGE_LABELS, WORK_MODE_LABELS, SOURCE_LABELS, formatCurrency, formatDate, getDaysAgo } from "@/lib/utils";
 import { Plus, Search, ExternalLink, Trash2, X, Loader2, Edit2, Eye, FileText, Image as ImageIcon, CheckSquare, RefreshCw, CheckCircle, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from "lucide-react";
 import ApplicationModal from "@/components/ApplicationModal";
@@ -344,10 +344,20 @@ export default function ApplicationsPage() {
                     <td>
                       <div className={styles.jobCellRow}>
                         {app.imageUrl ? (
-                          <img src={app.imageUrl} alt={app.jobTitle} className={styles.thumbImg} />
-                        ) : (
-                          <div className={styles.thumbPlaceholder}>{initial}</div>
-                        )}
+                          <img
+                            src={resolveImageUrl(app.imageUrl)}
+                            alt={app.jobTitle}
+                            className={styles.thumbImg}
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = "none";
+                              const fallback = (e.target as HTMLElement).parentElement?.querySelector(`.${styles.thumbPlaceholder}`) as HTMLElement;
+                              if (fallback) fallback.style.display = "flex";
+                            }}
+                          />
+                        ) : null}
+                        <div className={styles.thumbPlaceholder} style={{ display: app.imageUrl ? "none" : "flex" }}>
+                          {initial}
+                        </div>
                         <div className={styles.jobCell}>
                           <span
                             className={styles.jobTitle}

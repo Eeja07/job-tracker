@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { dashboardApi, applicationsApi, type Application } from "@/lib/api";
+import { dashboardApi, applicationsApi, resolveImageUrl, type Application } from "@/lib/api";
 import { STATUS_CONFIG, formatDate, getDaysAgo } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { Plus, ArrowRight } from "lucide-react";
@@ -382,10 +382,20 @@ export default function DashboardPage() {
                   <div key={app.id} className={styles.recentRow} onClick={() => setDetailApp(app)}>
                     <div className={styles.recentLeft}>
                       {app.imageUrl ? (
-                        <img src={app.imageUrl} alt={app.jobTitle} className={styles.thumbImg} />
-                      ) : (
-                        <div className={styles.thumbPlaceholder}>{initial}</div>
-                      )}
+                        <img
+                          src={resolveImageUrl(app.imageUrl)}
+                          alt={app.jobTitle}
+                          className={styles.thumbImg}
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = "none";
+                            const fallback = (e.target as HTMLElement).parentElement?.querySelector(`.${styles.thumbPlaceholder}`) as HTMLElement;
+                            if (fallback) fallback.style.display = "flex";
+                          }}
+                        />
+                      ) : null}
+                      <div className={styles.thumbPlaceholder} style={{ display: app.imageUrl ? "none" : "flex" }}>
+                        {initial}
+                      </div>
                       <div className={styles.recentMeta}>
                         <span className={styles.recentTitle}>{app.jobTitle}</span>
                         <span className={styles.recentCompany}>{companyName}</span>

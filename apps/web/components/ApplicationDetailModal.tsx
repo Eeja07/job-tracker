@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import type { Application } from "@/lib/api";
-import { applicationsApi } from "@/lib/api";
+import { applicationsApi, resolveImageUrl } from "@/lib/api";
 import { STATUS_CONFIG, REJECTION_STAGE_LABELS, WORK_MODE_LABELS, SOURCE_LABELS, formatCurrency, formatDate, getDaysAgo } from "@/lib/utils";
 import { X, Edit2, Trash2, ExternalLink, FileText, Image as ImageIcon, Briefcase, Calendar, MapPin, DollarSign, CheckSquare, Download, Eye, RefreshCw, CheckCircle, AlertTriangle, HelpCircle, Copy, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import styles from "./ApplicationDetailModal.module.css";
@@ -101,12 +101,20 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
               <div
                 className={styles.heroImageContainer}
                 onClick={() => {
-                  setLightboxImages([app.imageUrl!]);
+                  setLightboxImages([resolveImageUrl(app.imageUrl!)]);
                   setLightboxIndex(0);
                 }}
                 title="Klik untuk perbesar poster"
               >
-                <img src={app.imageUrl} alt="Foto/Screenshot Lamaran" className={styles.heroImage} />
+                <img
+                  src={resolveImageUrl(app.imageUrl)}
+                  alt="Foto/Screenshot Lamaran"
+                  className={styles.heroImage}
+                  onError={(e) => {
+                    const el = (e.target as HTMLElement).closest(`.${styles.section}`) as HTMLElement;
+                    if (el) el.style.display = 'none';
+                  }}
+                />
               </div>
             </div>
           )}
@@ -379,12 +387,12 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
                       key={idx}
                       className={styles.galleryThumb}
                       onClick={() => {
-                        setLightboxImages(app.notesImages!);
+                        setLightboxImages(app.notesImages!.map(resolveImageUrl));
                         setLightboxIndex(idx);
                       }}
                       title={`Lihat gambar catatan ${idx + 1} (Klik untuk pratinjau penuh)`}
                     >
-                      <img src={img} alt={`Catatan Gambar ${idx + 1}`} />
+                      <img src={resolveImageUrl(img)} alt={`Catatan Gambar ${idx + 1}`} />
                     </div>
                   ))}
                 </div>
@@ -558,7 +566,7 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
 
             <div className={styles.lightboxImageContainer}>
               <img
-                src={lightboxImages[lightboxIndex]}
+                src={resolveImageUrl(lightboxImages[lightboxIndex])}
                 alt={`Catatan Gambar ${lightboxIndex + 1}`}
                 className={styles.lightboxImage}
               />
@@ -588,7 +596,7 @@ export default function ApplicationDetailModal({ app, onEdit, onDelete, onClose 
                   onClick={() => setLightboxIndex(idx)}
                   title={`Buka gambar ${idx + 1}`}
                 >
-                  <img src={img} alt={`Thumb ${idx + 1}`} />
+                  <img src={resolveImageUrl(img)} alt={`Thumb ${idx + 1}`} />
                 </div>
               ))}
             </div>

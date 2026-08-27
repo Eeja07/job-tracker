@@ -95,6 +95,18 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
     return tx ? tx.application : this.prisma.application;
   }
 
+  private mapAppImageUrl<T extends { id: string; imageUrl?: string | null }>(app: T | null): T | null {
+    if (!app) return null;
+    let imageUrl = app.imageUrl;
+    if (imageUrl && imageUrl.startsWith('data:image/')) {
+      imageUrl = `/api/v1/applications/${app.id}/image`;
+    }
+    return {
+      ...app,
+      imageUrl,
+    };
+  }
+
   async findWithFiltersAndCount(
     userId: string,
     params: ApplicationFilterParams,
@@ -197,16 +209,7 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
       delegate.count({ where }),
     ]);
 
-    const mappedData = data.map((app: any) => {
-      let imageUrl = app.imageUrl;
-      if (imageUrl && imageUrl.startsWith('data:image/')) {
-        imageUrl = `/api/v1/applications/${app.id}/image`;
-      }
-      return {
-        ...app,
-        imageUrl,
-      };
-    });
+    const mappedData = data.map((app: any) => this.mapAppImageUrl(app));
 
     return { data: mappedData as any, total };
   }
@@ -224,12 +227,13 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
     id: string,
     tx?: Prisma.TransactionClient,
   ): Promise<Application | null> {
-    return this.getDelegate(tx).findUnique({
+    const app = await this.getDelegate(tx).findUnique({
       where: { id },
       include: {
         company: true,
       },
     });
+    return this.mapAppImageUrl(app) as any;
   }
 
   async findByUser(
@@ -237,7 +241,7 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
     limit = 50,
     tx?: Prisma.TransactionClient,
   ): Promise<Application[]> {
-    return this.getDelegate(tx).findMany({
+    const apps = await this.getDelegate(tx).findMany({
       where: { userId },
       include: {
         company: {
@@ -247,6 +251,7 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
       orderBy: { appliedAt: 'desc' },
       take: limit,
     });
+    return apps.map((app: any) => this.mapAppImageUrl(app)) as any;
   }
 
   async findByStatus(
@@ -254,7 +259,7 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
     status: ApplicationStatus,
     tx?: Prisma.TransactionClient,
   ): Promise<Application[]> {
-    return this.getDelegate(tx).findMany({
+    const apps = await this.getDelegate(tx).findMany({
       where: { userId, status },
       include: {
         company: {
@@ -263,6 +268,7 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
       },
       orderBy: { lastStatusChangedAt: 'desc' },
     });
+    return apps.map((app: any) => this.mapAppImageUrl(app)) as any;
   }
 
   async findRecent(
@@ -270,7 +276,7 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
     limit = 5,
     tx?: Prisma.TransactionClient,
   ): Promise<Application[]> {
-    return this.getDelegate(tx).findMany({
+    const apps = await this.getDelegate(tx).findMany({
       where: { userId },
       include: {
         company: {
@@ -280,6 +286,7 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
       orderBy: { appliedAt: 'desc' },
       take: limit,
     });
+    return apps.map((app: any) => this.mapAppImageUrl(app)) as any;
   }
 
   async create(
