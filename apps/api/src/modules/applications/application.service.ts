@@ -65,8 +65,8 @@ export class ApplicationService {
 
     if (!companyId && dto.companyName?.trim()) {
       const trimmedName = dto.companyName.trim();
-      const existingCompany = await this.prisma.company.findUnique({
-        where: { name: trimmedName },
+      const existingCompany = await this.prisma.company.findFirst({
+        where: { name: { equals: trimmedName, mode: 'insensitive' } },
       });
       if (existingCompany) {
         companyId = existingCompany.id;
@@ -199,19 +199,25 @@ export class ApplicationService {
       companyId = undefined;
     }
 
-    if (!companyId && dto.companyName?.trim()) {
+    if (dto.companyName !== undefined) {
       const trimmedName = dto.companyName.trim();
-      const existingCompany = await this.prisma.company.findUnique({
-        where: { name: trimmedName },
-      });
-      if (existingCompany) {
-        companyId = existingCompany.id;
-      } else {
-        const newCompany = await this.prisma.company.create({
-          data: { name: trimmedName },
+      if (trimmedName) {
+        const existingCompany = await this.prisma.company.findFirst({
+          where: { name: { equals: trimmedName, mode: 'insensitive' } },
         });
-        companyId = newCompany.id;
+        if (existingCompany) {
+          companyId = existingCompany.id;
+        } else {
+          const newCompany = await this.prisma.company.create({
+            data: { name: trimmedName },
+          });
+          companyId = newCompany.id;
+        }
+      } else {
+        companyId = null as any;
       }
+    } else if (companyId === undefined && dto.companyId !== undefined) {
+      companyId = null as any;
     }
 
     const deadline =

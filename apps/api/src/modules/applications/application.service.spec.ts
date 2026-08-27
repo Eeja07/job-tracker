@@ -61,6 +61,10 @@ describe('ApplicationService', () => {
 
     const mockPrisma = {
       $transaction: jest.fn().mockImplementation((cb) => cb(mockPrisma)),
+      company: {
+        findFirst: jest.fn(),
+        create: jest.fn(),
+      },
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -204,6 +208,59 @@ describe('ApplicationService', () => {
         'app-uuid-1',
         expect.objectContaining({ imageUrl: null }),
       );
+    });
+
+    it('should resolve and update companyId when companyName is changed to an existing company', async () => {
+      const dto: UpdateApplicationDto = {
+        companyName: 'Orang Tua Group',
+      };
+      const existingCompany = { id: 'company-uuid-ot', name: 'Orang Tua Group' };
+      (prismaService.company.findFirst as jest.Mock).mockResolvedValue(existingCompany);
+
+      applicationRepository.findById.mockResolvedValue(mockApp);
+      applicationRepository.update.mockResolvedValue({
+        ...mockApp,
+        companyId: 'company-uuid-ot',
+        company: existingCompany,
+      } as any);
+
+      const result = await service.update('app-uuid-1', 'user-uuid-1', dto);
+
+      expect(prismaService.company.findFirst).toHaveBeenCalledWith({
+        where: { name: { equals: 'Orang Tua Group', mode: 'insensitive' } },
+      });
+      expect(applicationRepository.update).toHaveBeenCalledWith(
+        'app-uuid-1',
+        expect.objectContaining({ companyId: 'company-uuid-ot' }),
+      );
+      expect(result.companyId).toBe('company-uuid-ot');
+    });
+
+    it('should create new company and update companyId when companyName is not found', async () => {
+      const dto: UpdateApplicationDto = {
+        companyName: 'New Startup Co',
+      };
+      const newCompany = { id: 'company-uuid-new', name: 'New Startup Co' };
+      (prismaService.company.findFirst as jest.Mock).mockResolvedValue(null);
+      (prismaService.company.create as jest.Mock).mockResolvedValue(newCompany);
+
+      applicationRepository.findById.mockResolvedValue(mockApp);
+      applicationRepository.update.mockResolvedValue({
+        ...mockApp,
+        companyId: 'company-uuid-new',
+        company: newCompany,
+      } as any);
+
+      const result = await service.update('app-uuid-1', 'user-uuid-1', dto);
+
+      expect(prismaService.company.create).toHaveBeenCalledWith({
+        data: { name: 'New Startup Co' },
+      });
+      expect(applicationRepository.update).toHaveBeenCalledWith(
+        'app-uuid-1',
+        expect.objectContaining({ companyId: 'company-uuid-new' }),
+      );
+      expect(result.companyId).toBe('company-uuid-new');
     });
   });
 

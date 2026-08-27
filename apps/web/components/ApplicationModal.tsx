@@ -254,23 +254,9 @@ export default function ApplicationModal({ app, onSave, onClose }: Props) {
     if (!form.jobTitle.trim()) { setError("Judul posisi wajib diisi"); return; }
     setError(""); setSaving(true);
     try {
-      let companyId = app?.companyId;
-      if (form.companyName && !app?.companyId) {
-        try {
-          const companies = await companiesApi.list(form.companyName);
-          const existing = companies.data.find((c: any) => c.name.toLowerCase() === form.companyName.toLowerCase());
-          if (existing) {
-            companyId = existing.id;
-          } else {
-            const created = await companiesApi.create({ name: form.companyName });
-            companyId = created.id;
-          }
-        } catch { /* ignore company create failure */ }
-      }
-
       await onSave({
         jobTitle: form.jobTitle,
-        companyId,
+        companyName: form.companyName.trim(),
         status: form.status,
         rejectedAtStage: form.status === "REJECTED" ? form.rejectedAtStage : undefined,
         workMode: form.workMode || undefined,

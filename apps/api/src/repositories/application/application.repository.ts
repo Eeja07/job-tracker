@@ -293,9 +293,13 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
     data: CreateApplicationData,
     tx?: Prisma.TransactionClient,
   ): Promise<Application> {
-    return this.getDelegate(tx).create({
+    const created = await this.getDelegate(tx).create({
       data,
+      include: {
+        company: true,
+      },
     });
+    return this.mapAppImageUrl(created) as any;
   }
 
   async updateStatus(
@@ -303,13 +307,17 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
     status: ApplicationStatus,
     tx?: Prisma.TransactionClient,
   ): Promise<Application> {
-    return this.getDelegate(tx).update({
+    const updated = await this.getDelegate(tx).update({
       where: { id },
       data: {
         status,
         lastStatusChangedAt: new Date(),
       },
+      include: {
+        company: true,
+      },
     });
+    return this.mapAppImageUrl(updated) as any;
   }
 
   async update(
@@ -317,10 +325,14 @@ export class ApplicationRepository extends BaseRepository<Prisma.ApplicationDele
     data: UpdateApplicationData,
     tx?: Prisma.TransactionClient,
   ): Promise<Application> {
-    return this.getDelegate(tx).update({
+    const updated = await this.getDelegate(tx).update({
       where: { id },
       data,
+      include: {
+        company: true,
+      },
     });
+    return this.mapAppImageUrl(updated) as any;
   }
 
   async delete(

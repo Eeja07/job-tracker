@@ -157,6 +157,9 @@ describe('ApplicationRepository', () => {
 
       expect(prismaService.application.create).toHaveBeenCalledWith({
         data: createData,
+        include: {
+          company: true,
+        },
       });
       expect(result).toEqual(mockApplication);
     });
@@ -184,6 +187,9 @@ describe('ApplicationRepository', () => {
           status: ApplicationStatus.INTERVIEWING,
           lastStatusChangedAt: expect.any(Date),
         },
+        include: {
+          company: true,
+        },
       });
       expect(result).toEqual(updatedApp);
     });
@@ -208,6 +214,9 @@ describe('ApplicationRepository', () => {
       expect(prismaService.application.update).toHaveBeenCalledWith({
         where: { id: 'app-uuid-1' },
         data: updateData,
+        include: {
+          company: true,
+        },
       });
       expect(result).toEqual(updatedApp);
     });
