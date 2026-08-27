@@ -509,6 +509,311 @@ const EMAIL_TYPE_KEYWORDS: Record<string, string[]> = {
   ],
 };
 
+// Known Indonesian corporate alias groups (lowercase)
+export const KNOWN_COMPANY_ALIASES: Record<string, string[]> = {
+  'orang tua': [
+    'orang tua',
+    'orang tua group',
+    'ot group',
+    'ot',
+    'ultra prima abadi',
+    'artaboga',
+    'arta boga',
+    'arta boga cemerlang',
+    'cs2 pola maju',
+    'hardcorindo semesta',
+    'pt orang tua',
+    'pt ultra prima abadi',
+  ],
+  'djarum': [
+    'djarum',
+    'pt djarum',
+    'djarum group',
+    'gdp venture',
+    'blibli',
+    'tiket.com',
+  ],
+  'bank central asia': ['bca', 'bank central asia', 'bank bca', 'bca digital', 'blu by bca'],
+  'bank rakyat indonesia': ['bri', 'bank rakyat indonesia', 'bank bri', 'bank raya'],
+  'bank mandiri': ['mandiri', 'bank mandiri', 'bank syariah indonesia', 'bsi', 'livin'],
+  'bank negara indonesia': ['bni', 'bank negara indonesia', 'bank bni'],
+  'telkom': ['telkom', 'telkom indonesia', 'telkomsel', 'mitratel', 'infomedia'],
+  'astra': ['astra', 'astra international', 'auto2000', 'acc', 'fifgroup', 'united tractors'],
+  'indofood': ['indofood', 'indofood cbp', 'icbp', 'bogasari', 'indomaret'],
+  'kalbe': ['kalbe', 'kalbe farma', 'kalbe nutritionals', 'hexpharm'],
+  'mayora': ['mayora', 'mayora indah', 'torabika'],
+  'wings': ['wings', 'wings group', 'sayap mas utama'],
+  'shopee': ['shopee', 'sea group', 'garena', 'seamoney'],
+  'tokopedia': ['tokopedia', 'goto', 'gojek'],
+  'gojek': ['gojek', 'goto', 'tokopedia', 'gobiz'],
+};
+
+// Generic / free email or platform domains that should not be treated as private company domains
+export const GENERIC_OR_ATS_DOMAINS = [
+  'gmail.com',
+  'googlemail.com',
+  'yahoo.com',
+  'ymail.com',
+  'rocketmail.com',
+  'hotmail.com',
+  'outlook.com',
+  'live.com',
+  'icloud.com',
+  'proton.me',
+  'protonmail.com',
+  'zoho.com',
+  'mail.com',
+  'aol.com',
+  'talentics.id',
+  'kalibrr.com',
+  'glints.com',
+  'jobstreet.com',
+  'jobstreet.co.id',
+  'linkedin.com',
+  'dealls.com',
+  'kitalulus.com',
+  'greenhouse.io',
+  'lever.co',
+  'workday.com',
+  'smartrecruiters.com',
+  'klob.id',
+  'karir.com',
+];
+
+export function cleanCompanyName(name?: string | null): string {
+  if (!name) return '';
+  return name
+    .toLowerCase()
+    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ' ')
+    .replace(/\b(pt|p\.t|cv|c\.v|tbk|persero|corp|corporation|inc|ltd|limited|llc|grup|group|indonesia)\b/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function extractDomainName(email?: string | null): string {
+  if (!email || !email.includes('@')) return '';
+  const domain = email.split('@')[1]?.toLowerCase().trim() || '';
+  if (GENERIC_OR_ATS_DOMAINS.includes(domain)) return '';
+  const parts = domain.split('.');
+  return parts[0] || '';
+}
+
+export function getCompanyAliases(companyName?: string | null): string[] {
+  const clean = cleanCompanyName(companyName);
+  const rawLower = (companyName || '').toLowerCase().trim();
+  const aliases = new Set<string>();
+
+  if (rawLower) aliases.add(rawLower);
+  if (clean && clean.length >= 2) aliases.add(clean);
+
+  // Check in KNOWN_COMPANY_ALIASES
+  for (const [key, aliasList] of Object.entries(KNOWN_COMPANY_ALIASES)) {
+    if (
+      rawLower.includes(key) ||
+      clean.includes(key) ||
+      aliasList.some((a) => rawLower.includes(a) || clean === a)
+    ) {
+      aliasList.forEach((a) => aliases.add(a));
+    }
+  }
+
+  // Generate acronym if multi-word (e.g. "Orang Tua" -> "OT", "Bank Central Asia" -> "BCA")
+  const words = clean.split(' ').filter((w) => w.length > 0);
+  if (words.length >= 2) {
+    const acronym = words.map((w) => w[0]).join('');
+    if (acronym.length >= 2) {
+      aliases.add(acronym);
+    }
+  }
+
+  return Array.from(aliases);
+}
+
+export interface ApplicationCandidate {
+  id: string;
+  jobTitle: string;
+  company?: { name?: string | null; website?: string | null } | null;
+  status: string;
+  updatedAt?: Date;
+  appliedAt?: Date;
+}
+
+export interface MatchResult {
+  app: ApplicationCandidate;
+  score: number;
+  companyScore: number;
+  jobTitleScore: number;
+}
+
+export function scoreApplicationMatch(
+  app: ApplicationCandidate,
+  email: {
+    subject: string;
+    fromEmail: string;
+    fromName: string | null;
+    snippet: string;
+    bodyText?: string;
+  },
+): MatchResult {
+  const compName = app.company?.name || '';
+  const jobTitleLower = (app.jobTitle || '').toLowerCase().trim();
+
+  const fromEmailLower = (email.fromEmail || '').toLowerCase().trim();
+  const fromNameLower = (email.fromName || '').toLowerCase().trim();
+  const subjectLower = (email.subject || '').toLowerCase().trim();
+  const snippetLower = (email.snippet || '').toLowerCase().trim();
+  const bodyLower = (email.bodyText || '').toLowerCase().trim();
+
+  const domainName = extractDomainName(fromEmailLower);
+  const aliases = getCompanyAliases(compName);
+
+  let companyScore = 0;
+  let jobTitleScore = 0;
+
+  // 1. Sender email domain match (e.g. from recruitment@ot.id -> domainName 'ot' matches alias 'ot' or clean 'orang tua')
+  if (domainName && domainName.length >= 2) {
+    if (
+      aliases.some(
+        (a) =>
+          a === domainName ||
+          domainName.includes(a) ||
+          (a.length >= 3 && a.includes(domainName)),
+      )
+    ) {
+      companyScore += 80;
+    }
+  }
+
+  // 2. Sender Name match (e.g. fromName: "Recruitment OT Group" or "HRD Orang Tua")
+  if (fromNameLower) {
+    for (const alias of aliases) {
+      if (alias.length <= 3) {
+        if (isKeywordMatched(fromNameLower, alias)) {
+          companyScore += 60;
+          break;
+        }
+      } else if (fromNameLower.includes(alias)) {
+        companyScore += 60;
+        break;
+      }
+    }
+  }
+
+  // 3. Subject match (e.g. subject: "[OT Group] Update Hasil Seleksi")
+  if (subjectLower) {
+    for (const alias of aliases) {
+      if (alias.length <= 3) {
+        if (isKeywordMatched(subjectLower, alias)) {
+          companyScore += 50;
+          break;
+        }
+      } else if (subjectLower.includes(alias)) {
+        companyScore += 50;
+        break;
+      }
+    }
+  }
+
+  // 4. Snippet / Body match
+  const contentToSearch = `${snippetLower} ${bodyLower}`;
+  if (contentToSearch) {
+    for (const alias of aliases) {
+      if (alias.length <= 3) {
+        if (isKeywordMatched(contentToSearch, alias)) {
+          companyScore += 35;
+          break;
+        }
+      } else if (contentToSearch.includes(alias)) {
+        companyScore += 35;
+        break;
+      }
+    }
+  }
+
+  // 5. Job Title match
+  if (jobTitleLower && jobTitleLower.length >= 3) {
+    if (subjectLower.includes(jobTitleLower)) {
+      jobTitleScore += 25;
+    } else if (
+      snippetLower.includes(jobTitleLower) ||
+      bodyLower.includes(jobTitleLower)
+    ) {
+      jobTitleScore += 15;
+    } else {
+      // Check significant words of job title (e.g. "software engineer" -> ["software", "engineer"])
+      const titleWords = jobTitleLower
+        .split(/\s+/)
+        .filter(
+          (w) =>
+            w.length > 3 &&
+            !['junior', 'senior', 'staff', 'lead', 'intern', 'internship'].includes(w),
+        );
+      const matchedWords = titleWords.filter(
+        (w) =>
+          subjectLower.includes(w) ||
+          snippetLower.includes(w) ||
+          bodyLower.includes(w),
+      );
+      if (
+        matchedWords.length >= 2 ||
+        (titleWords.length === 1 && matchedWords.length === 1)
+      ) {
+        jobTitleScore += 10;
+      }
+    }
+  }
+
+  return {
+    app,
+    score: companyScore + jobTitleScore,
+    companyScore,
+    jobTitleScore,
+  };
+}
+
+export function findBestMatchingApplication<T extends ApplicationCandidate>(
+  apps: T[],
+  email: {
+    subject: string;
+    fromEmail: string;
+    fromName: string | null;
+    snippet: string;
+    bodyText?: string;
+  },
+  requireCompanyMatch = true,
+): T | null {
+  if (!apps || apps.length === 0) return null;
+
+  const scored = apps.map((app) => scoreApplicationMatch(app, email));
+
+  // Sort by total score descending, with higher companyScore prioritizing, then updatedAt
+  scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (b.companyScore !== a.companyScore) return b.companyScore - a.companyScore;
+    const dateA = a.app.updatedAt ? new Date(a.app.updatedAt).getTime() : 0;
+    const dateB = b.app.updatedAt ? new Date(b.app.updatedAt).getTime() : 0;
+    return dateB - dateA;
+  });
+
+  const best = scored[0];
+  if (!best || best.score === 0) return null;
+
+  if (requireCompanyMatch) {
+    // For auto-updating status in database, MUST have a confident company match (>= 30)
+    if (best.companyScore >= 30) {
+      return best.app as T;
+    }
+    return null;
+  }
+
+  // For read-only UI hint in getEmailMessages
+  if (best.companyScore >= 30 || best.jobTitleScore >= 25) {
+    return best.app as T;
+  }
+
+  return null;
+}
+
 import { WhatsappService } from '../whatsapp/whatsapp.service';
 import { TelegramService } from '../telegram/telegram.service';
 
@@ -1032,37 +1337,60 @@ export class GmailService implements OnModuleInit {
       include: { company: true },
     });
 
-    const fullSearch = `${subject} ${fromName || ''} ${fromEmail} ${snippet} ${bodyText || ''}`.toLowerCase();
+    if (!apps || apps.length === 0) return;
 
-    for (const app of apps) {
-      const companyName = app.company?.name?.toLowerCase().trim();
-      const jobTitle = app.jobTitle.toLowerCase().trim();
+    const matchedApp = findBestMatchingApplication(
+      apps,
+      {
+        subject,
+        fromEmail,
+        fromName,
+        snippet,
+        bodyText,
+      },
+      true, // requireCompanyMatch = true to prevent false updates on other companies
+    );
 
-      let matched = false;
-      if (companyName && companyName.length > 2 && fullSearch.includes(companyName)) {
-        matched = true;
-      } else if (jobTitle && jobTitle.length > 3 && fullSearch.includes(jobTitle)) {
-        matched = true;
+    if (matchedApp) {
+      const fromStatus = matchedApp.status;
+      const rejectedAtStage =
+        targetStatus === 'REJECTED'
+          ? (fromStatus !== 'REJECTED' ? fromStatus : 'APPLIED')
+          : undefined;
+
+      const updated = await this.prisma.application.update({
+        where: { id: matchedApp.id },
+        data: {
+          status: targetStatus as any,
+          ...(rejectedAtStage ? { rejectedAtStage: rejectedAtStage as any } : {}),
+        },
+      });
+
+      if (fromStatus !== targetStatus) {
+        await this.prisma.statusHistory
+          .create({
+            data: {
+              applicationId: matchedApp.id,
+              userId,
+              fromStatus: fromStatus as any,
+              toStatus: targetStatus as any,
+            },
+          })
+          .catch((err) => {
+            this.logger.warn(
+              `Failed to create StatusHistory for application ${matchedApp.id}: ${err.message}`,
+            );
+          });
       }
 
-      if (matched) {
-        // Update application status automatically in database
-        const updated = await this.prisma.application.update({
-          where: { id: app.id },
-          data: { status: targetStatus as any },
-        });
+      this.logger.log(
+        `Auto-updated application ${matchedApp.id} (${matchedApp.jobTitle} at ${matchedApp.company?.name}) to status ${targetStatus} via Gmail sync`,
+      );
 
-        this.logger.log(
-          `Auto-updated application ${app.id} (${app.jobTitle} at ${app.company?.name}) to status ${targetStatus} via Gmail sync`,
-        );
-
-        // Emit real-time WebSocket event to update frontend instantly
-        this.realtime.emitToRoom(`user:${userId}`, 'application:updated', {
-          application: updated,
-        });
-
-        break; // Stop after matching first relevant application
-      }
+      // Emit real-time WebSocket event to update frontend instantly
+      this.realtime.emitToRoom(`user:${userId}`, 'application:updated', {
+        application: updated,
+      });
     }
   }
 
@@ -1102,30 +1430,24 @@ export class GmailService implements OnModuleInit {
 
       // Mass job alerts, recommendations, and non-job senders are NOT HR replies to individual applications
       if (!isJobAlertOrNewsletter && !isNonJobSender && msg.isJobRelated) {
-        for (const app of userApps) {
-          const companyName = app.company?.name?.toLowerCase().trim();
-          const jobTitle = app.jobTitle?.toLowerCase().trim();
+        const best = findBestMatchingApplication(
+          userApps,
+          {
+            subject: msg.subject || '',
+            fromEmail: msg.fromEmail || '',
+            fromName: msg.fromName || '',
+            snippet: msg.snippet || '',
+            bodyText: msg.bodyText || '',
+          },
+          false,
+        );
 
-          let isMatch = false;
-          if (companyName && companyName.length > 2 && fullSearch.includes(companyName)) {
-            isMatch = true;
-          } else if (
-            jobTitle &&
-            jobTitle.length > 3 &&
-            (subjectLower.includes(jobTitle) || snippetLower.includes(jobTitle)) &&
-            (subjectLower.startsWith('re:') || subjectLower.startsWith('fwd:') || subjectLower.includes('application') || subjectLower.includes('lamaran'))
-          ) {
-            isMatch = true;
-          }
-
-          if (isMatch) {
-            matchedApp = {
-              id: app.id,
-              jobTitle: app.jobTitle,
-              companyName: app.company?.name || 'Perusahaan',
-            };
-            break;
-          }
+        if (best) {
+          matchedApp = {
+            id: best.id,
+            jobTitle: best.jobTitle,
+            companyName: best.company?.name || 'Perusahaan',
+          };
         }
       }
 
