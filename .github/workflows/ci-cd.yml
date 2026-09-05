@@ -50,28 +50,28 @@ jobs:
           echo "🚀 [CI/CD] Starting Job Tracker Deployment on Homelab..."
 
           # 1. Ensure homelab directory hierarchy exists
-          mkdir -p /opt/apps/job-tracker
-          mkdir -p /opt/homelab/compose/job-tracker
-          mkdir -p /opt/homelab/compose/nginx/conf.d
+          mkdir -p /home/storage/apps/job-tracker
+          mkdir -p /home/storage/homelab/compose/job-tracker
+          mkdir -p /home/storage/homelab/compose/nginx/conf.d
 
-          # 2. Sync latest source code to /opt/apps/job-tracker
-          echo "📦 Syncing source code to /opt/apps/job-tracker..."
+          # 2. Sync latest source code to /home/storage/apps/job-tracker
+          echo "📦 Syncing source code to /home/storage/apps/job-tracker..."
           rsync -a --delete \
             --exclude '.git' \
             --exclude 'node_modules' \
             --exclude '.next' \
             --exclude 'dist' \
             --exclude '.turbo' \
-            ./ /opt/apps/job-tracker/
+            ./ /home/storage/apps/job-tracker/
 
           # 3. Sync Compose & Nginx configuration
           echo "⚙️ Syncing Compose and Nginx configs..."
-          cp docker/homelab-compose.yml /opt/homelab/compose/job-tracker/compose.yml
-          cp docker/nginx-job-tracker.conf /opt/homelab/compose/nginx/conf.d/job-tracker.conf
+          cp docker/homelab-compose.yml /home/storage/homelab/compose/job-tracker/compose.yml
+          cp docker/nginx-job-tracker.conf /home/storage/homelab/compose/nginx/conf.d/job-tracker.conf
 
           # 4. Build and restart Docker containers
           echo "🐳 Building and updating containers..."
-          cd /opt/homelab/compose/job-tracker
+          cd /home/storage/homelab/compose/job-tracker
           docker compose up -d --build --remove-orphans
 
           # 5. Reload master Nginx reverse proxy

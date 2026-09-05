@@ -16,7 +16,7 @@ services:
 
   job-tracker-api:
     build:
-      context: /opt/apps/job-tracker
+      context: /home/storage/apps/job-tracker
       dockerfile: apps/api/Dockerfile
     container_name: job-tracker-api
     restart: unless-stopped
@@ -45,7 +45,7 @@ services:
 
   job-tracker-web:
     build:
-      context: /opt/apps/job-tracker
+      context: /home/storage/apps/job-tracker
       dockerfile: apps/web/Dockerfile
     container_name: job-tracker-web
     restart: unless-stopped
