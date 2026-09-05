@@ -159,10 +159,14 @@ const NON_JOB_SENDERS = [
 const JOB_ALERT_SENDERS = [
   'jobs-noreply@linkedin.com',
   'jobalerts-noreply@linkedin.com',
+  'discussions-noreply@linkedin.com',
+  'newsletters-noreply@linkedin.com',
+  'groups-noreply@linkedin.com',
   'noreply@e.jobstreet.com',
   'noreply@jobstreet.com',
   'email.jobstreet.com',
   'e.jobstreet.com',
+  'jobstreet.co.id',
   'jobs2web.com',
   'jobnotification',
   'newsletter@glints.com',
@@ -175,6 +179,15 @@ const JOB_ALERT_SENDERS = [
   'glints.com',
   'kalibrr.com',
   'kitalulus.com',
+  'glassdoor.com',
+  'noreply@glassdoor.com',
+  'community@glassdoor.com',
+  'indeed.com',
+  'indeedmail.com',
+  'ziprecruiter.com',
+  'techinasia.com',
+  'nodeflair.com',
+  'karir.com',
 ];
 
 // Mass job alert / notification subject keywords
@@ -196,6 +209,15 @@ const JOB_ALERT_SUBJECT_KEYWORDS = [
   'verify your deall account',
   'verify your account',
   'verify your email',
+  'trending posts',
+  'tech trending',
+  'latest trending',
+  'community post',
+  'trending discussions',
+  'popular discussions',
+  'weekly digest',
+  'daily digest',
+  'switching careers',
 ];
 
 // Specific phrases indicating an actual job application submitted by the user (overrides mass alert senders)
@@ -259,7 +281,80 @@ const SYSTEM_AUTH_KEYWORDS = [
   'thank you for register',
   'register to',
   'mendaftar di',
+  'account confirmation',
+  'confirm your new account',
+  'confirm your account',
+  'confirm account',
+  'a new account has been requested',
+  'new account has been requested',
+  'self-registration',
+  'self-registration confirmation',
+  'registration confirmation',
+  'registered to use',
+  'you have now been registered',
+  'account created',
+  'your account has been created',
+  'welcome to',
+  'konfirmasi pendaftaran',
+  'pendaftaran berhasil',
+  'pendaftaran akun',
+  'konfirmasi akun',
+  'berhasil mendaftar',
+  'akun anda berhasil',
+  'selamat datang di',
 ];
+
+// Phrases indicating an incomplete / draft application reminder (NOT an HR reply)
+const INCOMPLETE_APP_REMINDER_KEYWORDS = [
+  'complete and submit your job application',
+  'complete and submit your application',
+  'complete your application',
+  'complete your job application',
+  'finish your application',
+  'finish submitting',
+  'started an application, but didn\'t submit',
+  'started an application, but did not submit',
+  'didn\'t submit it',
+  'did not submit it',
+  'continue your application',
+  'resume your application',
+  'selesaikan lamaran',
+  'lanjutkan lamaran',
+  'draft lamaran',
+  'incomplete application',
+  'haven\'t finished your application',
+  'haven\'t submitted',
+  'action required: submit',
+  'action required: complete',
+];
+
+// Helper to identify community forum digests, discussion feeds, or newsletters
+function isCommunityDigestOrNewsletter(
+  fromName: string,
+  fromEmail: string,
+  subject: string,
+  snippet: string,
+): boolean {
+  const combined = `${fromName} ${fromEmail} ${subject} ${snippet}`.toLowerCase();
+  if (
+    fromEmail.includes('noreply@glassdoor.com') ||
+    fromEmail.includes('community@glassdoor.com') ||
+    fromName.toLowerCase().includes('glassdoor<community') ||
+    fromName.toLowerCase().includes('community')
+  ) {
+    return true;
+  }
+  return (
+    combined.includes('trending posts') ||
+    combined.includes('tech trending') ||
+    combined.includes('community digest') ||
+    combined.includes('weekly digest') ||
+    combined.includes('daily digest') ||
+    combined.includes('popular discussions') ||
+    combined.includes('trending discussions') ||
+    combined.includes('switching careers')
+  );
+}
 
 // Keywords to detect job-related emails accurately (Indonesian & English)
 const JOB_KEYWORDS = [
@@ -461,7 +556,15 @@ const EMAIL_TYPE_KEYWORDS: Record<string, string[]> = {
     'lolos seleksi',
     'test online',
     'tes online',
-    'assessment',
+    'online assessment',
+    'technical assessment',
+    'coding assessment',
+    'assessment invitation',
+    'invitation to assessment',
+    'assessment link',
+    'take the assessment',
+    'complete your assessment',
+    'talent assessment invitation',
     'psikotes',
     'coding test',
     'technical test',
@@ -470,7 +573,8 @@ const EMAIL_TYPE_KEYWORDS: Record<string, string[]> = {
     'next step',
     'proses seleksi',
     'tahap seleksi',
-    'company review',
+    'tes assessment',
+    'jadwal assessment',
   ],
   APPLIED_CONFIRM: [
     'application received',
@@ -1063,11 +1167,19 @@ export class GmailService implements OnModuleInit {
           fromEmail.toLowerCase().includes('otp');
 
         const isNonJobSender = NON_JOB_SENDERS.some((s) => fromEmail.toLowerCase().includes(s));
-        let isJobRelated = !isNonJobSender && !isSystemAuth && JOB_KEYWORDS.some((k) => isKeywordMatched(searchText, k));
+        const isCommunity = isCommunityDigestOrNewsletter(fromName || '', fromEmail, subject, snippet);
+        const isIncompleteReminder = INCOMPLETE_APP_REMINDER_KEYWORDS.some((k) =>
+          searchText.includes(k),
+        );
+
+        let isJobRelated =
+          !isNonJobSender &&
+          !isSystemAuth &&
+          (JOB_KEYWORDS.some((k) => isKeywordMatched(searchText, k)) || isIncompleteReminder);
 
         // Smart fallback: If subject starts with "RE:" or "Fwd:" and contains "application", "lamaran", "staff", etc.
         const lowerSub = subject.toLowerCase();
-        if (!isJobRelated && !isNonJobSender) {
+        if (!isJobRelated && !isNonJobSender && !isSystemAuth) {
           if (
             (lowerSub.startsWith('re:') || lowerSub.startsWith('fwd:')) &&
             (lowerSub.includes('application') || lowerSub.includes('lamaran') || lowerSub.includes('candidate') || lowerSub.includes('applicant'))
@@ -1076,17 +1188,20 @@ export class GmailService implements OnModuleInit {
           }
         }
 
-        const isAppConfirmation = APPLIED_CONFIRM_KEYWORDS.some((k) => searchText.includes(k));
+        const isAppConfirmation =
+          !isIncompleteReminder && APPLIED_CONFIRM_KEYWORDS.some((k) => searchText.includes(k));
 
         let detectedType: string | null = null;
-        for (const [type, keywords] of Object.entries(EMAIL_TYPE_KEYWORDS)) {
-          if (keywords.some((k) => isKeywordMatched(searchText, k))) {
-            detectedType = type;
-            break;
+        if (!isSystemAuth && !isNonJobSender && !isCommunity && !isIncompleteReminder) {
+          for (const [type, keywords] of Object.entries(EMAIL_TYPE_KEYWORDS)) {
+            if (keywords.some((k) => isKeywordMatched(searchText, k))) {
+              detectedType = type;
+              break;
+            }
           }
-        }
-        if (!detectedType && (isAppConfirmation || lowerSub.startsWith('re:') || lowerSub.startsWith('fwd:'))) {
-          detectedType = 'APPLIED_CONFIRM';
+          if (!detectedType && (isAppConfirmation || lowerSub.startsWith('re:') || lowerSub.startsWith('fwd:'))) {
+            detectedType = 'APPLIED_CONFIRM';
+          }
         }
 
         const isJobAlertOrNewsletter =
@@ -1094,7 +1209,9 @@ export class GmailService implements OnModuleInit {
           (JOB_ALERT_SENDERS.some((s) => fromEmail.toLowerCase().includes(s)) ||
             JOB_ALERT_SUBJECT_KEYWORDS.some((k) => lowerSub.includes(k)) ||
             isSystemAuth ||
-            isNonJobSender);
+            isNonJobSender ||
+            isCommunity ||
+            isIncompleteReminder);
 
         if (isJobAlertOrNewsletter) {
           detectedType = null;
@@ -1235,35 +1352,45 @@ export class GmailService implements OnModuleInit {
       const searchText = `${subject} ${msg.snippet || ''} ${bodyText} ${fromEmail}`.toLowerCase();
 
       const isNonJobSender = NON_JOB_SENDERS.some((s) => fromEmail.includes(s));
-      const isAppConfirmation = APPLIED_CONFIRM_KEYWORDS.some((k) => searchText.includes(k));
       const isSystemAuth =
         SYSTEM_AUTH_KEYWORDS.some((k) => isKeywordMatched(searchText, k)) ||
         fromEmail.includes('otp');
+      const isCommunity = isCommunityDigestOrNewsletter(msg.fromName || '', fromEmail, msg.subject || '', msg.snippet || '');
+      const isIncompleteReminder = INCOMPLETE_APP_REMINDER_KEYWORDS.some((k) =>
+        searchText.includes(k),
+      );
+      const isAppConfirmation = !isIncompleteReminder && APPLIED_CONFIRM_KEYWORDS.some((k) => searchText.includes(k));
 
       let correctDetectedType: string | null = null;
-      for (const [type, keywords] of Object.entries(EMAIL_TYPE_KEYWORDS)) {
-        if (keywords.some((k) => isKeywordMatched(searchText, k))) {
-          correctDetectedType = type;
-          break;
+      if (!isSystemAuth && !isNonJobSender && !isCommunity && !isIncompleteReminder) {
+        for (const [type, keywords] of Object.entries(EMAIL_TYPE_KEYWORDS)) {
+          if (keywords.some((k) => isKeywordMatched(searchText, k))) {
+            correctDetectedType = type;
+            break;
+          }
         }
-      }
-      if (!correctDetectedType && isAppConfirmation) {
-        correctDetectedType = 'APPLIED_CONFIRM';
+        if (!correctDetectedType && isAppConfirmation) {
+          correctDetectedType = 'APPLIED_CONFIRM';
+        }
       }
 
       const isJobAlertOrNewsletter =
         !isAppConfirmation &&
-        !correctDetectedType &&
         (isSystemAuth ||
           isNonJobSender ||
+          isCommunity ||
+          isIncompleteReminder ||
           JOB_ALERT_SENDERS.some((s) => fromEmail.includes(s)) ||
           JOB_ALERT_SUBJECT_KEYWORDS.some((k) => subject.includes(k)));
 
-      if (isJobAlertOrNewsletter || isNonJobSender || isSystemAuth) {
+      if (isJobAlertOrNewsletter || isNonJobSender || isSystemAuth || isCommunity || isIncompleteReminder) {
         correctDetectedType = null;
       }
 
-      const correctJobRelated = !isNonJobSender && !isSystemAuth && (JOB_KEYWORDS.some((k) => isKeywordMatched(searchText, k)) || !!correctDetectedType);
+      const correctJobRelated =
+        !isNonJobSender &&
+        !isSystemAuth &&
+        (JOB_KEYWORDS.some((k) => isKeywordMatched(searchText, k)) || !!correctDetectedType || isIncompleteReminder);
 
       if (
         msg.isJobRelated !== correctJobRelated ||
@@ -1416,20 +1543,50 @@ export class GmailService implements OnModuleInit {
       const fullSearch = `${subjectLower} ${msg.fromName?.toLowerCase() || ''} ${fromEmailLower} ${snippetLower}`;
 
       const isNonJobSender = NON_JOB_SENDERS.some((s) => fromEmailLower.includes(s));
-      const isAppConfirmation = APPLIED_CONFIRM_KEYWORDS.some((k) => fullSearch.includes(k));
+      const isCommunity = isCommunityDigestOrNewsletter(
+        msg.fromName || '',
+        fromEmailLower,
+        msg.subject || '',
+        msg.snippet || '',
+      );
+      const isIncompleteReminder = INCOMPLETE_APP_REMINDER_KEYWORDS.some((k) =>
+        fullSearch.includes(k),
+      );
+      const isAppConfirmation = !isIncompleteReminder && APPLIED_CONFIRM_KEYWORDS.some((k) => fullSearch.includes(k));
       const isSystemAuth = SYSTEM_AUTH_KEYWORDS.some((k) => isKeywordMatched(fullSearch, k)) || fromEmailLower.includes('otp');
 
       const isJobAlertOrNewsletter =
         !isAppConfirmation &&
         (isSystemAuth ||
           isNonJobSender ||
+          isCommunity ||
+          isIncompleteReminder ||
           JOB_ALERT_SENDERS.some((s) => fromEmailLower.includes(s)) ||
           JOB_ALERT_SUBJECT_KEYWORDS.some((k) => subjectLower.includes(k)));
 
+      // Dynamically sanitize detectedType for existing stored records
+      let sanitizedDetectedType = msg.detectedType;
+      if (
+        isSystemAuth ||
+        isNonJobSender ||
+        isCommunity ||
+        isIncompleteReminder ||
+        isJobAlertOrNewsletter
+      ) {
+        sanitizedDetectedType = null;
+      }
+
       let matchedApp: { id: string; jobTitle: string; companyName: string } | null = null;
 
-      // Mass job alerts, recommendations, and non-job senders are NOT HR replies to individual applications
-      if (!isJobAlertOrNewsletter && !isNonJobSender && msg.isJobRelated) {
+      // Mass job alerts, recommendations, incomplete reminders, community feeds, and non-job senders are NOT HR replies to individual applications
+      if (
+        !isJobAlertOrNewsletter &&
+        !isNonJobSender &&
+        !isSystemAuth &&
+        !isIncompleteReminder &&
+        !isCommunity &&
+        msg.isJobRelated
+      ) {
         const best = findBestMatchingApplication(
           userApps,
           {
@@ -1452,37 +1609,40 @@ export class GmailService implements OnModuleInit {
       }
 
       // isHrReply: strict — must have a matched application OR an explicitly confirmed type
-      // Loose subject keywords alone (screening/interview/test) are NOT enough — they produce false positives
-      // from AI tools, developer newsletters, etc.
       const hasConfirmedType = Boolean(
-        msg.detectedType &&
+        sanitizedDetectedType &&
           ['INTERVIEW', 'OFFER', 'REJECTED', 'SCREENING', 'APPLIED_CONFIRM'].includes(
-            msg.detectedType,
+            sanitizedDetectedType,
           ),
       );
 
       const hasTrustedSenderSignal =
-        fromEmailLower.includes('recruitment') ||
-        fromEmailLower.includes('talent') ||
-        fromEmailLower.includes('careers') ||
-        fromEmailLower.includes('hr@') ||
-        fromEmailLower.includes('hrd@') ||
-        fromEmailLower.includes('@hrd.') ||
-        fromEmailLower.includes('rekrutmen') ||
-        fromEmailLower.includes('talentics') ||
-        fromEmailLower.includes('kalibrr') ||
-        fromEmailLower.includes('dealls');
+        !isIncompleteReminder &&
+        !isCommunity &&
+        (fromEmailLower.includes('recruitment') ||
+          fromEmailLower.includes('talent') ||
+          fromEmailLower.includes('careers') ||
+          fromEmailLower.includes('hr@') ||
+          fromEmailLower.includes('hrd@') ||
+          fromEmailLower.includes('@hrd.') ||
+          fromEmailLower.includes('rekrutmen') ||
+          fromEmailLower.includes('talentics') ||
+          fromEmailLower.includes('kalibrr') ||
+          fromEmailLower.includes('dealls'));
 
       const isHrReply =
         !isJobAlertOrNewsletter &&
         !isNonJobSender &&
         !isSystemAuth &&
+        !isIncompleteReminder &&
+        !isCommunity &&
         Boolean(msg.isJobRelated) &&
         // Must have at least ONE strong signal:
-        (matchedApp !== null || hasConfirmedType || hasTrustedSenderSignal);
+        (matchedApp !== null || hasConfirmedType || (hasTrustedSenderSignal && (hasConfirmedType || matchedApp !== null)));
 
       return {
         ...msg,
+        detectedType: sanitizedDetectedType,
         isHrReply,
         matchedApp,
       };

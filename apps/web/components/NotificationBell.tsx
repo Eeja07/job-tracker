@@ -1,11 +1,20 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useSyncExternalStore } from "react";
 import { Bell, Mail, CheckCheck, RefreshCw, AlertCircle, Check } from "lucide-react";
 import { notificationApi, gmailApi, type NotificationItem, type GmailStatus } from "@/lib/api";
 import styles from "./NotificationBell.module.css";
 
-// Web Audio API sound generator for crisp notification chime
+// Audio & Desktop Notification Deduplication Registries
+const globalNotifiedSet = new Set<string>();
+let lastSoundTime = 0;
+let lastDesktopNotifTime = 0;
+
+// Web Audio API sound generator for crisp notification chime (deduplicated)
 function playNotificationSound() {
+  const now = Date.now();
+  if (now - lastSoundTime < 1500) return;
+  lastSoundTime = now;
+
   try {
     const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioCtx) return;
@@ -30,9 +39,20 @@ function playNotificationSound() {
   }
 }
 
-// Browser Desktop Popup Notification
-function triggerDesktopNotification(title: string, body: string) {
+// Browser Desktop Popup Notification (deduplicated across instances & tabs)
+function triggerDesktopNotification(title: string, body: string, notifId?: string) {
   if (typeof window === "undefined" || !("Notification" in window)) return;
+
+  const now = Date.now();
+  if (now - lastDesktopNotifTime < 1500) return;
+  lastDesktopNotifTime = now;
+
+  if (notifId) {
+    globalNotifiedSet.add(notifId);
+    try {
+      sessionStorage.setItem(`jt_notified_${notifId}`, "1");
+    } catch {}
+  }
 
   if (Notification.permission === "granted") {
     try {
@@ -55,50 +75,130 @@ function triggerDesktopNotification(title: string, body: string) {
   }
 }
 
-export default function NotificationBell() {
-  const [open, setOpen] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [gmailStatus, setGmailStatus] = useState<GmailStatus | null>(null);
-  const [syncing, setSyncing] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const previousNotifIdsRef = useRef<Set<string>>(new Set());
+// ==========================================
+// Centralized Singleton Notification Store
+// Ensures only ONE polling loop runs, syncing desktop & mobile bells
+// ==========================================
+interface NotificationStoreState {
+  notifications: NotificationItem[];
+  gmailStatus: GmailStatus | null;
+  syncing: boolean;
+  loading: boolean;
+}
 
-  const fetchStatusAndNotifs = async () => {
-    try {
-      const [status, notifs] = await Promise.all([
-        gmailApi.getStatus().catch(() => null),
-        notificationApi.getNotifications().catch(() => []),
-      ]);
-      setGmailStatus(status);
-      const notifList = Array.isArray(notifs) ? notifs : [];
-      setNotifications(notifList);
+let storeState: NotificationStoreState = {
+  notifications: [],
+  gmailStatus: null,
+  syncing: false,
+  loading: true,
+};
 
-      // Trigger sound & desktop popup if new notifications arrive
-      if (previousNotifIdsRef.current.size > 0) {
-        const newItems = notifList.filter((n) => !previousNotifIdsRef.current.has(n.id));
-        if (newItems.length > 0) {
-          playNotificationSound();
-          const firstNew = newItems[0];
-          if (firstNew) {
-            triggerDesktopNotification(
-              firstNew.title || "Email Loker Baru!",
-              firstNew.body || "Ada pembaruan email loker terbaru."
-            );
+const listeners = new Set<() => void>();
+
+function emitChange() {
+  for (const listener of listeners) {
+    listener();
+  }
+}
+
+let hasInitializedExisting = false;
+let isFetching = false;
+let pollingInterval: any = null;
+let subscriberCount = 0;
+
+async function fetchStatusAndNotifsGlobal() {
+  if (isFetching) return;
+  isFetching = true;
+
+  try {
+    const [status, notifs] = await Promise.all([
+      gmailApi.getStatus().catch(() => null),
+      notificationApi.getNotifications().catch(() => []),
+    ]);
+
+    const notifList = Array.isArray(notifs) ? notifs : [];
+
+    // Check for newly arrived notifications
+    if (hasInitializedExisting) {
+      const newItems = notifList.filter((n) => {
+        if (globalNotifiedSet.has(n.id)) return false;
+        try {
+          if (sessionStorage.getItem(`jt_notified_${n.id}`)) {
+            globalNotifiedSet.add(n.id);
+            return false;
           }
+        } catch {}
+        return true;
+      });
+
+      if (newItems.length > 0) {
+        for (const item of newItems) {
+          globalNotifiedSet.add(item.id);
+          try {
+            sessionStorage.setItem(`jt_notified_${item.id}`, "1");
+          } catch {}
+        }
+
+        playNotificationSound();
+        const firstNew = newItems[0];
+        if (firstNew) {
+          triggerDesktopNotification(
+            firstNew.title || "Email Loker Baru!",
+            firstNew.body || "Ada pembaruan email loker terbaru.",
+            firstNew.id
+          );
         }
       }
+    } else {
+      // First fetch: seed existing notifications so they don't trigger alerts
+      for (const n of notifList) {
+        globalNotifiedSet.add(n.id);
+      }
+      hasInitializedExisting = true;
+    }
 
-      previousNotifIdsRef.current = new Set(notifList.map((n) => n.id));
-    } catch (err) {
-      console.error(err);
+    storeState = {
+      ...storeState,
+      gmailStatus: status,
+      notifications: notifList,
+      loading: false,
+    };
+    emitChange();
+  } catch (err) {
+    console.error("fetchStatusAndNotifsGlobal error:", err);
+  } finally {
+    isFetching = false;
+  }
+}
+
+function subscribe(callback: () => void) {
+  listeners.add(callback);
+  subscriberCount++;
+
+  if (subscriberCount === 1) {
+    fetchStatusAndNotifsGlobal();
+    pollingInterval = setInterval(fetchStatusAndNotifsGlobal, 30000);
+  }
+
+  return () => {
+    listeners.delete(callback);
+    subscriberCount--;
+    if (subscriberCount === 0 && pollingInterval) {
+      clearInterval(pollingInterval);
+      pollingInterval = null;
     }
   };
+}
 
-  useEffect(() => {
-    fetchStatusAndNotifs();
-    const interval = setInterval(fetchStatusAndNotifs, 30000); // Polling every 30s
-    return () => clearInterval(interval);
-  }, []);
+function getSnapshot() {
+  return storeState;
+}
+
+export default function NotificationBell() {
+  const { notifications, gmailStatus, syncing } = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [selectedNotif, setSelectedNotif] = useState<NotificationItem | null>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -111,21 +211,24 @@ export default function NotificationBell() {
   }, []);
 
   const handleSync = async () => {
-    setSyncing(true);
+    storeState = { ...storeState, syncing: true };
+    emitChange();
     try {
       await gmailApi.sync();
-      await fetchStatusAndNotifs();
+      await fetchStatusAndNotifsGlobal();
     } catch (err: any) {
       alert("Gagal sinkronisasi: " + (err.message || "Error"));
     } finally {
-      setSyncing(false);
+      storeState = { ...storeState, syncing: false };
+      emitChange();
     }
   };
 
   const handleMarkAllRead = async () => {
     try {
       await notificationApi.markAllRead();
-      setNotifications([]);
+      storeState = { ...storeState, notifications: [] };
+      emitChange();
     } catch (err) {
       console.error(err);
     }
@@ -135,13 +238,15 @@ export default function NotificationBell() {
     if (e) e.stopPropagation();
     try {
       await notificationApi.markRead(id);
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      storeState = {
+        ...storeState,
+        notifications: storeState.notifications.filter((n) => n.id !== id),
+      };
+      emitChange();
     } catch (err) {
       console.error(err);
     }
   };
-
-  const [selectedNotif, setSelectedNotif] = useState<NotificationItem | null>(null);
 
   const handleItemClick = (n: NotificationItem) => {
     if (!n.isRead) {
@@ -160,7 +265,7 @@ export default function NotificationBell() {
           className={styles.bellBtn}
           onClick={() => {
             setOpen(!open);
-            if (!open) fetchStatusAndNotifs();
+            if (!open) fetchStatusAndNotifsGlobal();
           }}
           title="Notifikasi Email Loker"
         >
